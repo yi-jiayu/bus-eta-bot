@@ -5,10 +5,8 @@
   "main": "transpiled/main.js",
   "scripts": {
     "test": "mocha",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha",
     "nyc": "nyc --require babel-core/register node_modules/mocha/bin/_mocha",
     "babel": "babel src --out-dir transpiled --copy-files",
-    "build-windows": "powershell -file build.ps1",
     "functions": "functions"
   },
   "repository": {
@@ -22,18 +20,17 @@
   },
   "homepage": "https://github.com/yi-jiayu/bus-eta-bot-sg#readme",
   "dependencies": {
-    "chai": "^3.5.0",
     "debug": "^2.6.0",
-    "dotenv": "^4.0.0",
     "geo-nearby": "^2.0.1",
     "moment-timezone": "^0.5.11",
-    "ngeohash": "^0.6.0",
     "redis": "^2.6.5",
     "request": "latest",
-    "sinon": "^1.17.7",
     "table": "^4.0.1"
   },
   "devDependencies": {
+    "ngeohash": "^0.6.0",
+    "chai": "^3.5.0",
+    "sinon": "^1.17.7",
     "babel-cli": "^6.16.0",
     "babel-preset-es2015": "^6.16.0",
     "istanbul": "^0.4.5",

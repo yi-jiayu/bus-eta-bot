@@ -103,6 +103,6 @@ _${updated_time}_`;
     let [bus_stop, ...service_nos] = text.split(' ');
     bus_stop = bus_stop.substr(0, 5);
 
-    return {bus_stop, service_nos: service_nos || null};
+    return {bus_stop, service_nos: service_nos};
   }
 }
