@@ -1,0 +1,9 @@
+machine:
+  node:
+    version: 6.9.1
+test:
+  override:
+    - npm run nyc --silent
+    - npm run report
+  post:
+    - bash <(curl -s https://codecov.io/bash)
