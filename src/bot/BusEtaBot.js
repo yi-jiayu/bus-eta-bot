@@ -51,9 +51,25 @@ export default class BusEtaBot {
       eta_array.push([eta.svc_no, eta.next, eta.subsequent, eta.third]);
     }
 
-    let eta_table = table(eta_array, {
-      border: getBorderCharacters('ramac')
-    });
+    let eta_table;
+    if (eta_array.length > 8) {
+      // if there are more than 8 buses to be shown, leave out the borders to save space
+      eta_table = table(eta_array, {
+        border: getBorderCharacters('void'),
+        columnDefault: {
+          paddingLeft: 0,
+          paddingRight: 2
+        },
+        drawHorizontalLine: () => {
+          return false
+        }
+      })
+    } else {
+      eta_table = table(eta_array, {
+        border: getBorderCharacters('ramac')
+      });
+    }
+
 
     if (excluded_services > 0) {
       eta_table += `${excluded_services} more ${excluded_services === 1 ? 'service' : 'services'} not shown.`;
