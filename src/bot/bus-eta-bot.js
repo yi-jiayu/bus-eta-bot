@@ -4,7 +4,7 @@ import { get_etas } from '../lib/datamall';
 
 import Bot from '../lib/Bot';
 import BusEtaBot from './BusEtaBot';
-import Datastore from '../lib/Datastore';
+import LocalDatastore from '../lib/LocalDatastore';
 import Analytics from '../lib/Analytics';
 import {
   message_types,
@@ -16,7 +16,7 @@ import {
 
 const bot = new Bot();
 
-bot.datastore = new Datastore(require('../data/bus-stop-info.json'), require('../data/location-data.json'));
+bot.datastore = new LocalDatastore(require('../data/bus-stop-info.json'), require('../data/location-data.json'));
 bot.analytics = new Analytics();
 
 // start command handler
@@ -50,18 +50,20 @@ bot.message(message_types.TEXT, (bot, msg) => {
   return get_etas(bus_stop)
     .then(etas => {
       if (etas.etas.length === 0) {
-        const info = bot.datastore.get_bus_stop_info(bus_stop);
-        if (info) {
-          // if there were no etas for a bus stop but we have information about it
-          return BusEtaBot.format_eta_message(etas, {services: service_nos, info})
-        } else {
-          // if there were no etas for a bus stop and it is not in our list of bus stops
-          return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`)
-        }
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => {
+            if (info) {
+              // if there were no etas for a bus stop but we have information about it
+              return BusEtaBot.format_eta_message(etas, {services: service_nos, info})
+            } else {
+              // if there were no etas for a bus stop and it is not in our list of bus stops
+              return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`)
+            }
+          });
+      } else {
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => BusEtaBot.format_eta_message(etas, {services: service_nos, info}));
       }
-
-      const info = bot.datastore.get_bus_stop_info(bus_stop);
-      return BusEtaBot.format_eta_message(etas, {services: service_nos, info})
     })
     .then(reply => reply.send(chat_id));
 });
@@ -93,18 +95,20 @@ bot.command('eta', (bot, msg, args) => {
   return get_etas(bus_stop)
     .then(etas => {
       if (etas.etas.length === 0) {
-        const info = bot.datastore.get_bus_stop_info(bus_stop);
-        if (info) {
-          // if there were no etas for a bus stop but we have information about it
-          return BusEtaBot.format_eta_message(etas, {services: service_nos, info})
-        } else {
-          // if there were no etas for a bus stop and it is not in our list of bus stops
-          return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`)
-        }
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => {
+            if (info) {
+              // if there were no etas for a bus stop but we have information about it
+              return BusEtaBot.format_eta_message(etas, {services: service_nos, info})
+            } else {
+              // if there were no etas for a bus stop and it is not in our list of bus stops
+              return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`)
+            }
+          });
+      } else {
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => BusEtaBot.format_eta_message(etas, {services: service_nos, info}));
       }
-
-      const info = bot.datastore.get_bus_stop_info(bus_stop);
-      return BusEtaBot.format_eta_message(etas, {services: service_nos, info})
     })
     .then(reply => reply.send(chat_id));
 });
@@ -114,23 +118,25 @@ bot.callback_query('eta', (bot, cbq) => {
   const cbq_from_ilq = cbq.inline_message_id !== null;
 
   const cbq_data = JSON.parse(cbq.data);
-  const {b: bus_stop, s: services} = cbq_data;
+  const {b: bus_stop, s: service_nos} = cbq_data;
 
   return get_etas(bus_stop)
     .then(etas => {
       if (etas.etas.length === 0) {
-        const info = bot.datastore.get_bus_stop_info(bus_stop);
-        if (info) {
-          // if there were no etas for a bus stop but we have information about it
-          return BusEtaBot.format_eta_message(etas, {services, info});
-        } else {
-          // if there were no etas for a bus stop and it is not in our list of bus stops
-          return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`);
-        }
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => {
+            if (info) {
+              // if there were no etas for a bus stop but we have information about it
+              return BusEtaBot.format_eta_message(etas, {services: service_nos, info})
+            } else {
+              // if there were no etas for a bus stop and it is not in our list of bus stops
+              return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`)
+            }
+          });
+      } else {
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => BusEtaBot.format_eta_message(etas, {services: service_nos, info}));
       }
-
-      const info = bot.datastore.get_bus_stop_info(bus_stop);
-      return BusEtaBot.format_eta_message(etas, {services, info});
     })
     .then(reply => {
       if (cbq_from_ilq) {
@@ -145,38 +151,40 @@ bot.inline_query((bot, ilq) => {
   const inline_query_id = ilq.inline_query_id;
   const query = ilq.query;
 
-  let completions = bot.datastore.get_completions(query);
-  completions = completions.slice(0, 50);
+  return bot.datastore.get_completions(query)
+    .then(completions => {
+      if (completions.length > 0) {
+        const results = [];
 
-  if (completions.length > 0) {
-    const results = [];
+        for (const c of completions) {
+          const callback_data = {t: 'eta', b: c.id};
 
-    for (const c of completions) {
-      const callback_data = {t: 'eta', b: c.id};
+          const markup = new InlineKeyboardMarkup([[{
+            text: 'Refresh',
+            callback_data: JSON.stringify(callback_data)
+          }]]);
 
-      const markup = new InlineKeyboardMarkup([[{
-        text: 'Refresh',
-        callback_data: JSON.stringify(callback_data)
-      }]]);
+          const r = new InlineQueryResultLocation(
+            c.id,
+            `${c.description} (${c.id})`,
+            c.latitude,
+            c.longitude,
+            {
+              reply_markup: markup,
+              input_message_content: {
+                message_text: `*${c.description} (${c.id})*\n${c.road}\n\n\`Fetching etas...\``,
+                parse_mode: 'markdown'
+              }
+            });
+          results.push(r);
+        }
 
-      const r = new InlineQueryResultLocation(
-        c.id,
-        `${c.description} (${c.id})`,
-        c.latitude,
-        c.longitude,
-        {
-          reply_markup: markup,
-          input_message_content: {
-            message_text: `*${c.description} (${c.id})*\n${c.road}\n\n\`Fetching etas...\``,
-            parse_mode: 'markdown'
-          }
-        });
-      results.push(r);
-    }
-
-    const answer = new InlineQueryAnswer(inline_query_id, results, {cache_time: 86400, next_offset: ''});
-    return answer.send();
-  }
+        const answer = new InlineQueryAnswer(inline_query_id, results, {cache_time: 86400, next_offset: ''});
+        return answer.send();
+      } else {
+        console.log('info: inline query returned no results');
+      }
+    });
 });
 
 bot.chosen_inline_result((bot, cir) => {
@@ -190,18 +198,20 @@ bot.chosen_inline_result((bot, cir) => {
   return get_etas(bus_stop)
     .then(etas => {
       if (etas.etas.length === 0) {
-        const info = bot.datastore.get_bus_stop_info(bus_stop);
-        if (info) {
-          // if there were no etas for a bus stop but we have information about it
-          return BusEtaBot.format_eta_message(etas, {info});
-        } else {
-          // if there were no etas for a bus stop and it is not in our list of bus stops
-          return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`);
-        }
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => {
+            if (info) {
+              // if there were no etas for a bus stop but we have information about it
+              return BusEtaBot.format_eta_message(etas, {info})
+            } else {
+              // if there were no etas for a bus stop and it is not in our list of bus stops
+              return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`)
+            }
+          });
+      } else {
+        return bot.datastore.get_bus_stop_info(bus_stop)
+          .then(info => BusEtaBot.format_eta_message(etas, {info}));
       }
-
-      const info = bot.datastore.get_bus_stop_info(bus_stop);
-      return BusEtaBot.format_eta_message(etas, {info});
     })
     .then(reply => reply.update_inline_message(inline_message_id));
 });
