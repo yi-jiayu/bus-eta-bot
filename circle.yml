@@ -1,9 +1,22 @@
 machine:
   node:
     version: 6.9.1
+  environment:
+    GCLOUD_PROJECT: bus-eta-bot
 test:
   override:
     - npm run nyc --silent
     - npm run report
   post:
     - bash <(curl -s https://codecov.io/bash)
+deployment:
+  staging:
+    branch: master
+    owner: yi-jiayu
+    commands:
+      - echo $GCLOUD_SERVICE_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components install alpha
+      - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - sudo /opt/google-cloud-sdk/bin/gcloud config set project $GCLOUD_PROJECT
+      - gcloud alpha functions deploy bus-eta-bot-staging --stage-bucket bus-eta-bot-src --entry-point main --memory 128MB --trigger-http
