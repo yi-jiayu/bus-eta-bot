@@ -2,10 +2,10 @@
 
 import { assert } from 'chai';
 
-import LocalDatastore from '../src/lib/LocalDatastore';
+import LocalDatastore from '../../src/bot/LocalDatastore';
 
-const info = require('../src/data/bus-stop-info.json');
-const locations = require('../src/data/location-data.json');
+const info = require('../../src/data/bus-stop-info.json');
+const locations = require('../../src/data/location-data.json');
 
 const datastore = new LocalDatastore(info, locations);
 

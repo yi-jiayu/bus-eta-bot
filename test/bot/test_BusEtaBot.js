@@ -3,7 +3,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
-import BusEtaBot from '../src/bot/BusEtaBot';
+import BusEtaBot from '../../src/bot/BusEtaBot';
 
 suite('BusEtaBot', function () {
   suite('prepare eta message', function () {

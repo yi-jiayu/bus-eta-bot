@@ -4,8 +4,8 @@ import { get_etas } from '../lib/datamall';
 
 import Bot from '../lib/Bot';
 import BusEtaBot from './BusEtaBot';
-import LocalDatastore from '../lib/LocalDatastore';
-import Analytics from '../lib/Analytics';
+import LocalDatastore from './LocalDatastore';
+import Analytics from './Analytics';
 import {
   message_types,
   OutgoingTextMessage,

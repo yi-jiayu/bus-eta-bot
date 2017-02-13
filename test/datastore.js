@@ -1,6 +1,6 @@
 "use strict";
 
-import Datastore from '../src/lib/Datastore';
+import Datastore from '../src/bot/Datastore';
 
 const datastore = new Datastore(require('./bus-stop-info.json'), require('./location-data.json'));
 

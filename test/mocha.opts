@@ -1,4 +1,4 @@
 --recursive
 --ui tdd
 --compilers js:babel-core/register
-test/test_*.js
+test/**/test_*.js

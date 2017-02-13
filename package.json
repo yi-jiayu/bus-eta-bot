@@ -7,6 +7,7 @@
     "test": "mocha",
     "nyc": "nyc --require babel-core/register node_modules/mocha/bin/_mocha",
     "report": "nyc report --reporter=lcov",
+    "report-stdout": "nyc report",
     "babel": "babel src --out-dir transpiled --copy-files",
     "functions": "functions"
   },

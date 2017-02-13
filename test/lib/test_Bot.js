@@ -3,8 +3,8 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
-import Bot from '../src/lib/Bot';
-import { message_types } from '../src/lib/telegram';
+import Bot from '../../src/lib/Bot';
+import { message_types } from '../../src/lib/telegram';
 
 const updates = {
   command: {
