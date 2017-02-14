@@ -22,11 +22,11 @@
   },
   "homepage": "https://github.com/yi-jiayu/bus-eta-bot-sg#readme",
   "dependencies": {
-    "debug": "^2.6.0",
+    "debug": "^2.6.1",
     "geo-nearby": "^2.0.1",
     "moment-timezone": "^0.5.11",
     "redis": "^2.6.5",
-    "request": "latest",
+    "request": "^2.79.0",
     "table": "^4.0.1"
   },
   "devDependencies": {
