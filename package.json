@@ -1,6 +1,6 @@
 {
   "name": "bus-eta-bot",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "",
   "main": "transpiled/main.js",
   "scripts": {
@@ -8,12 +8,12 @@
     "nyc": "nyc --require babel-core/register node_modules/mocha/bin/_mocha",
     "report": "nyc report --reporter=lcov",
     "report-stdout": "nyc report",
-    "babel": "babel src --out-dir transpiled --copy-files",
+    "babel": "babel src --out-dir transpiled --copy-files --source-maps",
     "functions": "functions"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yi-jiayu/bus-eta-bot-sg.git"
+    "url": "git+https://github.com/yi-jiayu/bus-eta-bot.git"
   },
   "author": "Jiayu Yi <yi-jiayu@users.noreply.github.com>",
   "license": "MIT",
@@ -27,13 +27,13 @@
     "moment-timezone": "^0.5.11",
     "redis": "^2.6.5",
     "request": "^2.79.0",
+    "source-map-support": "^0.4.11",
     "table": "^4.0.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.16.0",
+    "babel-cli": "^6.23.0",
     "babel-core": "^6.22.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.22.0",
-    "babel-preset-es2015": "^6.16.0",
+    "babel-preset-latest": "^6.22.0",
     "chai": "^3.5.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.1.2",
