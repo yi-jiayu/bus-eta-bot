@@ -1,9 +1,21 @@
 "use strict";
 
-const env = require('../.env.json');
-Object.keys(env).map(k => process.env[k] = env[k]);
+import 'source-map-support/register'
+import './loadenv';
 
-const bus_eta_bot = require('./bot/bus-eta-bot').default;
+import LocalDatastore from './bot/LocalDatastore';
+import Datamall from "./bot/Datamall";
+import BusEtaBot from './bot/BusEtaBot';
+
+const datastore = new LocalDatastore(
+  require('./data/bus-stop-info.json'),
+  require('./data/location-data.json'));
+const datamall = new Datamall();
+
+const bus_eta_bot = new BusEtaBot({
+  datastore,
+  eta_provider: datamall
+});
 
 const platform = process.env.PLATFORM;
 

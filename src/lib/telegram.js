@@ -3,11 +3,7 @@
 import request from 'request';
 
 const endpoint = 'https://api.telegram.org/bot';
-const token = process.env.TELEGRAM_BOT_TOKEN;
 
-if (!token) {
-  console.error('warning: TELEGRAM_BOT_TOKEN not defined');
-}
 
 class TelegramMethod {
   constructor(method, params = {}) {
@@ -22,9 +18,13 @@ class TelegramMethod {
   }
 
   do() {
+    if (!process.env.TELEGRAM_BOT_TOKEN) {
+      console.error('warning: TELEGRAM_BOT_TOKEN not defined');
+    }
+
     return new Promise((resolve, reject) => {
       request.post({
-          uri: endpoint + token + '/' + this.method,
+          uri: endpoint + process.env.TELEGRAM_BOT_TOKEN + '/' + this.method,
           body: this.params,
           json: true
         },
@@ -53,9 +53,13 @@ export const message_types = {
 };
 
 export function get_updates(options = {}) {
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    console.error('warning: TELEGRAM_BOT_TOKEN not defined');
+  }
+
   return new Promise((resolve, reject) => {
     request({
-      uri: endpoint + token + '/getUpdates',
+      uri: endpoint + process.env.TELEGRAM_BOT_TOKEN + '/getUpdates',
       qs: options
     }, (err, res, body) => {
       if (err) reject(err);
@@ -434,15 +438,14 @@ export class InlineQueryResultArticle extends InlineQueryResult {
 }
 
 export class InlineQueryAnswer {
-  constructor(id, results, options = {}) {
-    this.inline_query_id = id;
+  constructor(results, options = {}) {
     this.results = results;
     this.params = options;
   }
 
-  _prepare_answer() {
+  _prepare_answer(inline_query_id) {
     const params = {
-      inline_query_id: this.inline_query_id,
+      inline_query_id,
       results: JSON.stringify(this.results)
     };
 
@@ -456,11 +459,11 @@ export class InlineQueryAnswer {
     return new TelegramMethod('answerInlineQuery', params);
   }
 
-  send() {
-    return this._prepare_answer().do();
+  send(inline_query_id) {
+    return this._prepare_answer(inline_query_id).do();
   }
 
-  serialise() {
-    return this._prepare_answer().serialise();
+  serialise(inline_query_id) {
+    return this._prepare_answer(inline_query_id).serialise();
   }
 }

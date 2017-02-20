@@ -5,6 +5,9 @@ transpiled/
 rethinkdb/
 redis/
 
+# packaged code
+dist/
+
 # private environment variables
 *.env
 *.env.json
