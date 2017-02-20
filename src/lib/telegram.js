@@ -152,6 +152,33 @@ export class CallbackQuery {
       return msg.update_inline_message(this.inline_message_id);
     }
   }
+
+  _prepare_answer(options) {
+    const params = {
+      callback_query_id: this.callback_query_id
+    };
+
+    const optional = ['text', 'show_alert', 'url', 'cache_time'];
+    for (const opt of optional) {
+      if (options.hasOwnProperty(opt)) {
+        params[opt] = options[opt];
+      }
+    }
+
+    return new TelegramMethod('answerCallbackQuery', params);
+  }
+
+  /**
+   * Answers the callback query, stopping the progress bar displayed on telegram clients
+   * @param {object} [options]
+   * @param {string} [options.text]
+   * @param {boolean} [options.show_alert]
+   * @param {string} [options.url]
+   * @param {number} [options.cache_time]
+   */
+  answer(options) {
+    return this._prepare_answer(options).do();
+  }
 }
 
 export class InlineQuery {

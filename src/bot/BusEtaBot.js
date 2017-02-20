@@ -106,13 +106,17 @@ To get started, send me a bus stop code or try /help to view available commands.
       const cbq_data = JSON.parse(cbq.data);
       const {b: bus_stop, s: service_nos} = cbq_data;
 
-      return this.get_etas(bus_stop, service_nos)
+      return this.prepare_eta_message(bus_stop, service_nos)
         .then(reply => {
+          let update;
+
           if (cbq_from_ilq) {
-            return reply.update_inline_message(cbq.inline_message_id);
+            update = reply.update_inline_message(cbq.inline_message_id);
           } else {
-            return reply.update_message(cbq.message.chat_id, cbq.message.message_id);
+            update = reply.update_message(cbq.message.chat_id, cbq.message.message_id);
           }
+
+          return Promise.all([update, cbq.answer({text: 'Etas updated!'})]);
         });
     });
 
