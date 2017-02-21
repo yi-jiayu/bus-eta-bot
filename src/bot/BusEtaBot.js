@@ -50,6 +50,8 @@ export default class BusEtaBot extends Bot {
       return reply.send(chat_id);
     });
 
+    // todo: about command handler
+
     // text message handler
     this.message(message_types.TEXT, (bot, msg) => {
       const chat_id = msg.chat_id;
@@ -176,7 +178,31 @@ export default class BusEtaBot extends Bot {
       });
   }
 
-  answer_inline_query(query) {
+  /**
+   * Respond to an inline query
+   * @param {string} query - Inline query text
+   * @param {object} [location]
+   * @param {number} location.lat
+   * @param {number} location.lon
+   * @return {Promise}
+   */
+  answer_inline_query(query, location) {
+    if (query.length === 0 && location) {
+      // if the inline query is empty and we have a location, we respond with nearby bus stops
+      return this.datastore.get_nearby_bus_stops(location.lat, location.lon)
+        .then(nearby => {
+          if (nearby.length === 0) {
+            // if we can't find any nearby bus stops, just default to sending the completions for a blank query
+            return this.datastore.get_completions(query)
+              // don't cache results for empty queries or queries using location
+              .then(completions => BusEtaBot.prepare_inline_query_answer(completions, {cache_time: 0, next_offset: ''}));
+          } else {
+            // don't cache results for empty queries or queries using location
+            return BusEtaBot.prepare_inline_query_answer(nearby, {cache_time: 0, is_personal: true, next_offset: ''});
+          }
+        });
+    }
+
     return this.datastore.get_completions(query)
       .then(BusEtaBot.prepare_inline_query_answer);
   };
@@ -310,9 +336,10 @@ _${updated_time}_`;
   /**
    *
    * @param {BusStopInfo[]} completions
+   * @param options
    * @return {?InlineQueryAnswer}
    */
-  static prepare_inline_query_answer(completions) {
+  static prepare_inline_query_answer(completions, options) {
     if (completions.length > 0) {
       const results = [];
 
@@ -339,7 +366,9 @@ _${updated_time}_`;
         results.push(r);
       }
 
-      return new InlineQueryAnswer(results, {cache_time: 86400, next_offset: ''});
+      options = options || {cache_time: 86400, next_offset: ''};
+
+      return new InlineQueryAnswer(results, options);
     } else {
       return null;
     }
