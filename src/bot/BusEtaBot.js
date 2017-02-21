@@ -192,7 +192,7 @@ export default class BusEtaBot extends Bot {
 
     if (query.length === 0 && location) {
       // if the inline query is empty and we have a location, we respond with nearby bus stops
-      return this.datastore.get_nearby_bus_stops(location.lat, location.lon)
+      return this.datastore.get_nearby_bus_stops(location.latitude, location.longitude)
         .then(nearby => {
           if (nearby.length === 0) {
             // if we can't find any nearby bus stops, just default to sending the completions for a blank query
