@@ -9,6 +9,8 @@ This is a rewrite of my [previous bus eta bot](https://github.com/yi-jiayu/bus-e
 
 ## Features
 
+[Changelog](CHANGELOG.md)
+
 **Core**
 - **(WIP)** Request etas for all buses or specific buses at a bus stop by id.
 - **(WIP)** Search all bus stops by id, description and road name via inline query.

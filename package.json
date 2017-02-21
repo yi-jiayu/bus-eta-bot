@@ -18,9 +18,9 @@
   "author": "Jiayu Yi <yi-jiayu@users.noreply.github.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yi-jiayu/bus-eta-bot-sg/issues"
+    "url": "https://github.com/yi-jiayu/bus-eta-bot/issues"
   },
-  "homepage": "https://github.com/yi-jiayu/bus-eta-bot-sg#readme",
+  "homepage": "https://github.com/yi-jiayu/bus-eta-bot#readme",
   "dependencies": {
     "debug": "^2.6.1",
     "geo-nearby": "^2.0.1",
