@@ -14,9 +14,6 @@ no need to track:
 2. bus service
  */
 
-/**
- * @interface
- */
 export default class Analytics {
   log_interaction() {
 

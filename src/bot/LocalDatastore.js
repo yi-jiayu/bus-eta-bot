@@ -78,9 +78,8 @@ export default class LocalDatastore extends Datastore {
         // no need for sorted: true because bsearch seems to be slower with our dataset
         const geo = new Geo(this.locations, {limit: 50});
 
-        // arbitrary 100m radius for now
-        // what if there are no bus stops within 100m?
-        const nearby = geo.nearBy(lat, lon, 100);
+        // ok use a 1km radius
+        const nearby = geo.nearBy(lat, lon, 1000);
 
         return nearby.map(nb => {
           const bs = this.info[nb.i];
