@@ -135,9 +135,8 @@ export default class BusEtaBot extends Bot {
     // inline query handler
     this.inline_query((bot, ilq) => {
       const inline_query_id = ilq.inline_query_id;
-      const query = ilq.query;
 
-      return this.answer_inline_query(query)
+      return this.answer_inline_query(ilq)
         .then(answer => {
           if (answer !== null) {
             return answer.send(inline_query_id);
@@ -184,13 +183,13 @@ export default class BusEtaBot extends Bot {
 
   /**
    * Respond to an inline query
-   * @param {string} query - Inline query text
-   * @param {object} [location]
-   * @param {number} location.lat
-   * @param {number} location.lon
+   * @param {InlineQuery} ilq - Inline query
    * @return {Promise}
    */
-  answer_inline_query(query, location) {
+  answer_inline_query(ilq) {
+    const query = ilq.query;
+    const location = ilq.location;
+
     if (query.length === 0 && location) {
       // if the inline query is empty and we have a location, we respond with nearby bus stops
       return this.datastore.get_nearby_bus_stops(location.lat, location.lon)
@@ -199,8 +198,11 @@ export default class BusEtaBot extends Bot {
             // if we can't find any nearby bus stops, just default to sending the completions for a blank query
             console.log("prepare_inline_query: couldn't find any nearby bus stops, defaulting to completions");
             return this.datastore.get_completions(query)
-              // don't cache results for empty queries or queries using location
-              .then(completions => BusEtaBot.prepare_inline_query_answer(completions, {cache_time: 0, next_offset: ''}));
+            // don't cache results for empty queries or queries using location
+              .then(completions => BusEtaBot.prepare_inline_query_answer(completions, {
+                cache_time: 0,
+                next_offset: ''
+              }));
           } else {
             // don't cache results for empty queries or queries using location
             console.log(`prepare_inline_query: sending ${nearby.length} results for nearby bus stops`);

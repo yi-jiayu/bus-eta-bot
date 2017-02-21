@@ -1,5 +1,11 @@
 # Change log
 
+## 2.0.5 - 2017-2-21
+
+### Fixed
+
+- Fixed bug causing bot to never send nearby bus stops
+
 ## 2.0.4 - 2017-2-21
 
 ### Added

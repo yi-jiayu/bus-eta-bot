@@ -192,6 +192,7 @@ export class InlineQuery {
     this.username = ilq.from.username || null;
 
     this.query = ilq.query;
+    this.location = ilq.location;
   }
 }
 
