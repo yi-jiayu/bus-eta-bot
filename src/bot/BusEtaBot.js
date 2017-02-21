@@ -52,6 +52,10 @@ export default class BusEtaBot extends Bot {
 
     // todo: about command handler
 
+    // todo: feedback command handler
+
+    // todo: help command handler
+
     // text message handler
     this.message(message_types.TEXT, (bot, msg) => {
       const chat_id = msg.chat_id;
@@ -193,11 +197,13 @@ export default class BusEtaBot extends Bot {
         .then(nearby => {
           if (nearby.length === 0) {
             // if we can't find any nearby bus stops, just default to sending the completions for a blank query
+            console.log("prepare_inline_query: couldn't find any nearby bus stops, defaulting to completions");
             return this.datastore.get_completions(query)
               // don't cache results for empty queries or queries using location
               .then(completions => BusEtaBot.prepare_inline_query_answer(completions, {cache_time: 0, next_offset: ''}));
           } else {
             // don't cache results for empty queries or queries using location
+            console.log(`prepare_inline_query: sending ${nearby.length} results for nearby bus stops`);
             return BusEtaBot.prepare_inline_query_answer(nearby, {cache_time: 0, is_personal: true, next_offset: ''});
           }
         });
