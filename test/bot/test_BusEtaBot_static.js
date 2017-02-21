@@ -225,4 +225,20 @@ suite('BusEtaBot static functions', function () {
       assert.deepEqual(actual, expected);
     });
   });
+
+  suite('prepare welcome message', function () {
+    test('', function () {
+      const reply = BusEtaBot.prepare_welcome_message('Jiayu');
+
+      const expected = {
+        "text": "*Hello Jiayu,*\n\nBus Eta Bot is a Telegram bot which can tell you how long you have to wait for your bus to arrive. \n\nTo get started, try sending me a bus stop code to get etas for, such as `96049`.\n\nAlternatively, you can also search for bus stops by sending me an inline query. To try this out, use the button below, \nor type my username (@BusEtaBot) followed by a bus stop code, description or road name in any chat.\n\nThanks for trying out Bus Eta Bot! If you find Bus Eta Bot useful, do help to spread the word or use /feedback and \nleave some feedback to help make Bus Eta Bot even better!\n\nIf you're stuck, you can get help with using Bus Eta Bot by sending /help.\n\nRegards,  \n*J*  \nBus Eta Bot Developer",
+        "params": {
+          "parse_mode": "markdown",
+          "reply_markup": "{\"inline_keyboard\":[[{\"text\":\"Get etas for bus stop 96049\",\"callback_data\":\"{\\\"t\\\":\\\"eta_demo\\\"}\"}],[{\"text\":\"Try an inline query\",\"switch_inline_query_current_chat\":\"Changi\"}]]}"
+        }
+      };
+
+      assert.deepEqual(reply, expected);
+    });
+  });
 });

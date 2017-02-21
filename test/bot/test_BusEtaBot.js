@@ -92,4 +92,35 @@ suite('BusEtaBot', function () {
         });
     });
   });
+
+  suite('start command handling', function () {
+    test('reply with welcome message', function () {
+      const spy = sinon.spy();
+
+      const original = BusEtaBot.prepare_welcome_message;
+      BusEtaBot.prepare_welcome_message = function () {
+        return {
+          send: spy
+        };
+      };
+
+      const update = {
+        "update_id": 100000000,
+        "message": {
+          "message_id": 1,
+          "from": {"id": 100000000, "first_name": "Jiayu", "username": "un"},
+          "chat": {"id": 100000000, "first_name": "Jiayu", "username": "un", "type": "private"},
+          "date": 1486817921,
+          "text": "/start",
+          "entities": [{"type": "bot_command", "offset": 0, "length": 6}]
+        }
+      };
+
+      const bot = new BusEtaBot();
+      return bot.handle(update)
+        .then(() => {
+          assert.isTrue(spy.calledOnce, 'reply.send should have been called once');
+        });
+    });
+  });
 });

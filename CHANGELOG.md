@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.3 - 2017-2-21
+
+### Added
+
+- Bot will respond with a helpful (hopefully) welcome message after receiving /start.
+
 ## 2.0.2 - 2017-2-20
 
 ### Fixed

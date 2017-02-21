@@ -15,6 +15,8 @@ import {
   InlineQueryResultLocation
 } from '../lib/telegram';
 
+import strings from './strings';
+
 export default class BusEtaBot extends Bot {
   constructor(options = {}) {
     super();
@@ -32,16 +34,8 @@ export default class BusEtaBot extends Bot {
       const first_name = msg.first_name;
       const chat_id = msg.chat_id;
 
-      const text = `*Hello ${first_name}*,
-  
-Bus Eta Bot is a simple bot which can tell you the estimated time you have to wait for buses in Singapore. Its information comes from the same source as the official LTA MyTransport app and many other bus arrival time apps through the LTA Datamall API.
-
-To get started, send me a bus stop code or try /help to view available commands. I hope you will find Bus Eta Bot useful!`;
-
-      const reply = new OutgoingTextMessage(text);
-      reply.parse_mode('markdown');
-
-      return reply.send(chat_id);
+      return BusEtaBot.prepare_welcome_message(first_name)
+        .send(chat_id);
     });
 
     // version command handler
@@ -120,6 +114,18 @@ To get started, send me a bus stop code or try /help to view available commands.
         });
     });
 
+    // eta_demo handler
+    this.callback_query('eta_demo', (bot, cbq) => {
+      const bus_stop = '96049';
+
+      return this.prepare_eta_message(bus_stop)
+        .then(reply => {
+          const send = reply.send(cbq.message.chat_id);
+
+          return Promise.all([send, cbq.answer()]);
+        });
+    });
+
     // inline query handler
     this.inline_query((bot, ilq) => {
       const inline_query_id = ilq.inline_query_id;
@@ -174,6 +180,25 @@ To get started, send me a bus stop code or try /help to view available commands.
     return this.datastore.get_completions(query)
       .then(BusEtaBot.prepare_inline_query_answer);
   };
+
+  static prepare_welcome_message(first_name) {
+    const welcome = strings.welcome;
+    const text = welcome.replace('FIRST_NAME', first_name);
+
+    const reply = new OutgoingTextMessage(text);
+    reply.parse_mode('markdown');
+
+    const markup = new InlineKeyboardMarkup([[{
+      text: 'Get etas for bus stop 96049',
+      callback_data: JSON.stringify({t: 'eta_demo'})
+    }], [{
+      text: 'Try an inline query',
+      switch_inline_query_current_chat: 'Changi'
+    }]]);
+    reply.reply_markup(markup);
+
+    return reply;
+  }
 
   /**
    * Convert the result of an eta query to a message to be sent or updated on Telegram
