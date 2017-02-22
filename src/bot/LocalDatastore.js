@@ -1,6 +1,7 @@
 "use strict";
 
 import Geo from 'geo-nearby';
+import geolib from 'geolib';
 
 import Datastore from "./Datastore";
 
@@ -74,23 +75,28 @@ export default class LocalDatastore extends Datastore {
   get_nearby_bus_stops(lat, lon) {
     return Promise.resolve()
       .then(() => {
-        // limit of 50 is is the max number of results for an inline query
+        // 50 is is the max number of results for an inline query
+        // 10 suggestions should be more than enough
         // no need for sorted: true because bsearch seems to be slower with our dataset
-        const geo = new Geo(this.locations, {limit: 50});
+        const geo = new Geo(this.locations, {limit: 10});
 
         // ok use a 600m radius
-        const nearby = geo.nearBy(lat, lon, 600);
+        const nearby = geo.nearBy(lat, lon, 600)
+          .map(nb => {
+            const bs = this.info[nb.i];
+            return {
+              id: nb.i,
+              description: bs.d,
+              road: bs.r,
+              latitude: bs.lat,
+              longitude: bs.lon
+            };
+          });
 
-        return nearby.map(nb => {
-          const bs = this.info[nb.i];
-          return {
-            id: nb.i,
-            description: bs.d,
-            road: bs.r,
-            latitude: bs.lat,
-            longitude: bs.lon
-          };
-        });
+        // sort
+        const sorted = geolib.orderByDistance({latitude: lat, longitude: lon}, nearby);
+
+        return sorted.map(s => nearby[s.key]);
       });
   }
 }

@@ -63,7 +63,9 @@ suite('LocalDatastore', function () {
 
   suite('get nearby bus stops', function () {
     test('reasonable location', function () {
-      return datastore.get_nearby_bus_stops(1.320299, 103.904771)
+      const [lat, lon] = [1.320299, 103.904771];
+
+      return datastore.get_nearby_bus_stops(lat, lon)
         .then(nearby => {
           assert.isTrue(nearby.length > 0, 'there are bus stops near this location');
         });

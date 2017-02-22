@@ -1,5 +1,11 @@
 # Change log
 
+## 2.0.7 - 2017-2-21
+
+### Changed
+
+- Empty inline queries sent with location will now return nearby bus stops sorted by closest first
+
 ## 2.0.6 - 2017-2-21
 ## 2.0.5 - 2017-2-21
 

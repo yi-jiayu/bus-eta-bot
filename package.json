@@ -1,6 +1,6 @@
 {
   "name": "bus-eta-bot",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "",
   "main": "transpiled/main.js",
   "scripts": {
@@ -24,6 +24,7 @@
   "dependencies": {
     "debug": "^2.6.1",
     "geo-nearby": "^2.0.1",
+    "geolib": "^2.0.22",
     "moment-timezone": "^0.5.11",
     "request": "^2.79.0",
     "source-map-support": "^0.4.11",
