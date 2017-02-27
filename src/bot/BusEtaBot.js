@@ -54,7 +54,12 @@ export default class BusEtaBot extends Bot {
 
     // todo: feedback command handler
 
-    // todo: help command handler
+    this.command('help', (bot, msg) => {
+      const chat_id = msg.chat_id;
+
+      return new OutgoingTextMessage("Here's home help on how to use Bus Eta Bot:\n\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23", {parse_mode: 'markdown'})
+        .send(chat_id);
+    });
 
     // text message handler
     this.message(message_types.TEXT, (bot, msg) => {
