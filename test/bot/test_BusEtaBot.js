@@ -151,4 +151,61 @@ suite('BusEtaBot', function () {
         });
     });
   });
+
+  suite('about command handling', function () {
+    suite('', function () {
+      const update = {
+        "update_id": 100000000,
+        "message": {
+          "message_id": 1,
+          "from": {"id": 100000000, "first_name": "fn", "username": "un"},
+          "chat": {"id": 100000000, "first_name": "fn", "username": "un", "type": "private"},
+          "date": 1486817921,
+          "text": "/about",
+          "entities": [{"type": "bot_command", "offset": 0, "length": 6}]
+        }
+      };
+
+      const spy = sinon.spy();
+      BusEtaBot.prepare_about_message = function () {
+        return {
+          send: spy
+        };
+      };
+      const bot = new BusEtaBot();
+      return bot.handle(update)
+        .then(() => {
+          assert.isTrue(spy.calledOnce, 'reply.send should have been called');
+        });
+    });
+  });
+
+  suite('version command handling', function () {
+    suite('', function () {
+      const update = {
+        "update_id": 100000000,
+        "message": {
+          "message_id": 1,
+          "from": {"id": 100000000, "first_name": "fn", "username": "un"},
+          "chat": {"id": 100000000, "first_name": "fn", "username": "un", "type": "private"},
+          "date": 1486817921,
+          "text": "/version",
+          "entities": [{"type": "bot_command", "offset": 0, "length": 8}]
+        }
+      };
+
+      const spy = sinon.spy();
+      BusEtaBot.prepare_about_message = function () {
+        return {
+          send: spy
+        };
+      };
+      const bot = new BusEtaBot();
+      return bot.handle(update)
+        .then(() => {
+          assert.isTrue(spy.calledOnce, 'reply.send should have been called');
+        });
+    });
+  });
+
 });

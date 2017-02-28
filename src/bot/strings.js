@@ -16,7 +16,8 @@ If you're stuck, you can get help with using Bus Eta Bot by sending /help.
 Regards,  
 *J*  
 Bus Eta Bot Developer`,
-  help: "Here's some help on how to use Bus Eta Bot:\n\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23"
+  help: "Here's some help on how to use Bus Eta Bot:\n\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23",
+  about: "Bus Eta Bot $VERSION\n\nhttps://github.com/yi-jiayu/bus-eta-bot",
 };
 
 export default strings;

@@ -42,15 +42,16 @@ export default class BusEtaBot extends Bot {
     this.command('version', (bot, msg) => {
       const chat_id = msg.chat_id;
 
-      const version = require('../../package.json').version;
-
-      const text = `Bus Eta Bot version ${version}`;
-      const reply = new OutgoingTextMessage(text);
-
+      const reply = BusEtaBot.prepare_about_message();
       return reply.send(chat_id);
     });
 
-    // todo: about command handler
+    this.command('about', (bot, msg) => {
+      const chat_id = msg.chat_id;
+
+      const reply = BusEtaBot.prepare_about_message();
+      return reply.send(chat_id);
+    });
 
     // todo: feedback command handler
 
@@ -223,6 +224,13 @@ export default class BusEtaBot extends Bot {
   static prepare_help_message() {
     const help = strings.help;
     return new OutgoingTextMessage(help);
+  }
+
+  static prepare_about_message() {
+    const about = strings.about;
+    const text = about.replace('$VERSION', require('../../package.json').version);
+
+    return new OutgoingTextMessage(text);
   }
 
   static prepare_welcome_message(first_name) {
