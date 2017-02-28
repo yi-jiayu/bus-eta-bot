@@ -57,7 +57,7 @@ export default class BusEtaBot extends Bot {
     this.command('help', (bot, msg) => {
       const chat_id = msg.chat_id;
 
-      return new OutgoingTextMessage("Here's home help on how to use Bus Eta Bot:\n\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23", {parse_mode: 'markdown'})
+      return BusEtaBot.prepare_help_message()
         .send(chat_id);
     });
 
@@ -219,6 +219,11 @@ export default class BusEtaBot extends Bot {
     return this.datastore.get_completions(query)
       .then(BusEtaBot.prepare_inline_query_answer);
   };
+
+  static prepare_help_message() {
+    const help = strings.help;
+    return new OutgoingTextMessage(help);
+  }
 
   static prepare_welcome_message(first_name) {
     const welcome = strings.welcome;

@@ -123,4 +123,32 @@ suite('BusEtaBot', function () {
         });
     });
   });
+
+  suite('help command handling', function () {
+    test('help command', function () {
+      const update = {
+        "update_id": 100000000,
+        "message": {
+          "message_id": 1,
+          "from": {"id": 100000000, "first_name": "fn", "username": "un"},
+          "chat": {"id": 100000000, "first_name": "fn", "username": "un", "type": "private"},
+          "date": 1486817921,
+          "text": "/help",
+          "entities": [{"type": "bot_command", "offset": 0, "length": 5}]
+        }
+      };
+
+      const spy = sinon.spy();
+      BusEtaBot.prepare_help_message = function () {
+        return {
+          send: spy
+        };
+      };
+      const bot = new BusEtaBot();
+      return bot.handle(update)
+        .then(() => {
+          assert.isTrue(spy.calledOnce, 'reply.send should have been called');
+        });
+    });
+  });
 });

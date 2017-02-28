@@ -241,4 +241,17 @@ suite('BusEtaBot static functions', function () {
       assert.deepEqual(reply, expected);
     });
   });
+
+  suite('prepare help message', function () {
+    test('', function () {
+      const reply = BusEtaBot.prepare_help_message();
+
+      const expected = {
+        "text": "Here's some help on how to use Bus Eta Bot:\n\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23",
+        "params": {}
+      };
+
+      assert.deepEqual(reply, expected);
+    });
+  });
 });

@@ -1,5 +1,11 @@
 # Change log
 
+## 2.0.8 - 2017-2-28
+
+### Added
+
+- Bot with respond with /help commands with a link to a helpful article.
+
 ## 2.0.7 - 2017-2-21
 
 ### Changed
