@@ -6,7 +6,7 @@ machine:
 test:
   override:
     - npm run nyc --silent
-    - npm run report
+    - npm run coverage
   post:
     - bash <(curl -s https://codecov.io/bash)
 deployment:
