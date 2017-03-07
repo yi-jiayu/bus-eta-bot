@@ -18,7 +18,7 @@ suite('BusEtaBot static functions', function () {
         chat_id: 0,
         text: '*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n+-----+------+-----+-----+\n| Svc | Next | 2nd | 3rd |\n|-----|------|-----|-----|\n| 2   | 1    | 15  | 18  |\n|-----|------|-----|-----|\n| 24  | -2   | 7   | 22  |\n+-----+------+-----+-----+\n```\n_Last updated: Feb 9, 2017 1:14 PM._',
         parse_mode: 'markdown',
-        reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"eta\\",\\"b\\":\\"96049\\"}"}]]}',
+        reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"refresh\\",\\"b\\":\\"96049\\",\\"s\\":[]}"}]]}',
         method: 'sendMessage'
       });
     });
@@ -31,11 +31,12 @@ suite('BusEtaBot static functions', function () {
           {svc_no: '24', next: -2, subsequent: 7, third: 22}]
       });
 
+
       assert.deepEqual(msg.serialise_send(0), {
         chat_id: 0,
         text: '*96049*\n```\n+-----+------+-----+-----+\n| Svc | Next | 2nd | 3rd |\n|-----|------|-----|-----|\n| 2   | 1    | 15  | 18  |\n|-----|------|-----|-----|\n| 24  | -2   | 7   | 22  |\n+-----+------+-----+-----+\n```\n_Last updated: Feb 9, 2017 1:14 PM._',
         parse_mode: 'markdown',
-        reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"eta\\",\\"b\\":\\"96049\\"}"}]]}',
+        reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"refresh\\",\\"b\\":\\"96049\\",\\"s\\":[]}"}]]}',
         method: 'sendMessage'
       });
     });
@@ -51,17 +52,15 @@ suite('BusEtaBot static functions', function () {
       });
 
       assert.deepEqual(msg.serialise_send(0), {
-        "chat_id": 0,
-        "method": "sendMessage",
-        "parse_mode": "markdown",
-        "reply_markup": "{\"inline_keyboard\":[[{\"text\":\"Refresh\",\"callback_data\":\"{\\\"t\\\":\\\"eta\\\",\\\"b\\\":\\\"96049\\\",\\\"s\\\":[\\\"2\\\"]}\"}]]}",
-        "text": "*96049*\n```\n+-----+------+-----+-----+\n| Svc | Next | 2nd | 3rd |\n|-----|------|-----|-----|\n| 2   | 1    | 15  | 18  |\n+-----+------+-----+-----+\n1 more service not shown.```\n_Last updated: Feb 9, 2017 1:14 PM._"
+        chat_id: 0,
+        text: '*96049*\n```\n+-----+------+-----+-----+\n| Svc | Next | 2nd | 3rd |\n|-----|------|-----|-----|\n| 2   | 1    | 15  | 18  |\n+-----+------+-----+-----+\n1 more service not shown.```\n_Last updated: Feb 9, 2017 1:14 PM._',
+        parse_mode: 'markdown',
+        reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"refresh\\",\\"b\\":\\"96049\\",\\"s\\":[\\"2\\"]}"}]]}',
+        method: 'sendMessage'
       });
     });
 
     test('compact table when showing many services', function () {
-      this.timeout(20000);
-
       const msg = BusEtaBot.format_eta_message({
         updated: '2017-02-09T05:14:44.374Z',
         bus_stop_id: '96049',
@@ -77,13 +76,11 @@ suite('BusEtaBot static functions', function () {
           {svc_no: '24', next: -2, subsequent: 7, third: 22}]
       }, {info: {description: 'Opp Tropicana Condo', road: 'Upp Changi Rd East'}});
 
-      assert.deepEqual(msg.serialise_send(0), {
-        chat_id: 0,
+      assert.deepEqual(msg.serialise_send(0), { chat_id: 0,
         text: '*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\nSvc  Next  2nd  3rd  \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n```\n_Last updated: Feb 9, 2017 1:14 PM._',
         parse_mode: 'markdown',
-        reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"eta\\",\\"b\\":\\"96049\\"}"}]]}',
-        method: 'sendMessage'
-      });
+        reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"refresh\\",\\"b\\":\\"96049\\",\\"s\\":[]}"}]]}',
+        method: 'sendMessage' });
     });
   });
 

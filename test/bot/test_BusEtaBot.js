@@ -14,7 +14,7 @@ suite('BusEtaBot', function () {
 
       const answer_cbq_spy = sinon.spy();
 
-      bot._callback_query_handlers['eta'].unshift((bot, cbq) => {
+      bot._callback_query_handlers['refresh'].unshift((bot, cbq) => {
         cbq.answer = answer_cbq_spy;
       });
 
@@ -36,7 +36,7 @@ suite('BusEtaBot', function () {
             }, {"type": "italic", "offset": 404, "length": 35}]
           },
           "chat_instance": "10000000000000000",
-          "data": "{\"t\":\"eta\",\"b\":\"83151\"}"
+          "data": "{\"t\":\"refresh\",\"b\":\"83151\"}"
         }
       };
 
@@ -61,7 +61,7 @@ suite('BusEtaBot', function () {
 
       const answer_cbq_spy = sinon.spy();
 
-      bot._callback_query_handlers['eta'].unshift((bot, cbq) => {
+      bot._callback_query_handlers['refresh'].unshift((bot, cbq) => {
         cbq.answer = answer_cbq_spy;
       });
 
@@ -72,7 +72,7 @@ suite('BusEtaBot', function () {
           "from": {"id": 100000000, "first_name": "fn", "username": "un"},
           "inline_message_id": "aeoudhtns",
           "chat_instance": "1000000000",
-          "data": "{\"t\":\"eta\",\"b\":\"62109\"}"
+          "data": "{\"t\":\"refresh\",\"b\":\"62109\"}"
         }
       };
 
@@ -153,7 +153,7 @@ suite('BusEtaBot', function () {
   });
 
   suite('about command handling', function () {
-    suite('', function () {
+    test('', function () {
       const update = {
         "update_id": 100000000,
         "message": {
@@ -181,7 +181,7 @@ suite('BusEtaBot', function () {
   });
 
   suite('version command handling', function () {
-    suite('', function () {
+    test('', function () {
       const update = {
         "update_id": 100000000,
         "message": {

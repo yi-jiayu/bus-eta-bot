@@ -73,7 +73,7 @@ export default class BusEtaBot extends Bot {
       // and the service numbers be the subsequent words
       const {bus_stop_id, service_nos} = BusEtaBot.infer_bus_stop_and_service_nos(text);
 
-      return this.prepare_eta_message(bus_stop_id, service_nos)
+      return this.prepare_eta_message(bus_stop_id, service_nos, {show_resend_button: true})
         .then(reply => reply.send(chat_id));
     });
 
@@ -101,18 +101,18 @@ export default class BusEtaBot extends Bot {
       // and the service numbers be the subsequent words
       const {bus_stop_id, service_nos} = BusEtaBot.infer_bus_stop_and_service_nos(args);
 
-      return this.prepare_eta_message(bus_stop_id, service_nos)
+      return this.prepare_eta_message(bus_stop_id, service_nos, {show_resend_button: true})
         .then(reply => reply.send(chat_id));
     });
 
     // callback query handler
-    this.callback_query('eta', (bot, cbq) => {
+    this.callback_query('refresh', (bot, cbq) => {
       const cbq_from_ilq = cbq.inline_message_id !== null;
 
       const cbq_data = JSON.parse(cbq.data);
       const {b: bus_stop, s: service_nos} = cbq_data;
 
-      return this.prepare_eta_message(bus_stop, service_nos)
+      return this.prepare_eta_message(bus_stop, service_nos, {show_resend_button: !cbq_from_ilq})
         .then(reply => {
           let update;
 
@@ -124,6 +124,25 @@ export default class BusEtaBot extends Bot {
 
           return Promise.all([update, cbq.answer({text: 'Etas updated!'})]);
         });
+    });
+
+    // resend callback query handler
+    this.callback_query('resend', (bot, cbq) => {
+      if (cbq.inline_message_id) {
+        console.error('warning: not expecting resend callback query to come from inline message');
+      }
+
+      const chat_id = cbq.message.chat_id;
+
+      const cbq_data = JSON.parse(cbq.data);
+      const {b: bus_stop, s: service_nos} = cbq_data;
+
+
+
+      const reply = this.prepare_eta_message(bus_stop, service_nos, {show_resend_button: true});
+      const send = reply.send(chat_id);
+
+      return Promise.all([send, cbq.answer()]);
     });
 
     // eta_demo handler
@@ -166,7 +185,9 @@ export default class BusEtaBot extends Bot {
     });
   }
 
-  prepare_eta_message(bus_stop, services) {
+  prepare_eta_message(bus_stop, services, options = {}) {
+    const show_resend_button = options.show_resend_button === true;
+
     return this.eta_provider.get_etas(bus_stop)
       .then(etas => {
         if (etas.etas.length === 0) {
@@ -182,7 +203,7 @@ export default class BusEtaBot extends Bot {
             });
         } else {
           return this.datastore.get_bus_stop_info(bus_stop)
-            .then(info => BusEtaBot.format_eta_message(etas, {services: services, info}));
+            .then(info => BusEtaBot.format_eta_message(etas, {services, info, show_resend_button}));
         }
       });
   }
@@ -260,6 +281,7 @@ export default class BusEtaBot extends Bot {
    * @param {object} [options.info}
    * @param {string} options.info.description
    * @param {string} options.info.road
+   * @param {boolean} [options.show_resend_button]
    * @returns {OutgoingTextMessage}
    */
   static format_eta_message(etas, options = {}) {
@@ -327,19 +349,28 @@ ${info.road}`;
 _${updated_time}_`;
 
     const message = new OutgoingTextMessage(text);
-    const callback_data = {
-      t: 'eta',
-      b: etas.bus_stop_id
-    };
 
-    if (valid_services.length > 0) {
-      callback_data.s = services;
+    const buttons = [[{
+      text: 'Refresh',
+      callback_data: JSON.stringify({
+        t: 'refresh',
+        b: etas.bus_stop_id,
+        s: services
+      })
+    }]];
+
+    if (options.show_resend_button === true) {
+      buttons[0].push({
+        text: 'Resend',
+        callback_data: JSON.stringify({
+          t: 'resend',
+          b: etas.bus_stop_id,
+          s: services
+        })
+      });
     }
 
-    const markup = new InlineKeyboardMarkup([[{
-      text: 'Refresh',
-      callback_data: JSON.stringify(callback_data)
-    }]]);
+    const markup = new InlineKeyboardMarkup(buttons);
     message.reply_markup(markup);
     message.parse_mode('markdown');
 

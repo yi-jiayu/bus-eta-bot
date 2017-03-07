@@ -1,5 +1,11 @@
 # Change log
 
+## 2.0.9 - 2017-3-7
+
+### Added
+
+- Eta results sent directly by the bot will have a resend button to have the bot send that eta query as a new message.
+
 ## 2.0.8 - 2017-2-28
 
 ### Added
