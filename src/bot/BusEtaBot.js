@@ -14,6 +14,7 @@ import {
   InlineKeyboardMarkup,
   InlineQueryResultLocation
 } from '../lib/telegram';
+import { event_types } from './Analytics';
 
 import strings from './strings';
 
@@ -36,6 +37,13 @@ export default class BusEtaBot extends Bot {
 
       return BusEtaBot.prepare_welcome_message(first_name)
         .send(chat_id);
+    }, (bot, msg) => {
+      const event = event_types.start_command;
+      const details = {
+        user_id: msg.user_id
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // version command handler
@@ -44,14 +52,29 @@ export default class BusEtaBot extends Bot {
 
       const reply = BusEtaBot.prepare_about_message();
       return reply.send(chat_id);
+    }, (bot, msg) => {
+      const event = event_types.version_command;
+      const details = {
+        user_id: msg.user_id
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     this.command('about', (bot, msg) => {
-      const chat_id = msg.chat_id;
+        const chat_id = msg.chat_id;
 
-      const reply = BusEtaBot.prepare_about_message();
-      return reply.send(chat_id);
-    });
+        const reply = BusEtaBot.prepare_about_message();
+        return reply.send(chat_id);
+      },
+      (bot, msg) => {
+        const event = event_types.about_command;
+        const details = {
+          user_id: msg.user_id
+        };
+
+        return this.analytics.log_event(event, details);
+      });
 
     // todo: feedback command handler
 
@@ -60,6 +83,13 @@ export default class BusEtaBot extends Bot {
 
       return BusEtaBot.prepare_help_message()
         .send(chat_id);
+    }, (bot, msg) => {
+      const event = event_types.help_command;
+      const details = {
+        user_id: msg.user_id
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // text message handler
@@ -75,6 +105,14 @@ export default class BusEtaBot extends Bot {
 
       return this.prepare_eta_message(bus_stop_id, service_nos, {show_resend_button: true})
         .then(reply => reply.send(chat_id));
+    }, (bot, msg) => {
+      // todo: account for non-eta request text messages as well
+      const event = event_types.eta_text_message;
+      const details = {
+        user_id: msg.user_id
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // eta command handler
@@ -103,6 +141,15 @@ export default class BusEtaBot extends Bot {
 
       return this.prepare_eta_message(bus_stop_id, service_nos, {show_resend_button: true})
         .then(reply => reply.send(chat_id));
+    }, (bot, msg) => {
+      // todo: account for two part eta queries
+
+      const event = event_types.eta_command;
+      const details = {
+        user_id: msg.user_id
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // callback query handler
@@ -124,6 +171,14 @@ export default class BusEtaBot extends Bot {
 
           return Promise.all([update, cbq.answer({text: 'Etas updated!'})]);
         });
+    }, (bot, cbq) => {
+      const event = event_types.refresh_callback;
+      const details = {
+        user_id: cbq.user_id,
+        from_inline_query: cbq.inline_message_id !== null
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // resend callback query handler
@@ -137,12 +192,17 @@ export default class BusEtaBot extends Bot {
       const cbq_data = JSON.parse(cbq.data);
       const {b: bus_stop, s: service_nos} = cbq_data;
 
-
-
       const reply = this.prepare_eta_message(bus_stop, service_nos, {show_resend_button: true});
-      const send = reply.send(chat_id);
 
-      return Promise.all([send, cbq.answer()]);
+      return Promise.all([reply.send(chat_id), cbq.answer()]);
+    }, (bot, cbq) => {
+      const event = event_types.resend_callback;
+      const details = {
+        user_id: cbq.user_id,
+        from_inline_query: cbq.inline_message_id !== null
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // eta_demo handler
@@ -155,6 +215,14 @@ export default class BusEtaBot extends Bot {
 
           return Promise.all([send, cbq.answer()]);
         });
+    }, (bot, cbq) => {
+      const event = event_types.eta_demo_callback;
+      const details = {
+        user_id: cbq.user_id,
+        from_inline_query: cbq.inline_message_id !== null
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // inline query handler
@@ -169,6 +237,13 @@ export default class BusEtaBot extends Bot {
             console.error('info: inline query returned no results');
           }
         });
+    }, (bot, ilq) => {
+      const event = event_types.inline_query;
+      const details = {
+        user_id: ilq.user_id
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // chosen inline result handler
@@ -182,6 +257,13 @@ export default class BusEtaBot extends Bot {
       const bus_stop = cir.result_id;
       return this.prepare_eta_message(bus_stop)
         .then(reply => reply.update_inline_message(inline_message_id));
+    }, (bot, cir) => {
+      const event = event_types.chosen_inline_result;
+      const details = {
+        user_id: cir.user_id
+      };
+
+      return this.analytics.log_event(event, details);
     });
   }
 

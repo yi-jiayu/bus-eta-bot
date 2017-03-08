@@ -14,7 +14,7 @@ cp -R transpiled dist/transpiled
 Write-Output "Copying package.json to dist folder"
 node -e "var fs = require('fs'); var a = require('./package.json'); delete a.devDependencies; fs.writeFileSync('dist/package.json', JSON.stringify(a))"
 
-Write-Output "Copying .env.json to dist folder"
+Write-Output "Copying $($stage).env.json to dist folder"
 cp "$($stage).env.json" dist/.env.json
 
 Write-Output "Deploying"
