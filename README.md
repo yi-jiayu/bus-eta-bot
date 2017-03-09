@@ -29,3 +29,5 @@ This is a rewrite of my [previous bus eta bot](https://github.com/yi-jiayu/bus-e
 
 ## Architecture
 Bus Eta Bot v1 was deployed as an AWS Lambda function and used DynamoDB for persisting user state such as whether the user was in the middle of a /eta command, eta histories and saved queries. V2 avoids having to maintain state by using Telegram message replies to handle user interaction and dropping the history and favourites features. However, v2 does have to store bus stop information. While it is possible to do so in an external database, the number of bus stops (~5300) was low enough to just load a local JSON file with the bus stop details. Further performance monitoring is required to find out if this solution is satisfactory or a RDBMS- or Redis-based would be better.
+
+## [Privacy Policy](PRIVACY.md)

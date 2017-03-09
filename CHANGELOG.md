@@ -1,5 +1,17 @@
 # Change log
 
+## 2.0.10 -2017-3-9
+
+### Added
+
+- Bot will respond to /feedback commands with a placeholder message while the feedback command is still being 
+implemented.
+- Added privacy policy [here](PRIVACY.md) with regards to the addition of analytics code.
+
+### Under the hood
+
+- Added analytics code to track anonymous usage statics.
+
 ## 2.0.9 - 2017-3-7
 
 ### Added
