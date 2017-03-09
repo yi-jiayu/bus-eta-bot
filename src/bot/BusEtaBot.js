@@ -128,6 +128,21 @@ export default class BusEtaBot extends Bot {
       return this.analytics.log_event(event, details);
     });
 
+    // privacy command handler
+    this.command('privacy', (bot, msg) => {
+      const chat_id = msg.chat_id;
+
+      return BusEtaBot.prepare_privacy_message()
+        .send(chat_id);
+    }, (bot, msg) => {
+      const event = 'privacy_command';
+      const details = {
+        user_id: msg.user_id
+      };
+
+      return this.analytics.log_event(event, details);
+    });
+
     // eta command handler
     this.command('eta', (bot, msg, args) => {
       const chat_id = msg.chat_id;
@@ -336,6 +351,11 @@ export default class BusEtaBot extends Bot {
     return this.datastore.get_completions(query)
       .then(BusEtaBot.prepare_inline_query_answer);
   };
+
+  static prepare_privacy_message() {
+    const privacy = strings.privacy;
+    return new OutgoingTextMessage(privacy, {parse_mode: 'markdown'});
+  }
 
   static prepare_feedback_message() {
     const feedback = strings.feedback;

@@ -1,6 +1,12 @@
 # Change log
 
-## 2.0.10 -2017-3-9
+## 2.1.0-rc1 - 2017-3-9
+
+### Added
+
+- Added /privacy command which links to the privacy policy.
+
+## 2.0.10 - 2017-3-9
 
 ### Added
 

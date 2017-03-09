@@ -21,6 +21,7 @@ Bus Eta Bot Developer`,
 However, we're really sorry that the feedback command is still under construction 😅 
 
 Nevertheless, if you have any pressing issues you wish to bring up, do leave an issue on our Github page [here](https://github.com/yi-jiayu/bus-eta-bot/issues)!`,
+  privacy: "You can find Bus Eta Bot's privacy policy [here](http://telegra.ph/Bus-Eta-Bot-Privacy-Policy-03-09)."
 };
 
 export default strings;
