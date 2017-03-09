@@ -76,11 +76,13 @@ suite('BusEtaBot static functions', function () {
           {svc_no: '24', next: -2, subsequent: 7, third: 22}]
       }, {info: {description: 'Opp Tropicana Condo', road: 'Upp Changi Rd East'}});
 
-      assert.deepEqual(msg.serialise_send(0), { chat_id: 0,
+      assert.deepEqual(msg.serialise_send(0), {
+        chat_id: 0,
         text: '*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\nSvc  Next  2nd  3rd  \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n2    1     15   18   \n24   -2    7    22   \n```\n_Last updated: Feb 9, 2017 1:14 PM._',
         parse_mode: 'markdown',
         reply_markup: '{"inline_keyboard":[[{"text":"Refresh","callback_data":"{\\"t\\":\\"refresh\\",\\"b\\":\\"96049\\",\\"s\\":[]}"}]]}',
-        method: 'sendMessage' });
+        method: 'sendMessage'
+      });
     });
   });
 
@@ -228,7 +230,7 @@ suite('BusEtaBot static functions', function () {
       const reply = BusEtaBot.prepare_welcome_message('Jiayu');
 
       const expected = {
-        "text": "*Hello Jiayu,*\n\nBus Eta Bot is a Telegram bot which can tell you how long you have to wait for your bus to arrive. \n\nTo get started, try sending me a bus stop code to get etas for, such as `96049`.\n\nAlternatively, you can also search for bus stops by sending me an inline query. To try this out, use the button below, \nor type my username (@BusEtaBot) followed by a bus stop code, description or road name in any chat.\n\nThanks for trying out Bus Eta Bot! If you find Bus Eta Bot useful, do help to spread the word or use /feedback and \nleave some feedback to help make Bus Eta Bot even better!\n\nIf you're stuck, you can get help with using Bus Eta Bot by sending /help.\n\nRegards,  \n*J*  \nBus Eta Bot Developer",
+        "text": "*Hello Jiayu,*\n\nBus Eta Bot is a Telegram bot which can tell you how long you have to wait for your bus to arrive. \n\nTo get started, try sending me a bus stop code to get etas for, such as `96049`.\n\nAlternatively, you can also search for bus stops by sending me an inline query. To try this out, use the button below, or type my username (@BusEtaBot) followed by a bus stop code, description or road name in any chat.\n\nThanks for trying out Bus Eta Bot! If you find Bus Eta Bot useful, do help to spread the word or use /feedback and leave some feedback to help make Bus Eta Bot even better!\n\nIf you're stuck, you can get help with using Bus Eta Bot by sending /help.\n\nRegards,  \n*J*  \nBus Eta Bot Developer",
         "params": {
           "parse_mode": "markdown",
           "reply_markup": "{\"inline_keyboard\":[[{\"text\":\"Get etas for bus stop 96049\",\"callback_data\":\"{\\\"t\\\":\\\"eta_demo\\\"}\"}],[{\"text\":\"Try an inline query\",\"switch_inline_query_current_chat\":\"Changi\"}]]}"

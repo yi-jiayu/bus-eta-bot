@@ -77,6 +77,19 @@ export default class BusEtaBot extends Bot {
       });
 
     // todo: feedback command handler
+    this.command('feedback', (bot, msg) => {
+      const chat_id = msg.chat_id;
+
+      return BusEtaBot.prepare_feedback_message()
+        .send(chat_id);
+    }, (bot, msg) => {
+      const event = 'feedback_unimplemented';
+      const details = {
+        user_id: msg.user_id
+      };
+
+      return this.analytics.log_event(event, details);
+    });
 
     this.command('help', (bot, msg) => {
       const chat_id = msg.chat_id;
@@ -323,6 +336,11 @@ export default class BusEtaBot extends Bot {
     return this.datastore.get_completions(query)
       .then(BusEtaBot.prepare_inline_query_answer);
   };
+
+  static prepare_feedback_message() {
+    const feedback = strings.feedback;
+    return new OutgoingTextMessage(feedback, {parse_mode: 'markdown'});
+  }
 
   static prepare_help_message() {
     const help = strings.help;
