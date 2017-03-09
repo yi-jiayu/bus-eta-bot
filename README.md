@@ -1,5 +1,7 @@
 [![CircleCI](https://circleci.com/gh/yi-jiayu/bus-eta-bot.svg?style=shield)](https://circleci.com/gh/yi-jiayu/bus-eta-bot)
 [![codecov](https://codecov.io/gh/yi-jiayu/bus-eta-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/yi-jiayu/bus-eta-bot)
+[![Build Status](https://semaphoreci.com/api/v1/jiayu/bus-eta-bot/branches/master/shields_badge.svg)](https://semaphoreci.com/jiayu/bus-eta-bot)
+[![Coverage Status](https://coveralls.io/repos/github/yi-jiayu/bus-eta-bot/badge.svg?branch=master)](https://coveralls.io/github/yi-jiayu/bus-eta-bot?branch=master)
 
 # Bus Eta Bot
 A Telegram bot for checking bus etas in Singapore
