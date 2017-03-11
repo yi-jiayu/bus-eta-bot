@@ -18,4 +18,4 @@ Write-Output "Copying $($stage).env.json to dist folder"
 cp "$($stage).env.json" dist/.env.json
 
 Write-Output "Deploying"
-gcloud alpha functions deploy "bus-eta-bot-$stage" --stage-bucket bus-eta-bot-src --entry-point main --local-path dist --memory 128MB --timeout 60 --trigger-http
+gcloud beta functions deploy "bus-eta-bot-$stage" --stage-bucket bus-eta-bot-src --entry-point main --local-path dist --memory 128MB --timeout 60 --trigger-http
