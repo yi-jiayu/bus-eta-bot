@@ -25,4 +25,4 @@ deployment:
       - cp -r transpiled dist/transpiled
       - cp .env.json dist/.env.json
       - node -e "var a = require('./package.json'); delete a.devDependencies; console.log(JSON.stringify(a))" > dist/package.json
-      - sudo /opt/google-cloud-sdk/bin/gcloud alpha functions deploy bus-eta-bot-staging --stage-bucket bus-eta-bot-src --local-path dist --entry-point main --memory 128MB --timeout 60 --trigger-http
+      - sudo /opt/google-cloud-sdk/bin/gcloud beta functions deploy bus-eta-bot-staging --stage-bucket bus-eta-bot-src --local-path dist --entry-point main --memory 128MB --timeout 60 --trigger-http
