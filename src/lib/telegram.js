@@ -153,7 +153,7 @@ export class CallbackQuery {
     }
   }
 
-  _prepare_answer(options) {
+  _prepare_answer(options = {}) {
     const params = {
       callback_query_id: this.callback_query_id
     };
@@ -176,7 +176,7 @@ export class CallbackQuery {
    * @param {string} [options.url]
    * @param {number} [options.cache_time]
    */
-  answer(options) {
+  answer(options = {}) {
     return this._prepare_answer(options).do();
   }
 }

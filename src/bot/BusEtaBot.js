@@ -226,14 +226,12 @@ export default class BusEtaBot extends Bot {
       const cbq_data = JSON.parse(cbq.data);
       const {b: bus_stop, s: service_nos} = cbq_data;
 
-      const reply = this.prepare_eta_message(bus_stop, service_nos, {show_resend_button: true});
-
-      return Promise.all([reply.send(chat_id), cbq.answer()]);
+      return this.prepare_eta_message(bus_stop, service_nos, {show_resend_button: true})
+        .then(reply => Promise.all([reply.send(chat_id), cbq.answer()]))
     }, (bot, cbq) => {
       const event = event_types.resend_callback;
       const details = {
         user_id: cbq.user_id,
-        from_inline_query: cbq.inline_message_id !== null
       };
 
       return this.analytics.log_event(event, details);

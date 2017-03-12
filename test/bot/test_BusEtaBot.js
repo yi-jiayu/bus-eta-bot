@@ -8,8 +8,8 @@ import sinon from 'sinon';
 import BusEtaBot from '../../src/bot/BusEtaBot';
 
 suite('BusEtaBot', function () {
-  suite('callback query handling', function () {
-    test('callback query from message', function () {
+  suite('refresh callback query handling', function () {
+    test('from message', function () {
       const bot = new BusEtaBot();
 
       const answer_cbq_spy = sinon.spy();
@@ -56,7 +56,7 @@ suite('BusEtaBot', function () {
         });
     });
 
-    test('callback query from inline query', function () {
+    test('from inline query', function () {
       const bot = new BusEtaBot();
 
       const answer_cbq_spy = sinon.spy();
@@ -88,6 +88,55 @@ suite('BusEtaBot', function () {
         .then(() => {
           assert.isTrue(update_inline_message_spy.calledOnce, 'update_inline_message should have been called once');
           assert.isTrue(update_inline_message_spy.calledWith('aeoudhtns'), 'update_inline_message should have been called with the right inline_message_id');
+          assert.isTrue(answer_cbq_spy.calledOnce, 'cbq.answer should have been called once');
+        });
+    });
+  });
+
+  suite('resend callback query handling', function () {
+    test('from message', function () {
+      const bot = new BusEtaBot();
+
+      const answer_cbq_spy = sinon.spy();
+
+      bot._callback_query_handlers['resend'].unshift((bot, cbq) => {
+        cbq.answer = answer_cbq_spy;
+      });
+
+      const cbq = {
+        "update_id": 100000000,
+        "callback_query": {
+          "id": "100000000000000000",
+          "from": {"id": 100000000, "first_name": "fn", "username": "un"},
+          "message": {
+            "message_id": 85,
+            "from": {"id": 100000000, "first_name": "Bus Eta Bot", "username": "BusEtaBot"},
+            "chat": {"id": 100000000, "first_name": "fn", "username": "un", "type": "private"},
+            "date": 1487566812,
+            "text": "message_text",
+            "entities": [{"type": "bold", "offset": 0, "length": 25}, {
+              "type": "pre",
+              "offset": 39,
+              "length": 364
+            }, {"type": "italic", "offset": 404, "length": 35}]
+          },
+          "chat_instance": "10000000000000000",
+          "data": "{\"t\":\"resend\",\"b\":\"83151\"}"
+        }
+      };
+
+      const send_message_spy = sinon.spy();
+
+      bot.prepare_eta_message = function () {
+        return Promise.resolve({
+          send: send_message_spy
+        });
+      };
+
+      return bot.handle(cbq)
+        .then(() => {
+          assert.isTrue(send_message_spy.calledOnce, 'send should have been called on the prepared message.');
+          assert.isTrue(send_message_spy.calledWith(100000000), 'update_message should have been called with the right chat_id');
           assert.isTrue(answer_cbq_spy.calledOnce, 'cbq.answer should have been called once');
         });
     });
@@ -208,7 +257,7 @@ suite('BusEtaBot', function () {
     });
   });
 
-  suite('text message handling', function () {
+  suite('eta request handling', function () {
     test('bus stop only in text message', function () {
       const update = {
         "update_id": 100000000,
@@ -223,7 +272,19 @@ suite('BusEtaBot', function () {
 
       const bot = new BusEtaBot();
 
-      return bot.handle(update);
+      const send_message_spy = sinon.spy();
+
+      bot.prepare_eta_message = function () {
+        return Promise.resolve({
+          send: send_message_spy,
+        });
+      };
+
+      return bot.handle(update)
+        .then(() => {
+          assert.isTrue(send_message_spy.calledOnce, 'reply.send should have been called once');
+          assert.isTrue(send_message_spy.calledWith(100000000), 'reply.send should have been called with the right chat_id');
+        });
     });
   });
 });

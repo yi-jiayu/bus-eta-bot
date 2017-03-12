@@ -1,6 +1,12 @@
 # Change log
 
-## 2.1.1 - 2017
+## 2.1.2 - 2017-3-13
+
+### Fixed
+
+- Fixed broken resend button on eta results sent by the bot
+
+## 2.1.1 - 2017-3-13
 
 ### Added
 
