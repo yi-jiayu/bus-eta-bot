@@ -107,6 +107,12 @@ export default class BusEtaBot extends Bot {
 
     // text message handler
     this.message(message_types.TEXT, (bot, msg) => {
+      // ignore the message if it looks like an inline message from ourselves
+      if (msg.entities.length > 0 && !!msg.entities.find(e => e.type === 'bold') && !!msg.entities.find(e => e.type === 'code')) {
+        // fixme: hack to bypass the analytics code behind
+        return Promise.reject("hack to bypass the analytics code behind");
+      }
+
       const chat_id = msg.chat_id;
 
       // trim incoming text to an arbitrary limit of 100 chars
@@ -308,7 +314,7 @@ export default class BusEtaBot extends Bot {
                 return BusEtaBot.format_eta_message(etas, {services: services, info})
               } else {
                 // if there were no etas for a bus stop and it is not in our list of bus stops
-                return new OutgoingTextMessage(`Sorry, I couldn't find any information about that bus stop.`)
+                return new OutgoingTextMessage(`Sorry, I couldn't find any information about bus stop ${bus_stop}.`)
               }
             });
         } else {
@@ -452,6 +458,8 @@ export default class BusEtaBot extends Bot {
 
     if (excluded_services > 0) {
       eta_table += `${excluded_services} more ${excluded_services === 1 ? 'service' : 'services'} not shown.`;
+    } else if (etas.etas.length === 0) {
+      eta_table += `No bus services serving this bus stop.`;
     }
 
     const updated_time = `Last updated: ${moment(etas.updated).tz('Asia/Singapore').format('lll')}.`;

@@ -153,7 +153,7 @@ suite('BusEtaBot', function () {
   });
 
   suite('about command handling', function () {
-    test('', function () {
+    test('/about command', function () {
       const update = {
         "update_id": 100000000,
         "message": {
@@ -181,7 +181,7 @@ suite('BusEtaBot', function () {
   });
 
   suite('version command handling', function () {
-    test('', function () {
+    test('/version command', function () {
       const update = {
         "update_id": 100000000,
         "message": {
@@ -208,4 +208,22 @@ suite('BusEtaBot', function () {
     });
   });
 
+  suite('text message handling', function () {
+    test('bus stop only in text message', function () {
+      const update = {
+        "update_id": 100000000,
+        "message": {
+          "message_id": 1,
+          "from": {"id": 100000000, "first_name": "fn", "username": "un"},
+          "chat": {"id": 100000000, "first_name": "fn", "username": "un", "type": "private"},
+          "date": 1486817921,
+          "text": "96049"
+        }
+      };
+
+      const bot = new BusEtaBot();
+
+      return bot.handle(update);
+    });
+  });
 });

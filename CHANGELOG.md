@@ -1,5 +1,17 @@
 # Change log
 
+## 2.1.1 - 2017
+
+### Added
+
+- When the bot is unable to find etas for a bus stop, it will mention what bus code it tried to look up.
+- The bot will now mention if there are no bus services serving a bus stop, even if it has information about it. (This 
+is the case for bus stop codes such as "TPE" or "TENN9".)
+
+### Fixed
+
+- Bot will not respond with an error message when sent an inline query result from itself
+
 ## 2.1.0-rc1 - 2017-3-9
 
 ### Added
