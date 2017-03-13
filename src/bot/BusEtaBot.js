@@ -186,6 +186,36 @@ export default class BusEtaBot extends Bot {
       return this.analytics.log_event(event, details);
     });
 
+    // backwards compatible eta callback query handler
+    this.callback_query('eta', (bot, cbq) => {
+      const cbq_from_ilq = cbq.inline_message_id !== null;
+
+      const cbq_data = JSON.parse(cbq.data);
+
+      let bus_stop_id, service_nos;
+
+      if (cbq_data.hasOwnProperty('a')) {
+        // argstr style callback query data
+        ({bus_stop_id, service_nos} = BusEtaBot.infer_bus_stop_and_service_nos(cbq_data.a));
+      } else {
+        // new style callback query data
+        ({b: bus_stop_id, s: service_nos} = cbq_data);
+      }
+
+      return this.prepare_eta_message(bus_stop_id, service_nos, {show_resend_button: !cbq_from_ilq})
+        .then(reply => {
+          let update;
+
+          if (cbq_from_ilq) {
+            update = reply.update_inline_message(cbq.inline_message_id);
+          } else {
+            update = reply.update_message(cbq.message.chat_id, cbq.message.message_id);
+          }
+
+          return Promise.all([update, cbq.answer({text: 'Etas updated!'})]);
+        });
+    });
+
     // callback query handler
     this.callback_query('refresh', (bot, cbq) => {
       const cbq_from_ilq = cbq.inline_message_id !== null;
@@ -508,7 +538,7 @@ _${updated_time}_`;
    * @param {string} text
    * @returns {{bus_stop_id: string, service_nos: string[]}}
    */
-  static infer_bus_stop_and_service_nos(text) {
+  static infer_bus_stop_and_service_nos(text = '') {
     text = text.toUpperCase();
     let [bus_stop_id, ...service_nos] = text.split(' ');
     bus_stop_id = bus_stop_id.substr(0, 5);

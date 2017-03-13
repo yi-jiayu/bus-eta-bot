@@ -1,5 +1,11 @@
 # Change log
 
+## 2.1.3 - 2017-3-13
+
+### Fixed
+
+- Made bot backwards compatible with older callback query which used different callback_data formats
+
 ## 2.1.2 - 2017-3-13
 
 ### Fixed
