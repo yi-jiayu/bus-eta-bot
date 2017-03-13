@@ -214,6 +214,14 @@ export default class BusEtaBot extends Bot {
 
           return Promise.all([update, cbq.answer({text: 'Etas updated!'})]);
         });
+    }, (bot, cbq) => {
+      const event = event_types.refresh_callback;
+      const details = {
+        user_id: cbq.user_id,
+        from_inline_query: cbq.inline_message_id !== null,
+      };
+
+      return this.analytics.log_event(event, details);
     });
 
     // callback query handler
