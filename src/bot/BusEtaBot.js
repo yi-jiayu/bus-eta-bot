@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 import { table, getBorderCharacters } from 'table';
 import moment from 'moment-timezone';
@@ -110,7 +110,7 @@ export default class BusEtaBot extends Bot {
       // ignore the message if it looks like an inline message from ourselves
       if (msg.entities.length > 0 && !!msg.entities.find(e => e.type === 'bold') && !!msg.entities.find(e => e.type === 'code')) {
         // fixme: hack to bypass the analytics code behind
-        return Promise.reject("hack to bypass the analytics code behind");
+        return Promise.reject('hack to bypass the analytics code behind');
       }
 
       const chat_id = msg.chat_id;
@@ -257,7 +257,7 @@ export default class BusEtaBot extends Bot {
       const {b: bus_stop, s: service_nos} = cbq_data;
 
       return this.prepare_eta_message(bus_stop, service_nos, {show_resend_button: true})
-        .then(reply => Promise.all([reply.send(chat_id), cbq.answer()]))
+        .then(reply => Promise.all([reply.send(chat_id), cbq.answer()]));
     }, (bot, cbq) => {
       const event = event_types.resend_callback;
       const details = {
@@ -339,10 +339,10 @@ export default class BusEtaBot extends Bot {
             .then(info => {
               if (info) {
                 // if there were no etas for a bus stop but we have information about it
-                return BusEtaBot.format_eta_message(etas, {services: services, info})
+                return BusEtaBot.format_eta_message(etas, {services: services, info});
               } else {
                 // if there were no etas for a bus stop and it is not in our list of bus stops
-                return new OutgoingTextMessage(`Sorry, I couldn't find any information about bus stop ${bus_stop}.`)
+                return new OutgoingTextMessage(`Sorry, I couldn't find any information about bus stop ${bus_stop}.`);
               }
             });
         } else {
@@ -367,7 +367,7 @@ export default class BusEtaBot extends Bot {
         .then(nearby => {
           if (nearby.length === 0) {
             // if we can't find any nearby bus stops, just default to sending the completions for a blank query
-            console.log("prepare_inline_query: couldn't find any nearby bus stops, defaulting to completions");
+            console.log('prepare_inline_query: couldn\'t find any nearby bus stops, defaulting to completions');
             return this.datastore.get_completions(query)
             // don't cache results for empty queries or queries using location
               .then(completions => BusEtaBot.prepare_inline_query_answer(completions, {
@@ -384,7 +384,7 @@ export default class BusEtaBot extends Bot {
 
     return this.datastore.get_completions(query)
       .then(BusEtaBot.prepare_inline_query_answer);
-  };
+  }
 
   static prepare_privacy_message() {
     const privacy = strings.privacy;
@@ -455,7 +455,7 @@ export default class BusEtaBot extends Bot {
       if (services.length > 0) {
         if (services.indexOf(eta.svc_no) === -1) {
           excluded_services++;
-          continue
+          continue;
         } else {
           valid_services.push(eta.svc_no);
         }
@@ -474,9 +474,9 @@ export default class BusEtaBot extends Bot {
           paddingRight: 2
         },
         drawHorizontalLine: () => {
-          return false
+          return false;
         }
-      })
+      });
     } else {
       eta_table = table(eta_array, {
         border: getBorderCharacters('ramac')
@@ -487,7 +487,7 @@ export default class BusEtaBot extends Bot {
     if (excluded_services > 0) {
       eta_table += `${excluded_services} more ${excluded_services === 1 ? 'service' : 'services'} not shown.`;
     } else if (etas.etas.length === 0) {
-      eta_table += `No bus services serving this bus stop.`;
+      eta_table += 'No bus services serving this bus stop.';
     }
 
     const updated_time = `Last updated: ${moment(etas.updated).tz('Asia/Singapore').format('lll')}.`;

@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * @typedef {object} ParsedEtas
@@ -18,6 +18,6 @@ export default class EtaProvider {
       bus_stop_id,
       etas: [],
       updated: new Date()
-    })
+    });
   }
 }

@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 import request from 'request';
 

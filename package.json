@@ -10,7 +10,8 @@
     "report": "nyc report",
     "babel": "babel src --out-dir transpiled --copy-files --source-maps",
     "functions": "functions",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "eslint": "eslint src"
   },
   "repository": {
     "type": "git",
@@ -37,6 +38,7 @@
     "babel-preset-latest": "^6.22.0",
     "chai": "^3.5.0",
     "coveralls": "^2.12.0",
+    "eslint": "^3.17.1",
     "istanbul": "^0.4.5",
     "mocha": "^3.1.2",
     "ngeohash": "^0.6.0",

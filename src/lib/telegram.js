@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 import request from 'request';
 
@@ -31,7 +31,7 @@ class TelegramMethod {
         (err, res, body) => {
           if (err) reject(err);
           else resolve(body);
-        })
+        });
     });
   }
 }

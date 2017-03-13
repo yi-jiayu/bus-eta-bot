@@ -1,9 +1,9 @@
-"use strict";
+'use strict';
 
 import Geo from 'geo-nearby';
 import geolib from 'geolib';
 
-import Datastore from "./Datastore";
+import Datastore from './Datastore';
 
 export default class LocalDatastore extends Datastore {
   /**

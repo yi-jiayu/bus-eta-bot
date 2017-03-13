@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 import { get_etas } from '../lib/datamall';
 
-import EtaProvider from "./EtaProvider";
+import EtaProvider from './EtaProvider';
 
 const MILLISECONDS_IN_A_MINUTE = 60 * 1000;
 
@@ -28,10 +28,10 @@ export default class Datamall extends EtaProvider {
       const next = service.NextBus.EstimatedArrival !== ''
         ? Math.floor((new Date(service.NextBus.EstimatedArrival) - updated) / MILLISECONDS_IN_A_MINUTE)
         : placeholder;
-      const subsequent = service.SubsequentBus.EstimatedArrival != ''
+      const subsequent = service.SubsequentBus.EstimatedArrival !== ''
         ? Math.floor((new Date(service.SubsequentBus.EstimatedArrival) - updated) / MILLISECONDS_IN_A_MINUTE)
         : placeholder;
-      const third = service.SubsequentBus3.EstimatedArrival != ''
+      const third = service.SubsequentBus3.EstimatedArrival !== ''
         ? Math.floor((new Date(service.SubsequentBus3.EstimatedArrival) - updated) / MILLISECONDS_IN_A_MINUTE)
         : placeholder;
       etas.push({svc_no, next, subsequent, third});

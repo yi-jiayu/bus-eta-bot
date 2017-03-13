@@ -1,12 +1,12 @@
-"use strict";
+'use strict';
 
-import 'source-map-support/register'
+import 'source-map-support/register';
 import './loadenv';
 
 import LocalDatastore from './bot/LocalDatastore';
-import Datamall from "./bot/Datamall";
+import Datamall from './bot/Datamall';
 import BusEtaBot from './bot/BusEtaBot';
-import KeenAnalytics from "./bot/KeenAnalytics";
+import KeenAnalytics from './bot/KeenAnalytics';
 
 const datastore = new LocalDatastore(
   require('./data/bus-stop-info.json'),
@@ -37,7 +37,7 @@ if (platform === 'GCLOUD_FUNCTIONS') {
         console.error('error! msg: ' + JSON.stringify(err));
         return res.status(200).end();
       });
-  }
+  };
 } else if (platform === 'AWS_LAMBDA') {
   exports.main = function (event, context, callback) {
     const update = event;
@@ -52,6 +52,6 @@ if (platform === 'GCLOUD_FUNCTIONS') {
         console.error('error! msg: ' + JSON.stringify(err));
         callback(null);
       });
-  }
+  };
 }
 

@@ -14,14 +14,18 @@ If you're stuck, you can get help with using Bus Eta Bot by sending /help.
 Regards,  
 *J*  
 Bus Eta Bot Developer`,
-  help: "Here's some help on how to use Bus Eta Bot:\n\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23",
-  about: "Bus Eta Bot $VERSION\n\nhttps://github.com/yi-jiayu/bus-eta-bot",
+  help: `Here's some help on how to use Bus Eta Bot:
+
+http://telegra.ph/Bus-Eta-Bot-Help-02-23`,
+  about: `Bus Eta Bot $VERSION
+
+https://github.com/yi-jiayu/bus-eta-bot`,
   feedback: `Hi there, thanks for being willing to share your feedback on Bus Eta Bot!
   
 However, we're really sorry that the feedback command is still under construction 😅 
 
 Nevertheless, if you have any pressing issues you wish to bring up, do leave an issue on our Github page [here](https://github.com/yi-jiayu/bus-eta-bot/issues)!`,
-  privacy: "You can find Bus Eta Bot's privacy policy [here](http://telegra.ph/Bus-Eta-Bot-Privacy-Policy-03-09)."
+  privacy: 'You can find Bus Eta Bot\'s privacy policy [here](http://telegra.ph/Bus-Eta-Bot-Privacy-Policy-03-09).'
 };
 
 export default strings;

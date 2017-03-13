@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 // datastore purposes:
 // 2. autocomplete
