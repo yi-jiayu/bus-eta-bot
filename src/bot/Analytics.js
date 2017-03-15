@@ -20,6 +20,7 @@ export const event_types = {
   start_command: 'start_command',
   help_command: 'help_command',
   version_command: 'version_command',
+  privacy_command: 'privacy_command',
   eta_text_message: 'eta_text_message',
   refresh_callback: 'refresh_callback',
   resend_callback: 'resend_callback',
