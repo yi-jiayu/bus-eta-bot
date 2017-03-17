@@ -1,5 +1,11 @@
 # Change log
 
+## 2.1.4 - 2017-3-17
+
+### Fixed
+
+- Made sure not to cache results for empty inline queries
+
 ## 2.1.3 - 2017-3-13
 
 ### Fixed

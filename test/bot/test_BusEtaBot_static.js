@@ -226,7 +226,7 @@ suite('BusEtaBot static functions', function () {
   });
 
   suite('prepare welcome message', function () {
-    test('', function () {
+    test('welcome message', function () {
       const reply = BusEtaBot.prepare_welcome_message('Jiayu');
 
       const expected = {
@@ -242,7 +242,7 @@ suite('BusEtaBot static functions', function () {
   });
 
   suite('prepare help message', function () {
-    test('', function () {
+    test('help message', function () {
       const reply = BusEtaBot.prepare_help_message();
 
       const expected = {
