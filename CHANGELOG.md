@@ -1,5 +1,12 @@
 # Change log
 
+## 2.2.0 - 2017-3-23
+
+### Removed
+
+- Bus Eta Bot does not request inline location anymore, and empty inline queries will not return nearby bus stops. This 
+feature will be replaced later on by directly sending the bot a location.
+
 ## 2.1.4 - 2017-3-17
 
 ### Fixed

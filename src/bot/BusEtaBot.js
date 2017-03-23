@@ -367,37 +367,6 @@ export default class BusEtaBot extends Bot {
    */
   answer_inline_query(ilq) {
     const query = ilq.query;
-    const location = ilq.location;
-
-    if (query.length === 0) {
-      // if the inline query is empty and we have a location, we respond with nearby bus stops
-      if (location) {
-        return this.datastore.get_nearby_bus_stops(location.latitude, location.longitude)
-          .then(nearby => {
-            if (nearby.length === 0) {
-              // if we can't find any nearby bus stops, just default to sending the completions for a blank query
-              console.log('prepare_inline_query: couldn\'t find any nearby bus stops, defaulting to completions');
-              return this.datastore.get_completions(query)
-              // don't cache results for empty queries or queries using location
-                .then(completions => BusEtaBot.prepare_inline_query_answer(completions, {
-                  cache_time: 0,
-                  next_offset: ''
-                }));
-            } else {
-              // don't cache results for queries using location
-              console.log(`prepare_inline_query: sending ${nearby.length} results for nearby bus stops`);
-              return BusEtaBot.prepare_inline_query_answer(nearby, {cache_time: 0, is_personal: true, next_offset: ''});
-            }
-          });
-      } else {
-        // don't cache results for empty queries
-        return this.datastore.get_completions(query)
-          .then(completions => BusEtaBot.prepare_inline_query_answer(completions, {
-            cache_time: 0,
-            next_offset: ''
-          }));
-      }
-    }
 
     return this.datastore.get_completions(query)
       .then(BusEtaBot.prepare_inline_query_answer);
