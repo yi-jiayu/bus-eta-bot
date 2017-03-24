@@ -4,10 +4,10 @@
 # Bus Eta Bot
 A Telegram bot for checking bus etas in Singapore
 
-**Checking etas**
+### Check etas
 ![Checking etas](eta-query.gif)
 
-**Searching bus stops**
+### Search bus stops
 ![Searching bus stops](inline-query.gif)
 
 ## Getting started
