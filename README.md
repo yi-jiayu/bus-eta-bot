@@ -1,5 +1,3 @@
-[![CircleCI](https://circleci.com/gh/yi-jiayu/bus-eta-bot.svg?style=shield)](https://circleci.com/gh/yi-jiayu/bus-eta-bot)
-[![codecov](https://codecov.io/gh/yi-jiayu/bus-eta-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/yi-jiayu/bus-eta-bot)
 [![Build Status](https://semaphoreci.com/api/v1/jiayu/bus-eta-bot/branches/master/shields_badge.svg)](https://semaphoreci.com/jiayu/bus-eta-bot)
 [![Coverage Status](https://coveralls.io/repos/github/yi-jiayu/bus-eta-bot/badge.svg?branch=master)](https://coveralls.io/github/yi-jiayu/bus-eta-bot?branch=master)
 
@@ -13,21 +11,11 @@ This is a rewrite of my [previous bus eta bot](https://github.com/yi-jiayu/bus-e
 
 [Changelog](CHANGELOG.md)
 
-**Core**
-- **(WIP)** Request etas for all buses or specific buses at a bus stop by id.
-- **(WIP)** Search all bus stops by id, description and road name via inline query.
-- **(WIP)** Query bus stops by location. Default inline query results will also show nearby bus stops.
-
-**Gimmicks**
-- **(NOT IMPLEMENTED)** Send the bot a bus stop id in a voice message.
-- **(NOT IMPLEMENTED)** Send the bot a photo of the bus stop info plate to get etas.
-
-**Dropped** (No one used these)
-- Eta query history
-- Favourite eta queries
-- 'Done' button on eta messages
+- Request etas for all buses or specific buses at a bus stop by id.
+- Search all bus stops by id, description and road name via inline query.
+- **(WIP)** Query bus stops by location.
 
 ## Architecture
-Bus Eta Bot v1 was deployed as an AWS Lambda function and used DynamoDB for persisting user state such as whether the user was in the middle of a /eta command, eta histories and saved queries. V2 avoids having to maintain state by using Telegram message replies to handle user interaction and dropping the history and favourites features. However, v2 does have to store bus stop information. While it is possible to do so in an external database, the number of bus stops (~5300) was low enough to just load a local JSON file with the bus stop details. Further performance monitoring is required to find out if this solution is satisfactory or a RDBMS- or Redis-based would be better.
+Bus Eta Bot is deployed as a [Cloud Function](https://cloud.google.com/functions/) on [Google Cloud Platform](https://cloud.google.com/) responding to [Telegram Bot API](https://core.telegram.org/bots/api) webhooks.
 
 ## [Privacy Policy](PRIVACY.md)
