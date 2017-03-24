@@ -4,8 +4,15 @@
 # Bus Eta Bot
 A Telegram bot for checking bus etas in Singapore
 
-## About
-This is a rewrite of my [previous bus eta bot](https://github.com/yi-jiayu/bus-eta-bot-sg) for maintainability and new features, while dropping other features which turned out to be less popular than expected. It is currently available on Telegram at [@DevBuildBusEtaBot](https://t.me/DevBuildBusEtaBot) and is running on Google Cloud Platform as a Cloud Function, however it is not yet production-ready and will likely be broken often. Once the important v1 features are implemented in v2 and it is generally stable, it will be promoted to take over [@BusEtaBot](https://t.me/BusEtaBot).
+**Checking etas**
+![Checking etas](eta-query.gif)
+
+**Searching bus stops**
+![Searching bus stops](inline-query.gif)
+
+## Getting started
+
+Contact [@BusEtaBot](https://t.me/BusEtaBot/) on Telegram now!
 
 ## Features
 
