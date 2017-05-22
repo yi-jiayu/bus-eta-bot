@@ -49,7 +49,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		Client:      client,
 	}
 
-	updateHandler(ctx, &bot, &update)
+	busEtaBot.HandleUpdate(ctx, &bot, &update)
 }
 
 func addBusStopsToDatastoreHandler(w http.ResponseWriter, r *http.Request) {

@@ -30,16 +30,29 @@ type BusEtaBot struct {
 	CommandHandlers           map[string]MessageHandler
 	TextHandler               MessageHandler
 	LocationHandler           MessageHandler
+	CallbackQueryHandlers     map[string]CallbackQueryHandler
 	InlineQueryHandler        func(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi.InlineQuery) error
 	ChosenInlineResultHandler func(ctx context.Context, bot *tgbotapi.BotAPI, cir *tgbotapi.ChosenInlineResult) error
-	CallbackQueryHandlers     map[string]CallbackQueryHandler
+	MessageErrorHandler       func(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message, err error)
+	CallbackErrorHandler      func(ctx context.Context, bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery, err error)
 }
 
-func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
+var busEtaBot = BusEtaBot{
+	CommandHandlers:           commandHandlers,
+	TextHandler:               TextHandler,
+	LocationHandler:           LocationHandler,
+	CallbackQueryHandlers:     callbackQueryHandlers,
+	InlineQueryHandler:        InlineQueryHandler,
+	ChosenInlineResultHandler: ChosenInlineResultHandler,
+	MessageErrorHandler:       messageErrorHandler,
+	CallbackErrorHandler:      callbackErrorHandler,
+}
+
+func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
 		if command := message.Command(); command != "" {
 			// handle command
-			if handler, exists := commandHandlers[command]; exists {
+			if handler, exists := b.CommandHandlers[command]; exists {
 				err := handler(ctx, bot, message)
 				if err != nil {
 					messageErrorHandler(ctx, bot, message, err)
@@ -51,7 +64,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 		}
 
 		if text := message.Text; text != "" {
-			err := TextHandler(ctx, bot, message)
+			err := b.TextHandler(ctx, bot, message)
 			if err != nil {
 				messageErrorHandler(ctx, bot, message, err)
 				return
@@ -61,7 +74,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 		}
 
 		if location := message.Location; location != nil {
-			err := LocationHandler(ctx, bot, message)
+			err := b.LocationHandler(ctx, bot, message)
 			if err != nil {
 				messageErrorHandler(ctx, bot, message, err)
 				return
@@ -82,7 +95,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 		}
 
 		if cbqType, ok := data["t"].(string); ok {
-			if handler, ok := callbackQueryHandlers[cbqType]; ok {
+			if handler, ok := b.CallbackQueryHandlers[cbqType]; ok {
 				err := handler(ctx, bot, cbq)
 				if err != nil {
 					callbackErrorHandler(ctx, bot, cbq, err)
@@ -99,7 +112,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 
 	if ilq := update.InlineQuery; ilq != nil {
 		// handle inline query
-		err := InlineQueryHandler(ctx, bot, ilq)
+		err := b.InlineQueryHandler(ctx, bot, ilq)
 		if err != nil {
 			log.Errorf(ctx, "%v", err)
 			return
@@ -109,7 +122,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 	}
 
 	if cir := update.ChosenInlineResult; cir != nil {
-		err := ChosenInlineResultHandler(ctx, bot, cir)
+		err := b.ChosenInlineResultHandler(ctx, bot, cir)
 		if err != nil {
 			log.Errorf(ctx, "%v", err)
 			return

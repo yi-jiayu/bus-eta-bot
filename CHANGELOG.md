@@ -1,8 +1,12 @@
 # Change Log
 
+## v3.4.3 - 2017-05-22
+### Added
+- More tests.
+
 ## v3.4.2 - 2017-05-22
 ### Added
-- Added Google Analytics for tracking usage statistics
+- Added Google Analytics for tracking usage statistics.
 
 ## v3.3.0 - 2017-05-21
 ### Added
