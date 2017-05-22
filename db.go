@@ -143,14 +143,18 @@ func GetNearbyBusStops(ctx context.Context, lat, lng float64) ([]BusStop, error)
 }
 
 // SearchBusStops returns bus stops containing query
-func SearchBusStops(ctx context.Context, query string) ([]BusStop, error) {
+func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, error) {
 	index, err := search.Open("BusStops")
 	if err != nil {
 		return nil, err
 	}
 
 	var busStops []BusStop
-	for t := index.Search(ctx, query, nil); ; {
+	options := search.SearchOptions{
+		Limit:  50,
+		Offset: offset,
+	}
+	for t := index.Search(ctx, query, &options); ; {
 		var bs BusStop
 		_, err := t.Next(&bs)
 		if err != nil {

@@ -60,6 +60,8 @@ func RefreshCallbackHandler(ctx context.Context, bot *tgbotapi.BotAPI, cbq *tgbo
 		},
 	}
 
+	go LogEvent(ctx, cbq.From.ID, "callback_query", "refresh", fmt.Sprintf("%s %v", bsID, sNos))
+
 	answer := tgbotapi.NewCallback(cbq.ID, "Etas updated!")
 
 	var wg sync.WaitGroup
@@ -103,6 +105,7 @@ func EtaCallbackHandler(ctx context.Context, bot *tgbotapi.BotAPI, query *tgbota
 // callbackErrorHandler is for informing the user about an error while processing a callback query.
 func callbackErrorHandler(ctx context.Context, bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery, err error) {
 	log.Errorf(ctx, "%v", err)
+	go LogEvent(ctx, query.From.ID, "callback_query", "error", fmt.Sprintf("%v", err))
 
 	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
 	answer := tgbotapi.NewCallbackWithAlert(query.ID, text)
@@ -110,5 +113,6 @@ func callbackErrorHandler(ctx context.Context, bot *tgbotapi.BotAPI, query *tgbo
 	_, err = bot.AnswerCallbackQuery(answer)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
+		go LogEvent(ctx, query.From.ID, "callback_query", "error", fmt.Sprintf("%v", err))
 	}
 }

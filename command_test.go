@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -13,40 +10,6 @@ import (
 	"google.golang.org/appengine/aetest"
 	"google.golang.org/appengine/datastore"
 )
-
-func NewMockTelegramAPI() (*httptest.Server, chan []byte, chan error) {
-	bodyChan := make(chan []byte, 1)
-	errChan := make(chan error, 1)
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				errChan <- err
-				return
-			}
-
-			bodyChan <- body
-		}
-
-		w.Write([]byte(`{"ok":true}`))
-	}))
-
-	return ts, bodyChan, errChan
-}
-
-func NewMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {
-	busArrival, err := json.Marshal(newArrival(t))
-	if err != nil {
-		return nil, err
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(busArrival)
-	}))
-
-	return ts, nil
-}
 
 func TestAboutHandler(t *testing.T) {
 	t.Parallel()
@@ -59,9 +22,7 @@ func TestAboutHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	message := tgbotapi.Message{
-		Chat: &tgbotapi.Chat{ID: 1},
-	}
+	message := MockMessage()
 
 	err := AboutHandler(nil, &bot, &message)
 	if err != nil {
@@ -93,10 +54,7 @@ func TestStartHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	message := tgbotapi.Message{
-		Chat: &tgbotapi.Chat{ID: 1},
-		From: &tgbotapi.User{FirstName: "Jiayu"},
-	}
+	message := MockMessage()
 
 	err := StartHandler(nil, &bot, &message)
 	if err != nil {
@@ -128,9 +86,7 @@ func TestPrivacyHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	message := tgbotapi.Message{
-		Chat: &tgbotapi.Chat{ID: 1},
-	}
+	message := MockMessage()
 
 	err := PrivacyHandler(nil, &bot, &message)
 	if err != nil {
@@ -212,10 +168,8 @@ func TestEtaHandler(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			message := tgbotapi.Message{
-				Chat: &tgbotapi.Chat{ID: 1},
-				Text: tc.Text,
-			}
+			message := MockMessage()
+			message.Text = tc.Text
 
 			err := EtaHandler(ctx, &bot, &message)
 			if err != nil {

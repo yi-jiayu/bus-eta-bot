@@ -7,17 +7,26 @@ import (
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"strconv"
 )
 
-func inlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi.InlineQuery) error {
+// InlineQueryHandler handles inline queries
+func InlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi.InlineQuery) error {
 	query := ilq.Query
 
-	busStops, err := SearchBusStops(ctx, query)
+	offset := 0
+	if ilq.Offset != "" {
+		var err error
+		offset, err = strconv.Atoi(ilq.Offset)
+		if err != nil {
+			return err
+		}
+	}
+
+	busStops, err := SearchBusStops(ctx, query, offset)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("%v", busStops)
 
 	results := make([]interface{}, 0)
 	for _, bs := range busStops {
@@ -58,10 +67,24 @@ func inlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi
 		results = append(results, result)
 	}
 
+	var nextOffset string
+	if len(busStops) > 0 {
+		nextOffset = fmt.Sprintf("%d", offset+50)
+	}
+
 	config := tgbotapi.InlineConfig{
 		InlineQueryID: ilq.ID,
 		Results:       results,
+		NextOffset:    nextOffset,
 	}
+
+	var action string
+	if ilq.Offset == "" {
+		action = "new"
+	} else {
+		action = "offset"
+	}
+	go LogEvent(ctx, ilq.From.ID, "inline_query", action, query)
 
 	resp, err := bot.AnswerInlineQuery(config)
 	if err != nil {
@@ -109,10 +132,8 @@ func chosenInlineResultHandler(ctx context.Context, bot *tgbotapi.BotAPI, cir *t
 		ParseMode: "markdown",
 	}
 
-	_, err = bot.Send(reply)
-	if err != nil {
-		return err
-	}
+	go LogEvent(ctx, cir.From.ID, "inline_query", "chosen_inline_result", fmt.Sprintf("%s %s", cir.ResultID, cir.Query))
 
-	return nil
+	_, err = bot.Send(reply)
+	return err
 }

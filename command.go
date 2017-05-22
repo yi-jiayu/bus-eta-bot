@@ -10,7 +10,7 @@ import (
 var commandHandlers = map[string]MessageHandler{
 	"start":   StartHandler,
 	"about":   AboutHandler,
-	"version": AboutHandler,
+	"version": VersionHandler,
 	//"feedback": feedbackHandler,
 	"help":    helpHandler,
 	"privacy": PrivacyHandler,
@@ -56,6 +56,8 @@ func StartHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.M
 		reply.ReplyToMessageID = messageID
 	}
 
+	go LogEvent(ctx, message.From.ID, "command", "start", "")
+
 	_, err := bot.Send(reply)
 	if err != nil {
 		return err
@@ -64,7 +66,24 @@ func StartHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.M
 	return nil
 }
 
-// AboutHandler handles the /about and /version commands
+// VersionHandler handles the /version command
+func VersionHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+
+	text := "Bus Eta Bot v" + Version + "\nhttps://github.com/yi-jiayu/bus-eta-bot-3"
+	reply := tgbotapi.NewMessage(chatID, text)
+	if !message.Chat.IsPrivate() {
+		messageID := message.MessageID
+		reply.ReplyToMessageID = messageID
+	}
+
+	go LogEvent(ctx, message.From.ID, "command", "version", "")
+
+	_, err := bot.Send(reply)
+	return err
+}
+
+// AboutHandler handles the /about command
 func AboutHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
@@ -75,12 +94,10 @@ func AboutHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.M
 		reply.ReplyToMessageID = messageID
 	}
 
-	_, err := bot.Send(reply)
-	if err != nil {
-		return err
-	}
+	go LogEvent(ctx, message.From.ID, "command", "about", "")
 
-	return nil
+	_, err := bot.Send(reply)
+	return err
 }
 
 func feedbackHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
@@ -92,12 +109,10 @@ func helpHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Me
 	text := "Here's some help on how to use Bus Eta Bot:\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23"
 	reply := tgbotapi.NewMessage(chatID, text)
 
-	_, err := bot.Send(reply)
-	if err != nil {
-		return err
-	}
+	go LogEvent(ctx, message.From.ID, "command", "help", "")
 
-	return nil
+	_, err := bot.Send(reply)
+	return err
 }
 
 // PrivacyHandler handles the /privacy command.
@@ -112,12 +127,10 @@ func PrivacyHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi
 		reply.ReplyToMessageID = messageID
 	}
 
-	_, err := bot.Send(reply)
-	if err != nil {
-		return err
-	}
+	go LogEvent(ctx, message.From.ID, "command", "privacy", "")
 
-	return nil
+	_, err := bot.Send(reply)
+	return err
 }
 
 // EtaHandler handles the /eta command.
@@ -166,6 +179,8 @@ func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Mes
 			reply.ReplyToMessageID = messageID
 		}
 
+		go LogEvent(ctx, message.From.ID, "command", "eta", args)
+
 		_, err = bot.Send(reply)
 		if err != nil {
 			return err
@@ -181,6 +196,8 @@ func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Mes
 				Selective:  true,
 			}
 		}
+
+		go LogEvent(ctx, message.From.ID, "command", "eta", "")
 
 		_, err := bot.Send(reply)
 		if err != nil {

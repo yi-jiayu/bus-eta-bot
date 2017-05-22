@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -11,12 +12,19 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 )
 
 var illegalCharsRegex = regexp.MustCompile(`[^A-Z0-9 ]`)
 
-// MessageHandler is a handler for incoming messages
-type MessageHandler func(context.Context, *tgbotapi.BotAPI, *tgbotapi.Message) error
+var (
+	gaTID = os.Getenv("GA_TID")
+	app   = App{
+		Name:    "Bus Eta Bot",
+		ID:      "github.com/yi-jiayu/bus-eta-bot-3",
+		Version: Version,
+	}
+)
 
 func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
@@ -44,7 +52,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 		}
 
 		if location := message.Location; location != nil {
-			err := locationHandler(ctx, bot, message)
+			err := LocationHandler(ctx, bot, message)
 			if err != nil {
 				messageErrorHandler(ctx, bot, message, err)
 				return
@@ -82,7 +90,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 
 	if ilq := update.InlineQuery; ilq != nil {
 		// handle inline query
-		err := inlineQueryHandler(ctx, bot, ilq)
+		err := InlineQueryHandler(ctx, bot, ilq)
 		if err != nil {
 			log.Errorf(ctx, "%v", err)
 			return
@@ -104,6 +112,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 
 func messageErrorHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message, err error) {
 	log.Errorf(ctx, "%v", err)
+	go LogEvent(ctx, message.From.ID, "message", "error", fmt.Sprintf("%v", err))
 
 	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
 	reply := tgbotapi.NewMessage(message.Chat.ID, text)
@@ -112,85 +121,8 @@ func messageErrorHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgb
 	_, err = bot.Send(reply)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
+		go LogEvent(ctx, message.From.ID, "message", "error", fmt.Sprintf("%v", err))
 	}
-}
-
-// TextHandler handles incoming text messages
-func TextHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
-	if strings.Contains(message.Text, "Fetching etas...") {
-		return nil
-	}
-
-	chatID := message.Chat.ID
-	busStopID, serviceNos := InferEtaQuery(message.Text)
-
-	if busStopID == "" {
-		return nil
-	}
-
-	text, err := EtaMessage(ctx, busStopID, serviceNos)
-	if err != nil {
-		return err
-	}
-
-	callbackData := EtaCallbackData{
-		Type:       "refresh",
-		BusStopID:  busStopID,
-		ServiceNos: serviceNos,
-	}
-
-	callbackDataJSON, err := json.Marshal(callbackData)
-	if err != nil {
-		return err
-	}
-	callbackDataJSONStr := string(callbackDataJSON)
-
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-	reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
-				tgbotapi.InlineKeyboardButton{
-					Text:         "Refresh",
-					CallbackData: &callbackDataJSONStr,
-				},
-			},
-		},
-	}
-
-	if !message.Chat.IsPrivate() {
-		reply.ReplyToMessageID = message.MessageID
-	}
-
-	_, err = bot.Send(reply)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func locationHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
-	chatID := message.Chat.ID
-	location := message.Location
-
-	nearby, err := GetNearbyBusStops(ctx, location.Latitude, location.Longitude)
-	if err != nil {
-		return err
-	}
-
-	text := "Nearby bus stops: "
-	for _, bs := range nearby {
-		text += fmt.Sprintf("%s (%s), ", bs.Description, bs.BusStopID)
-	}
-
-	reply := tgbotapi.NewMessage(chatID, text)
-	_, err = bot.Send(reply)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // InferEtaQuery extracts a bus stop ID and service numbers from a text message
@@ -205,4 +137,45 @@ func InferEtaQuery(text string) (string, []string) {
 	busStopID, serviceNos := tokens[0], tokens[1:]
 
 	return busStopID, serviceNos
+}
+
+// LogEventWithValue logs an interaction with the bot with a value
+func LogEventWithValue(ctx context.Context, userID int, category, action, label string, value int) {
+	// don't record analytics data while testing
+	if gaTID == "" || ctx == nil || userID == 1 {
+		return
+	}
+
+	client := urlfetch.Client(ctx)
+	gaClient := NewClient(gaTID, client)
+
+	user := User{
+		UserID: fmt.Sprintf("%d", userID),
+	}
+
+	event := Event{
+		Category: category,
+		Action:   action,
+	}
+
+	if label != "" {
+		if len(label) > 500 {
+			label = label[:500]
+		}
+		event.Label = &label
+	}
+
+	if value != 0 {
+		event.Value = &value
+	}
+
+	_, err := gaClient.Send(user, app, event)
+	if err != nil {
+		log.Errorf(ctx, "%v", err)
+	}
+}
+
+// LogEvent logs an interaction with the bot
+func LogEvent(ctx context.Context, userID int, category, action, label string) {
+	LogEventWithValue(ctx, userID, category, action, label, 0)
 }
