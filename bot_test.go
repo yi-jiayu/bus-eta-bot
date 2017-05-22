@@ -13,8 +13,13 @@ import (
 	"github.com/yi-jiayu/telegram-bot-api"
 )
 
-func NewMockTelegramAPI() (*httptest.Server, chan []byte, chan error) {
-	bodyChan := make(chan []byte, 2)
+type Request struct {
+	Path string
+	Body string
+}
+
+func NewMockTelegramAPIWithPath() (*httptest.Server, chan Request, chan error) {
+	reqChan := make(chan Request, 2)
 	errChan := make(chan error, 2)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -25,13 +30,13 @@ func NewMockTelegramAPI() (*httptest.Server, chan []byte, chan error) {
 				return
 			}
 
-			bodyChan <- body
+			reqChan <- Request{r.URL.Path, string(body)}
 		}
 
 		w.Write([]byte(`{"ok":true}`))
 	}))
 
-	return ts, bodyChan, errChan
+	return ts, reqChan, errChan
 }
 
 func NewMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {

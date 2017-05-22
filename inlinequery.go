@@ -95,7 +95,8 @@ func InlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi
 	return nil
 }
 
-func chosenInlineResultHandler(ctx context.Context, bot *tgbotapi.BotAPI, cir *tgbotapi.ChosenInlineResult) error {
+// ChosenInlineResultHandler handles a chosen inline result
+func ChosenInlineResultHandler(ctx context.Context, bot *tgbotapi.BotAPI, cir *tgbotapi.ChosenInlineResult) error {
 	busStopID := cir.ResultID
 
 	text, err := EtaMessage(ctx, busStopID, nil)

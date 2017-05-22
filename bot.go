@@ -26,6 +26,15 @@ var (
 	}
 )
 
+type BusEtaBot struct {
+	CommandHandlers           map[string]MessageHandler
+	TextHandler               MessageHandler
+	LocationHandler           MessageHandler
+	InlineQueryHandler        func(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi.InlineQuery) error
+	ChosenInlineResultHandler func(ctx context.Context, bot *tgbotapi.BotAPI, cir *tgbotapi.ChosenInlineResult) error
+	CallbackQueryHandlers     map[string]CallbackQueryHandler
+}
+
 func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
 		if command := message.Command(); command != "" {
@@ -100,7 +109,7 @@ func updateHandler(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.U
 	}
 
 	if cir := update.ChosenInlineResult; cir != nil {
-		err := chosenInlineResultHandler(ctx, bot, cir)
+		err := ChosenInlineResultHandler(ctx, bot, cir)
 		if err != nil {
 			log.Errorf(ctx, "%v", err)
 			return
