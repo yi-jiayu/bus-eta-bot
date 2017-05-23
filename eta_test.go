@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
-	"net/http"
-	"net/http/httptest"
+	"google.golang.org/appengine/aetest"
 )
 
 func newArrival(t time.Time) datamall.BusArrival {
@@ -292,34 +293,39 @@ func TestFormatEtas(t *testing.T) {
 	})
 }
 
-// todo: refactor datamallEndpoint into per-request variable
-//func TestEtaMessage(t *testing.T) {
-//	t.Parallel()
-//
-//	ctx, done, err := aetest.NewContext()
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	defer done()
-//
-//	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-//	nowFunc = func() time.Time {
-//		return now
-//	}
-//	dm, err := NewEmptyMockBusArrivalAPI(now)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	defer dm.Close()
-//	datamallEndpoint = dm.URL
-//
-//	actual, err := EtaMessage(ctx, "invalid", nil)
-//	if err != nil && err != errNotFound {
-//		t.Fatal(err)
-//	}
-//
-//	expected := "Oh no! I couldn't find any information about bus stop invalid."
-//	if actual != expected {
-//		t.Fail()
-//	}
-//}
+func TestEtaMessage(t *testing.T) {
+	t.Parallel()
+
+	ctx, done, err := aetest.NewContext()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer done()
+
+	now, _ := time.Parse(time.RFC3339, time.RFC3339)
+	nowFunc = func() time.Time {
+		return now
+	}
+	dmAPI, err := NewEmptyMockBusArrivalAPI(now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dmAPI.Close()
+
+	bot := &BusEtaBot{
+		Datamall: &datamall.APIClient{
+			Endpoint: dmAPI.URL,
+			Client:   http.DefaultClient,
+		},
+	}
+
+	actual, err := EtaMessage(ctx, bot, "invalid", nil)
+	if err != nil && err != errNotFound {
+		t.Fatal(err)
+	}
+
+	expected := "Oh no! I couldn't find any information about bus stop invalid."
+	if actual != expected {
+		t.Fail()
+	}
+}

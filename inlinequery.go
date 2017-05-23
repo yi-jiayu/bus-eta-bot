@@ -3,15 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
-	"strconv"
 )
 
 // InlineQueryHandler handles inline queries
-func InlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi.InlineQuery) error {
+func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.InlineQuery) error {
 	query := ilq.Query
 
 	offset := 0
@@ -86,7 +86,7 @@ func InlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi
 	}
 	go LogEvent(ctx, ilq.From.ID, "inline_query", action, query)
 
-	resp, err := bot.AnswerInlineQuery(config)
+	resp, err := bot.Telegram.AnswerInlineQuery(config)
 	if err != nil {
 		log.Errorf(ctx, "%v", resp)
 		return err
@@ -96,10 +96,10 @@ func InlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi
 }
 
 // ChosenInlineResultHandler handles a chosen inline result
-func ChosenInlineResultHandler(ctx context.Context, bot *tgbotapi.BotAPI, cir *tgbotapi.ChosenInlineResult) error {
+func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotapi.ChosenInlineResult) error {
 	busStopID := cir.ResultID
 
-	text, err := EtaMessage(ctx, busStopID, nil)
+	text, err := EtaMessage(ctx, bot, busStopID, nil)
 	if err != nil {
 		return err
 	}
@@ -135,6 +135,6 @@ func ChosenInlineResultHandler(ctx context.Context, bot *tgbotapi.BotAPI, cir *t
 
 	go LogEvent(ctx, cir.From.ID, "inline_query", "chosen_inline_result", fmt.Sprintf("%s %s", cir.ResultID, cir.Query))
 
-	_, err = bot.Send(reply)
+	_, err = bot.Telegram.Send(reply)
 	return err
 }

@@ -10,10 +10,10 @@ import (
 )
 
 // MessageHandler is a handler for incoming messages
-type MessageHandler func(context.Context, *tgbotapi.BotAPI, *tgbotapi.Message) error
+type MessageHandler func(context.Context, *BusEtaBot, *tgbotapi.Message) error
 
 // TextHandler handles incoming text messages
-func TextHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	if strings.Contains(message.Text, "Fetching etas...") {
 		return nil
 	}
@@ -31,7 +31,7 @@ func TextHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Me
 	if len(busStopID) > 5 && message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
 		reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
 	} else {
-		text, err := EtaMessage(ctx, busStopID, serviceNos)
+		text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
 		if err != nil {
 			if err == errNotFound {
 				reply = tgbotapi.NewMessage(chatID, text)
@@ -72,12 +72,12 @@ func TextHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Me
 
 	go LogEvent(ctx, message.From.ID, "message", "text", message.Text)
 
-	_, err := bot.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	return err
 }
 
 // LocationHandler handles messages contain a location
-func LocationHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 	location := message.Location
 
@@ -94,6 +94,6 @@ func LocationHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotap
 	go LogEvent(ctx, message.From.ID, "message", "location", fmt.Sprintf("%f, %f", location.Latitude, location.Longitude))
 
 	reply := tgbotapi.NewMessage(chatID, text)
-	_, err = bot.Send(reply)
+	_, err = bot.Telegram.Send(reply)
 	return err
 }

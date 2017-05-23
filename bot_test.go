@@ -20,7 +20,7 @@ type Spy struct {
 	SpyFunc func()
 }
 
-func (s *Spy) MessageHandler(context.Context, *tgbotapi.BotAPI, *tgbotapi.Message) error {
+func (s *Spy) MessageHandler(context.Context, *BusEtaBot, *tgbotapi.Message) error {
 	if s.SpyFunc != nil {
 		s.SpyFunc()
 	}
@@ -29,7 +29,7 @@ func (s *Spy) MessageHandler(context.Context, *tgbotapi.BotAPI, *tgbotapi.Messag
 	return nil
 }
 
-func (s *Spy) CallbackQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, cbq *tgbotapi.CallbackQuery) error {
+func (s *Spy) CallbackQueryHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	if s.SpyFunc != nil {
 		s.SpyFunc()
 	}
@@ -38,7 +38,7 @@ func (s *Spy) CallbackQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, cb
 	return nil
 }
 
-func (s *Spy) InlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi.InlineQuery) error {
+func (s *Spy) InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.InlineQuery) error {
 	if s.SpyFunc != nil {
 		s.SpyFunc()
 	}
@@ -47,7 +47,7 @@ func (s *Spy) InlineQueryHandler(ctx context.Context, bot *tgbotapi.BotAPI, ilq 
 	return nil
 }
 
-func (s *Spy) ChosenInlineResultHandler(ctx context.Context, bot *tgbotapi.BotAPI, cir *tgbotapi.ChosenInlineResult) error {
+func (s *Spy) ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotapi.ChosenInlineResult) error {
 	if s.SpyFunc != nil {
 		s.SpyFunc()
 	}
@@ -122,7 +122,7 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 	// location handler
 	locationHandlerSpy := Spy{}
 
-	// callback query handlers
+	// callback query Handlers
 	refreshCbqSpy := Spy{}
 
 	// inline query handler
@@ -132,21 +132,23 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 	cirHandlerSpy := Spy{}
 
 	busEtaBot := BusEtaBot{
-		CommandHandlers: map[string]MessageHandler{
-			"start":   startCmdSpy.MessageHandler,
-			"about":   aboutCmdSpy.MessageHandler,
-			"version": versionCmdSpy.MessageHandler,
-			"help":    helpCmdSpy.MessageHandler,
-			"privacy": privacyCmdSpy.MessageHandler,
-			"eta":     etaCmdSpy.MessageHandler,
+		Handlers: Handlers{
+			CommandHandlers: map[string]MessageHandler{
+				"start":   startCmdSpy.MessageHandler,
+				"about":   aboutCmdSpy.MessageHandler,
+				"version": versionCmdSpy.MessageHandler,
+				"help":    helpCmdSpy.MessageHandler,
+				"privacy": privacyCmdSpy.MessageHandler,
+				"eta":     etaCmdSpy.MessageHandler,
+			},
+			TextHandler:     textHandlerSpy.MessageHandler,
+			LocationHandler: locationHandlerSpy.MessageHandler,
+			CallbackQueryHandlers: map[string]CallbackQueryHandler{
+				"refresh": refreshCbqSpy.CallbackQueryHandler,
+			},
+			InlineQueryHandler:        ilqHandlerSpy.InlineQueryHandler,
+			ChosenInlineResultHandler: cirHandlerSpy.ChosenInlineResultHandler,
 		},
-		TextHandler:     textHandlerSpy.MessageHandler,
-		LocationHandler: locationHandlerSpy.MessageHandler,
-		CallbackQueryHandlers: map[string]CallbackQueryHandler{
-			"refresh": refreshCbqSpy.CallbackQueryHandler,
-		},
-		InlineQueryHandler:        ilqHandlerSpy.InlineQueryHandler,
-		ChosenInlineResultHandler: cirHandlerSpy.ChosenInlineResultHandler,
 	}
 
 	testCases := []struct {
@@ -235,7 +237,7 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			busEtaBot.HandleUpdate(nil, nil, tc.Update)
+			busEtaBot.HandleUpdate(nil, tc.Update)
 
 			if !tc.Spy.Called {
 				t.Fail()

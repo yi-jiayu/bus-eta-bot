@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
@@ -25,19 +26,7 @@ var (
 	}
 )
 
-// BusEtaBot contains all the handlers used by this bot
-type BusEtaBot struct {
-	CommandHandlers           map[string]MessageHandler
-	TextHandler               MessageHandler
-	LocationHandler           MessageHandler
-	CallbackQueryHandlers     map[string]CallbackQueryHandler
-	InlineQueryHandler        func(ctx context.Context, bot *tgbotapi.BotAPI, ilq *tgbotapi.InlineQuery) error
-	ChosenInlineResultHandler func(ctx context.Context, bot *tgbotapi.BotAPI, cir *tgbotapi.ChosenInlineResult) error
-	MessageErrorHandler       func(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message, err error)
-	CallbackErrorHandler      func(ctx context.Context, bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery, err error)
-}
-
-var busEtaBot = BusEtaBot{
+var handlers = Handlers{
 	CommandHandlers:           commandHandlers,
 	TextHandler:               TextHandler,
 	LocationHandler:           LocationHandler,
@@ -48,15 +37,41 @@ var busEtaBot = BusEtaBot{
 	CallbackErrorHandler:      callbackErrorHandler,
 }
 
+// BusEtaBot contains all the bot's dependencies
+type BusEtaBot struct {
+	Handlers Handlers
+	Telegram *tgbotapi.BotAPI
+	Datamall *datamall.APIClient
+}
+
+type Handlers struct {
+	CommandHandlers           map[string]MessageHandler
+	TextHandler               MessageHandler
+	LocationHandler           MessageHandler
+	CallbackQueryHandlers     map[string]CallbackQueryHandler
+	InlineQueryHandler        func(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.InlineQuery) error
+	ChosenInlineResultHandler func(ctx context.Context, bot *BusEtaBot, cir *tgbotapi.ChosenInlineResult) error
+	MessageErrorHandler       func(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error)
+	CallbackErrorHandler      func(ctx context.Context, bot *BusEtaBot, query *tgbotapi.CallbackQuery, err error)
+}
+
+func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient) BusEtaBot {
+	return BusEtaBot{
+		Handlers: handlers,
+		Telegram: tg,
+		Datamall: dm,
+	}
+}
+
 // HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type
-func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
+func (b *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
 		if command := message.Command(); command != "" {
 			// handle command
-			if handler, exists := b.CommandHandlers[command]; exists {
-				err := handler(ctx, bot, message)
+			if handler, exists := b.Handlers.CommandHandlers[command]; exists {
+				err := handler(ctx, b, message)
 				if err != nil {
-					messageErrorHandler(ctx, bot, message, err)
+					messageErrorHandler(ctx, b, message, err)
 					return
 				}
 			}
@@ -65,9 +80,9 @@ func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, updat
 		}
 
 		if text := message.Text; text != "" {
-			err := b.TextHandler(ctx, bot, message)
+			err := b.Handlers.TextHandler(ctx, b, message)
 			if err != nil {
-				messageErrorHandler(ctx, bot, message, err)
+				messageErrorHandler(ctx, b, message, err)
 				return
 			}
 
@@ -75,9 +90,9 @@ func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, updat
 		}
 
 		if location := message.Location; location != nil {
-			err := b.LocationHandler(ctx, bot, message)
+			err := b.Handlers.LocationHandler(ctx, b, message)
 			if err != nil {
-				messageErrorHandler(ctx, bot, message, err)
+				messageErrorHandler(ctx, b, message, err)
 				return
 			}
 
@@ -91,20 +106,20 @@ func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, updat
 		var data map[string]interface{}
 		err := json.Unmarshal([]byte(cbq.Data), &data)
 		if err != nil {
-			callbackErrorHandler(ctx, bot, cbq, err)
+			callbackErrorHandler(ctx, b, cbq, err)
 			return
 		}
 
 		if cbqType, ok := data["t"].(string); ok {
-			if handler, ok := b.CallbackQueryHandlers[cbqType]; ok {
-				err := handler(ctx, bot, cbq)
+			if handler, ok := b.Handlers.CallbackQueryHandlers[cbqType]; ok {
+				err := handler(ctx, b, cbq)
 				if err != nil {
-					callbackErrorHandler(ctx, bot, cbq, err)
+					callbackErrorHandler(ctx, b, cbq, err)
 					return
 				}
 			}
 		} else {
-			callbackErrorHandler(ctx, bot, cbq, errors.New("unrecognised callback query"))
+			callbackErrorHandler(ctx, b, cbq, errors.New("unrecognised callback query"))
 			return
 		}
 
@@ -113,7 +128,7 @@ func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, updat
 
 	if ilq := update.InlineQuery; ilq != nil {
 		// handle inline query
-		err := b.InlineQueryHandler(ctx, bot, ilq)
+		err := b.Handlers.InlineQueryHandler(ctx, b, ilq)
 		if err != nil {
 			log.Errorf(ctx, "%v", err)
 			return
@@ -123,7 +138,7 @@ func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, updat
 	}
 
 	if cir := update.ChosenInlineResult; cir != nil {
-		err := b.ChosenInlineResultHandler(ctx, bot, cir)
+		err := b.Handlers.ChosenInlineResultHandler(ctx, b, cir)
 		if err != nil {
 			log.Errorf(ctx, "%v", err)
 			return
@@ -133,7 +148,7 @@ func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, updat
 	}
 }
 
-func messageErrorHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message, err error) {
+func messageErrorHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error) {
 	log.Errorf(ctx, "%v", err)
 	go LogEvent(ctx, message.From.ID, "message", "error", fmt.Sprintf("%v", err))
 
@@ -141,7 +156,7 @@ func messageErrorHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgb
 	reply := tgbotapi.NewMessage(message.Chat.ID, text)
 	reply.ParseMode = "markdown"
 
-	_, err = bot.Send(reply)
+	_, err = bot.Telegram.Send(reply)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
 		go LogEvent(ctx, message.From.ID, "message", "error", fmt.Sprintf("%v", err))

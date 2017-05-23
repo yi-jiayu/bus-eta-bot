@@ -2,18 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
 	"golang.org/x/net/context"
-	"google.golang.org/appengine/urlfetch"
 )
 
-var datamallAccountKey = os.Getenv("DATAMALL_ACCOUNT_KEY")
-var datamallEndpoint = datamall.DataMallEndpoint
 var nowFunc = time.Now
 
 // BusEtas represents the calculated time before buses arrive at a bus stop
@@ -230,14 +226,8 @@ func EtaTable(etas [][4]string) string {
 }
 
 // EtaMessage generates and returns the text for an eta message
-func EtaMessage(ctx context.Context, busStopID string, serviceNos []string) (string, error) {
-	client := datamall.APIClient{
-		Endpoint:   datamallEndpoint,
-		AccountKey: datamallAccountKey,
-		Client:     urlfetch.Client(ctx),
-	}
-
-	busArrival, err := client.GetBusArrival(busStopID, nil)
+func EtaMessage(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
+	busArrival, err := bot.Datamall.GetBusArrival(busStopID, nil)
 	if err != nil {
 		return "", err
 	}

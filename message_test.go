@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine/aetest"
 	"google.golang.org/appengine/datastore"
@@ -13,20 +14,6 @@ import (
 
 func TestTextHandler(t *testing.T) {
 	t.Parallel()
-
-	tg, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tg.Close()
-
-	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	nowFunc = func() time.Time {
-		return now
-	}
-	dm, err := NewMockBusArrivalAPI(now)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer dm.Close()
-	datamallEndpoint = dm.URL
 
 	ctx, done, err := aetest.NewContext()
 	if err != nil {
@@ -46,10 +33,30 @@ func TestTextHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bot := tgbotapi.BotAPI{
-		APIEndpoint: tg.URL + "/bot%s/%s",
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	now, _ := time.Parse(time.RFC3339, time.RFC3339)
+	nowFunc = func() time.Time {
+		return now
+	}
+	dmAPI, err := NewMockBusArrivalAPI(now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dmAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
 		Client:      http.DefaultClient,
 	}
+
+	dm := &datamall.APIClient{
+		Endpoint: dmAPI.URL,
+		Client:   http.DefaultClient,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, dm)
 
 	testCases := []struct {
 		Name     string
@@ -103,19 +110,21 @@ func TestTextHandler(t *testing.T) {
 func TestLocationHandler(t *testing.T) {
 	t.Parallel()
 
-	tg, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tg.Close()
-
 	ctx, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer done()
 
-	bot := tgbotapi.BotAPI{
-		APIEndpoint: tg.URL + "/bot%s/%s",
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
 		Client:      http.DefaultClient,
 	}
+
+	bot := NewBusEtaBot(handlers, tg, nil)
 
 	message := MockMessage()
 	message.Location = &tgbotapi.Location{

@@ -1,5 +1,9 @@
 # Change Log
 
+## v3.4.5 - 2017-05-22
+### Changed
+- Refactored bot implementation for testing
+
 ## v3.4.4 - 2017-05-22
 ### Changed
 - The bot will now ignore text messages where the first word is longer than 5 characters

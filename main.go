@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -43,13 +44,21 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := urlfetch.Client(ctx)
-	bot := tgbotapi.BotAPI{
+
+	tg := &tgbotapi.BotAPI{
 		APIEndpoint: tgbotapi.APIEndpoint,
 		Token:       os.Getenv("TELEGRAM_BOT_TOKEN"),
 		Client:      client,
 	}
 
-	busEtaBot.HandleUpdate(ctx, &bot, &update)
+	dm := &datamall.APIClient{
+		Endpoint:   datamall.DataMallEndpoint,
+		AccountKey: os.Getenv("DATAMALL_ACCOUNT_KEY"),
+		Client:     client,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, dm)
+	bot.HandleUpdate(ctx, &update)
 }
 
 func addBusStopsToDatastoreHandler(w http.ResponseWriter, r *http.Request) {

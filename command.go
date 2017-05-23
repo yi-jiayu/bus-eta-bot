@@ -18,7 +18,7 @@ var commandHandlers = map[string]MessageHandler{
 }
 
 // StartHandler handles a /start command.
-func StartHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 	firstName := message.From.FirstName
 
@@ -58,7 +58,7 @@ func StartHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.M
 
 	go LogEvent(ctx, message.From.ID, "command", "start", "")
 
-	_, err := bot.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func StartHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.M
 }
 
 // VersionHandler handles the /version command
-func VersionHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
 	text := "Bus Eta Bot v" + Version + "\nhttps://github.com/yi-jiayu/bus-eta-bot-3"
@@ -79,12 +79,12 @@ func VersionHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi
 
 	go LogEvent(ctx, message.From.ID, "command", "version", "")
 
-	_, err := bot.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	return err
 }
 
 // AboutHandler handles the /about command
-func AboutHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func AboutHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
 	text := "Bus Eta Bot v" + Version + "\nhttps://github.com/yi-jiayu/bus-eta-bot-3"
@@ -96,7 +96,7 @@ func AboutHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.M
 
 	go LogEvent(ctx, message.From.ID, "command", "about", "")
 
-	_, err := bot.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	return err
 }
 
@@ -104,19 +104,19 @@ func feedbackHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotap
 	return nil
 }
 
-func helpHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func helpHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 	text := "Here's some help on how to use Bus Eta Bot:\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23"
 	reply := tgbotapi.NewMessage(chatID, text)
 
 	go LogEvent(ctx, message.From.ID, "command", "help", "")
 
-	_, err := bot.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	return err
 }
 
 // PrivacyHandler handles the /privacy command.
-func PrivacyHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
 	text := "You can find Bus Eta Bot's privacy policy [here](http://telegra.ph/Bus-Eta-Bot-Privacy-Policy-03-09)."
@@ -129,12 +129,12 @@ func PrivacyHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi
 
 	go LogEvent(ctx, message.From.ID, "command", "privacy", "")
 
-	_, err := bot.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	return err
 }
 
 // EtaHandler handles the /eta command.
-func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
 	if args := message.CommandArguments(); args != "" {
@@ -152,7 +152,7 @@ func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Mes
 			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
 		} else {
 
-			text, err := EtaMessage(ctx, busStopID, serviceNos)
+			text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
 			if err != nil {
 				if err == errNotFound {
 					reply = tgbotapi.NewMessage(chatID, text)
@@ -192,7 +192,7 @@ func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Mes
 
 		go LogEvent(ctx, message.From.ID, "command", "eta", args)
 
-		_, err := bot.Send(reply)
+		_, err := bot.Telegram.Send(reply)
 		if err != nil {
 			return err
 		}
@@ -209,7 +209,7 @@ func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Mes
 
 		go LogEvent(ctx, message.From.ID, "command", "eta", "")
 
-		_, err := bot.Send(reply)
+		_, err := bot.Telegram.Send(reply)
 		if err != nil {
 			return err
 		}
