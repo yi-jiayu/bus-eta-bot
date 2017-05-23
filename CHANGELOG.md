@@ -1,5 +1,12 @@
 # Change Log
 
+## v3.4.4 - 2017-05-22
+### Changed
+- The bot will now ignore text messages where the first word is longer than 5 characters
+- When an eta slash command is invoked directly, the bot will complain if the provided bus stop code is longer than 5 
+characters.
+- Changed bot's response when a bus stop code is invalid
+
 ## v3.4.3 - 2017-05-22
 ### Added
 - More tests.

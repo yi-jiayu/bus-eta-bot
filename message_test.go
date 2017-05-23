@@ -22,6 +22,9 @@ func TestTextHandler(t *testing.T) {
 		return now
 	}
 	dm, err := NewMockBusArrivalAPI(now)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer dm.Close()
 	datamallEndpoint = dm.URL
 

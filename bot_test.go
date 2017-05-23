@@ -1,14 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
-	"time"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
@@ -81,19 +77,7 @@ func NewMockTelegramAPIWithPath() (*httptest.Server, chan Request, chan error) {
 	return ts, reqChan, errChan
 }
 
-func NewMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {
-	busArrival, err := json.Marshal(newArrival(t))
-	if err != nil {
-		return nil, err
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(busArrival)
-	}))
-
-	return ts, nil
-}
-
+// todo: differentiate between private and non-private messages
 func MockMessage() tgbotapi.Message {
 	return tgbotapi.Message{
 		Chat: &tgbotapi.Chat{ID: 1},
@@ -119,59 +103,6 @@ func MockInlineQuery() tgbotapi.InlineQuery {
 			FirstName: "Jiayu",
 		},
 	}
-}
-
-func TestInferEtaQuery(t *testing.T) {
-	t.Parallel()
-
-	t.Run("Bus stop ID only", func(t *testing.T) {
-		query := "96049"
-
-		busStopID, serviceNos := InferEtaQuery(query)
-		actual := struct {
-			BusStopID  string
-			ServiceNos []string
-		}{
-			busStopID,
-			serviceNos,
-		}
-		expected := struct {
-			BusStopID  string
-			ServiceNos []string
-		}{
-			"96049",
-			[]string{},
-		}
-
-		if !reflect.DeepEqual(actual, expected) {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	})
-	t.Run("Bus stop ID and services", func(t *testing.T) {
-		query := "96049 2 24"
-
-		busStopID, serviceNos := InferEtaQuery(query)
-		actual := struct {
-			BusStopID  string
-			ServiceNos []string
-		}{
-			busStopID,
-			serviceNos,
-		}
-		expected := struct {
-			BusStopID  string
-			ServiceNos []string
-		}{
-			"96049",
-			[]string{"2", "24"},
-		}
-
-		if !reflect.DeepEqual(actual, expected) {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	})
 }
 
 func TestBusEtaBot_HandleUpdate(t *testing.T) {

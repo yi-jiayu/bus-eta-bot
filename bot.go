@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
@@ -26,6 +25,7 @@ var (
 	}
 )
 
+// BusEtaBot contains all the handlers used by this bot
 type BusEtaBot struct {
 	CommandHandlers           map[string]MessageHandler
 	TextHandler               MessageHandler
@@ -48,6 +48,7 @@ var busEtaBot = BusEtaBot{
 	CallbackErrorHandler:      callbackErrorHandler,
 }
 
+// HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type
 func (b BusEtaBot) HandleUpdate(ctx context.Context, bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
 		if command := message.Command(); command != "" {
@@ -145,20 +146,6 @@ func messageErrorHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgb
 		log.Errorf(ctx, "%v", err)
 		go LogEvent(ctx, message.From.ID, "message", "error", fmt.Sprintf("%v", err))
 	}
-}
-
-// InferEtaQuery extracts a bus stop ID and service numbers from a text message
-func InferEtaQuery(text string) (string, []string) {
-	if len(text) > 30 {
-		text = text[:30]
-	}
-
-	text = strings.ToUpper(text)
-	text = illegalCharsRegex.ReplaceAllString(text, "")
-	tokens := strings.Split(text, " ")
-	busStopID, serviceNos := tokens[0], tokens[1:]
-
-	return busStopID, serviceNos
 }
 
 // LogEventWithValue logs an interaction with the bot with a value

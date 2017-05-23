@@ -21,38 +21,49 @@ func TextHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Me
 	chatID := message.Chat.ID
 	busStopID, serviceNos := InferEtaQuery(message.Text)
 
+	// ignore the message if the bus stop was all invalid characters
 	if busStopID == "" {
 		return nil
 	}
 
-	text, err := EtaMessage(ctx, busStopID, serviceNos)
-	if err != nil {
-		return err
-	}
+	var reply tgbotapi.MessageConfig
 
-	callbackData := EtaCallbackData{
-		Type:       "refresh",
-		BusStopID:  busStopID,
-		ServiceNos: serviceNos,
-	}
+	if len(busStopID) > 5 && message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
+		reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
+	} else {
+		text, err := EtaMessage(ctx, busStopID, serviceNos)
+		if err != nil {
+			if err == errNotFound {
+				reply = tgbotapi.NewMessage(chatID, text)
+			} else {
+				return err
+			}
+		} else {
+			callbackData := EtaCallbackData{
+				Type:       "refresh",
+				BusStopID:  busStopID,
+				ServiceNos: serviceNos,
+			}
 
-	callbackDataJSON, err := json.Marshal(callbackData)
-	if err != nil {
-		return err
-	}
-	callbackDataJSONStr := string(callbackDataJSON)
+			callbackDataJSON, err := json.Marshal(callbackData)
+			if err != nil {
+				return err
+			}
+			callbackDataJSONStr := string(callbackDataJSON)
 
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-	reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
-				tgbotapi.InlineKeyboardButton{
-					Text:         "Refresh",
-					CallbackData: &callbackDataJSONStr,
+			reply = tgbotapi.NewMessage(chatID, text)
+			reply.ParseMode = "markdown"
+			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+					{
+						tgbotapi.InlineKeyboardButton{
+							Text:         "Refresh",
+							CallbackData: &callbackDataJSONStr,
+						},
+					},
 				},
-			},
-		},
+			}
+		}
 	}
 
 	if !message.Chat.IsPrivate() {
@@ -61,7 +72,7 @@ func TextHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Me
 
 	go LogEvent(ctx, message.From.ID, "message", "text", message.Text)
 
-	_, err = bot.Send(reply)
+	_, err := bot.Send(reply)
 	return err
 }
 

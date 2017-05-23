@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
@@ -27,6 +28,20 @@ type EtaCallbackData struct {
 	Type       string   `json:"t"`
 	BusStopID  string   `json:"b"`
 	ServiceNos []string `json:"s"`
+}
+
+// InferEtaQuery extracts a bus stop ID and service numbers from a text message
+func InferEtaQuery(text string) (string, []string) {
+	if len(text) > 30 {
+		text = text[:30]
+	}
+
+	text = strings.ToUpper(text)
+	text = illegalCharsRegex.ReplaceAllString(text, "")
+	tokens := strings.Split(text, " ")
+	busStopID, serviceNos := tokens[0], tokens[1:]
+
+	return busStopID, serviceNos
 }
 
 // CalculateEtas calculates the time before buses arrive from the LTA DataMall bus arrival response
@@ -122,10 +137,20 @@ func FormatEtas(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
 
 	table := EtaTable(services)
 
+	var header string
+	if busStop.Description != "" {
+		header = fmt.Sprintf("*%s (%s)*\n", busStop.Description, busStop.BusStopID)
+	} else {
+		header = fmt.Sprintf("*%s*\n", busStop.BusStopID)
+	}
+
+	if busStop.Road != "" {
+		header += fmt.Sprintf("%s\n", busStop.Road)
+	}
+
 	shown := fmt.Sprintf("Showing %d out of %d services for this bus stop.", showing, len(busEtas.Services))
 	updated := fmt.Sprintf("Last updated at %s", busEtas.UpdatedTime.Format(time.RFC822))
-	formatted := fmt.Sprintf("*%s (%s)*\n%s\n```\n%s```\n%s\n\n_%s_",
-		busStop.Description, busStop.BusStopID, busStop.Road, table, shown, updated)
+	formatted := fmt.Sprintf("%s```\n%s```\n%s\n\n_%s_", header, table, shown, updated)
 
 	return formatted
 }
@@ -225,10 +250,11 @@ func EtaMessage(ctx context.Context, busStopID string, serviceNos []string) (str
 	busStop, err := GetBusStop(ctx, busStopID)
 	if err != nil {
 		if err == errNotFound {
-			busStop = BusStop{
-				Description: "Invalid bus stop code",
-				BusStopID:   busStopID,
+			if len(etas.Services) == 0 {
+				return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopID), err
 			}
+
+			busStop.BusStopID = busStopID
 		} else {
 			return "", err
 		}

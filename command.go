@@ -140,48 +140,59 @@ func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Mes
 	if args := message.CommandArguments(); args != "" {
 		busStopID, serviceNos := InferEtaQuery(args)
 
+		// ignore the message if the bus stop was all invalid characters
+		// todo: inform the user
 		if busStopID == "" {
 			return nil
 		}
 
-		text, err := EtaMessage(ctx, busStopID, serviceNos)
-		if err != nil {
-			return err
-		}
+		var reply tgbotapi.MessageConfig
 
-		callbackData := EtaCallbackData{
-			Type:       "refresh",
-			BusStopID:  busStopID,
-			ServiceNos: serviceNos,
-		}
+		if len(busStopID) > 5 {
+			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
+		} else {
 
-		callbackDataJSON, err := json.Marshal(callbackData)
-		if err != nil {
-			return err
-		}
-		callbackDataJSONStr := string(callbackDataJSON)
+			text, err := EtaMessage(ctx, busStopID, serviceNos)
+			if err != nil {
+				if err == errNotFound {
+					reply = tgbotapi.NewMessage(chatID, text)
+				} else {
+					return err
+				}
+			} else {
+				callbackData := EtaCallbackData{
+					Type:       "refresh",
+					BusStopID:  busStopID,
+					ServiceNos: serviceNos,
+				}
 
-		reply := tgbotapi.NewMessage(chatID, text)
-		reply.ParseMode = "markdown"
-		reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-			InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-				{
-					tgbotapi.InlineKeyboardButton{
-						Text:         "Refresh",
-						CallbackData: &callbackDataJSONStr,
+				callbackDataJSON, err := json.Marshal(callbackData)
+				if err != nil {
+					return err
+				}
+				callbackDataJSONStr := string(callbackDataJSON)
+
+				reply = tgbotapi.NewMessage(chatID, text)
+				reply.ParseMode = "markdown"
+				reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+					InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+						{
+							tgbotapi.InlineKeyboardButton{
+								Text:         "Refresh",
+								CallbackData: &callbackDataJSONStr,
+							},
+						},
 					},
-				},
-			},
+				}
+			}
 		}
-
 		if !message.Chat.IsPrivate() {
-			messageID := message.MessageID
-			reply.ReplyToMessageID = messageID
+			reply.ReplyToMessageID = message.MessageID
 		}
 
 		go LogEvent(ctx, message.From.ID, "command", "eta", args)
 
-		_, err = bot.Send(reply)
+		_, err := bot.Send(reply)
 		if err != nil {
 			return err
 		}
@@ -189,12 +200,11 @@ func EtaHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Mes
 		text := "Alright, send me a bus stop code to get etas for."
 		reply := tgbotapi.NewMessage(chatID, text)
 		if !message.Chat.IsPrivate() {
-			messageID := message.MessageID
-			reply.ReplyToMessageID = messageID
-			reply.ReplyMarkup = tgbotapi.ForceReply{
-				ForceReply: true,
-				Selective:  true,
-			}
+			reply.ReplyToMessageID = message.MessageID
+		}
+		reply.ReplyMarkup = tgbotapi.ForceReply{
+			ForceReply: true,
+			Selective:  true,
 		}
 
 		go LogEvent(ctx, message.From.ID, "command", "eta", "")

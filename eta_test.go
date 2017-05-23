@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
+	"net/http"
+	"net/http/httptest"
 )
 
 func newArrival(t time.Time) datamall.BusArrival {
@@ -39,6 +42,87 @@ func newArrival(t time.Time) datamall.BusArrival {
 			},
 		},
 	}
+}
+
+func NewMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {
+	busArrival, err := json.Marshal(newArrival(t))
+	if err != nil {
+		return nil, err
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(busArrival)
+	}))
+
+	return ts, nil
+}
+
+func NewEmptyMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {
+	busArrival, err := json.Marshal(datamall.BusArrival{
+		Services: []datamall.Service{},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(busArrival)
+	}))
+
+	return ts, nil
+}
+
+func TestInferEtaQuery(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Bus stop ID only", func(t *testing.T) {
+		query := "96049"
+
+		busStopID, serviceNos := InferEtaQuery(query)
+		actual := struct {
+			BusStopID  string
+			ServiceNos []string
+		}{
+			busStopID,
+			serviceNos,
+		}
+		expected := struct {
+			BusStopID  string
+			ServiceNos []string
+		}{
+			"96049",
+			[]string{},
+		}
+
+		if !reflect.DeepEqual(actual, expected) {
+			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+			t.Fail()
+		}
+	})
+	t.Run("Bus stop ID and services", func(t *testing.T) {
+		query := "96049 2 24"
+
+		busStopID, serviceNos := InferEtaQuery(query)
+		actual := struct {
+			BusStopID  string
+			ServiceNos []string
+		}{
+			busStopID,
+			serviceNos,
+		}
+		expected := struct {
+			BusStopID  string
+			ServiceNos []string
+		}{
+			"96049",
+			[]string{"2", "24"},
+		}
+
+		if !reflect.DeepEqual(actual, expected) {
+			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+			t.Fail()
+		}
+	})
 }
 
 func TestCalculateEtas(t *testing.T) {
@@ -207,3 +291,35 @@ func TestFormatEtas(t *testing.T) {
 		}
 	})
 }
+
+// todo: refactor datamallEndpoint into per-request variable
+//func TestEtaMessage(t *testing.T) {
+//	t.Parallel()
+//
+//	ctx, done, err := aetest.NewContext()
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	defer done()
+//
+//	now, _ := time.Parse(time.RFC3339, time.RFC3339)
+//	nowFunc = func() time.Time {
+//		return now
+//	}
+//	dm, err := NewEmptyMockBusArrivalAPI(now)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	defer dm.Close()
+//	datamallEndpoint = dm.URL
+//
+//	actual, err := EtaMessage(ctx, "invalid", nil)
+//	if err != nil && err != errNotFound {
+//		t.Fatal(err)
+//	}
+//
+//	expected := "Oh no! I couldn't find any information about bus stop invalid."
+//	if actual != expected {
+//		t.Fail()
+//	}
+//}
