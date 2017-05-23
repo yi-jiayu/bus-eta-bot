@@ -59,6 +59,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	ga := &GAClient{
 		Endpoint: MeasurementProtocolEndpoint,
+		TrackingID: os.Getenv("GA_TID"),
 		Client:   client,
 	}
 

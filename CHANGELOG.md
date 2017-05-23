@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.4.8 - 2017-05-24
+### Fixed
+- Fixed GA_TID not being set
+
 ## 3.4.7 - 2017-05-24
 ### Changed
 - Standardised event types for analytics
