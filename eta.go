@@ -26,8 +26,10 @@ type EtaCallbackData struct {
 	ServiceNos []string `json:"s"`
 }
 
-// InferEtaQuery extracts a bus stop ID and service numbers from a text message
+// InferEtaQuery extracts a bus stop ID and service numbers from a text message.
 func InferEtaQuery(text string) (string, []string) {
+	// todo: report if the bus stop id contains illegal characters
+
 	if len(text) > 30 {
 		text = text[:30]
 	}

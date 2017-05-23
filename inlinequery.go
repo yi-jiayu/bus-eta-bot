@@ -68,7 +68,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 	}
 
 	var nextOffset string
-	if len(busStops) > 0 {
+	if len(busStops) == 50 {
 		nextOffset = fmt.Sprintf("%d", offset+50)
 	}
 
@@ -84,7 +84,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 	} else {
 		action = "offset"
 	}
-	go LogEvent(ctx, ilq.From.ID, "inline_query", action, query)
+	go LogEvent(ctx, ilq.From.ID, "inline_query", action, "")
 
 	resp, err := bot.Telegram.AnswerInlineQuery(config)
 	if err != nil {
@@ -133,7 +133,7 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 		ParseMode: "markdown",
 	}
 
-	go LogEvent(ctx, cir.From.ID, "inline_query", "chosen_inline_result", fmt.Sprintf("%s %s", cir.ResultID, cir.Query))
+	go LogEvent(ctx, cir.From.ID, "inline_query", "chosen_inline_result", "")
 
 	_, err = bot.Telegram.Send(reply)
 	return err

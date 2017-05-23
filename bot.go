@@ -44,6 +44,7 @@ type BusEtaBot struct {
 	Datamall *datamall.APIClient
 }
 
+// Handlers contains all the handlers used by the bot.
 type Handlers struct {
 	CommandHandlers           map[string]MessageHandler
 	TextHandler               MessageHandler
@@ -55,6 +56,7 @@ type Handlers struct {
 	CallbackErrorHandler      func(ctx context.Context, bot *BusEtaBot, query *tgbotapi.CallbackQuery, err error)
 }
 
+// NewBusEtaBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.
 func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient) BusEtaBot {
 	return BusEtaBot{
 		Handlers: handlers,
@@ -150,7 +152,7 @@ func (b *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 
 func messageErrorHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error) {
 	log.Errorf(ctx, "%v", err)
-	go LogEvent(ctx, message.From.ID, "message", "error", fmt.Sprintf("%v", err))
+	go LogEvent(ctx, message.From.ID, "message", "error", "")
 
 	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
 	reply := tgbotapi.NewMessage(message.Chat.ID, text)
@@ -159,7 +161,7 @@ func messageErrorHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.
 	_, err = bot.Telegram.Send(reply)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
-		go LogEvent(ctx, message.From.ID, "message", "error", fmt.Sprintf("%v", err))
+		go LogEvent(ctx, message.From.ID, "message", "error", "")
 	}
 }
 

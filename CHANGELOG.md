@@ -1,5 +1,11 @@
 # Change Log
 
+## v3.4.6 - 2017-05-22
+### Changed
+- When an eta slash command is invoked directly, the bot will complain if the provided bus stop code was invalid.
+- The bot will only include `next_offset` when answering inline queries if 50 results are returned.
+- Reduce the amount of information logged to Google Analytics
+
 ## v3.4.5 - 2017-05-22
 ### Changed
 - Refactored bot implementation for testing

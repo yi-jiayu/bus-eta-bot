@@ -60,7 +60,7 @@ func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 		},
 	}
 
-	go LogEvent(ctx, cbq.From.ID, "callback_query", "refresh", fmt.Sprintf("%s %v", bsID, sNos))
+	go LogEvent(ctx, cbq.From.ID, "callback_query", "refresh", "")
 
 	answer := tgbotapi.NewCallback(cbq.ID, "Etas updated!")
 
@@ -105,7 +105,7 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, query *tgbotapi.Cal
 // callbackErrorHandler is for informing the user about an error while processing a callback query.
 func callbackErrorHandler(ctx context.Context, bot *BusEtaBot, query *tgbotapi.CallbackQuery, err error) {
 	log.Errorf(ctx, "%v", err)
-	go LogEvent(ctx, query.From.ID, "callback_query", "error", fmt.Sprintf("%v", err))
+	go LogEvent(ctx, query.From.ID, "callback_query", "error", "")
 
 	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
 	answer := tgbotapi.NewCallbackWithAlert(query.ID, text)
@@ -113,6 +113,6 @@ func callbackErrorHandler(ctx context.Context, bot *BusEtaBot, query *tgbotapi.C
 	_, err = bot.Telegram.AnswerCallbackQuery(answer)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
-		go LogEvent(ctx, query.From.ID, "callback_query", "error", fmt.Sprintf("%v", err))
+		go LogEvent(ctx, query.From.ID, "callback_query", "error", "")
 	}
 }

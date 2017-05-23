@@ -140,21 +140,21 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 	if args := message.CommandArguments(); args != "" {
 		busStopID, serviceNos := InferEtaQuery(args)
 
-		// ignore the message if the bus stop was all invalid characters
-		// todo: inform the user
-		if busStopID == "" {
-			return nil
-		}
-
 		var reply tgbotapi.MessageConfig
+		var label string
 
-		if len(busStopID) > 5 {
+		if busStopID == "" {
+			label = "invalid"
+			reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
+		} else if len(busStopID) > 5 {
+			label = "invalid"
 			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
 		} else {
 
 			text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
 			if err != nil {
 				if err == errNotFound {
+					label = "not_found"
 					reply = tgbotapi.NewMessage(chatID, text)
 				} else {
 					return err
@@ -184,13 +184,15 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 						},
 					},
 				}
+
+				label = "ok"
 			}
 		}
 		if !message.Chat.IsPrivate() {
 			reply.ReplyToMessageID = message.MessageID
 		}
 
-		go LogEvent(ctx, message.From.ID, "command", "eta", args)
+		go LogEvent(ctx, message.From.ID, "command", "eta", label)
 
 		_, err := bot.Telegram.Send(reply)
 		if err != nil {
@@ -207,7 +209,7 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 			Selective:  true,
 		}
 
-		go LogEvent(ctx, message.From.ID, "command", "eta", "")
+		go LogEvent(ctx, message.From.ID, "command", "et", "no_args")
 
 		_, err := bot.Telegram.Send(reply)
 		if err != nil {

@@ -23,19 +23,28 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 
 	// ignore the message if the bus stop was all invalid characters
 	if busStopID == "" {
+		go LogEvent(ctx, message.From.ID, "message", "text", "ignored")
 		return nil
 	}
 
 	var reply tgbotapi.MessageConfig
+	var label string
 
-	if len(busStopID) > 5 && message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
-		reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
+	if len(busStopID) > 5 {
+		if message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
+			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
+			label = "continued_invalid"
+		} else {
+			return nil
+		}
 	} else {
 		text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
 		if err != nil {
 			if err == errNotFound {
 				reply = tgbotapi.NewMessage(chatID, text)
+				label = "continued_not_found"
 			} else {
+				go LogEvent(ctx, message.From.ID, "message", "text", "ignored")
 				return err
 			}
 		} else {
@@ -63,6 +72,12 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 					},
 				},
 			}
+
+			if message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
+				label = "continued_ok"
+			} else {
+				label = "ok"
+			}
 		}
 	}
 
@@ -70,7 +85,7 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 		reply.ReplyToMessageID = message.MessageID
 	}
 
-	go LogEvent(ctx, message.From.ID, "message", "text", message.Text)
+	go LogEvent(ctx, message.From.ID, "message", "text_eta", label)
 
 	_, err := bot.Telegram.Send(reply)
 	return err
@@ -91,7 +106,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 		text += fmt.Sprintf("%s (%s), ", bs.Description, bs.BusStopID)
 	}
 
-	go LogEvent(ctx, message.From.ID, "message", "location", fmt.Sprintf("%f, %f", location.Latitude, location.Longitude))
+	go LogEvent(ctx, message.From.ID, "message", "location", "")
 
 	reply := tgbotapi.NewMessage(chatID, text)
 	_, err = bot.Telegram.Send(reply)
