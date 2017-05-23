@@ -26,8 +26,8 @@ const (
 
 // Event actions
 const (
-	ActionEtaCommandWithArgs    = "eta_command"
-	ActionEtaCommandWithoutArgs = "eta_command"
+	ActionEtaCommandWithArgs    = "eta_command_with_args"
+	ActionEtaCommandWithoutArgs = "eta_command_without_args"
 	ActionStartCommand          = "start_command"
 	ActionAboutCommand          = "about_command"
 	ActionVersionCommand        = "version_command"

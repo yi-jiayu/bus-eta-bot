@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.4.9 - 2017-05-24
+### Fixed
+- Fixed incorrect constants in analytics event action strings
+
 ## 3.4.8 - 2017-05-24
 ### Fixed
 - Fixed GA_TID not being set
