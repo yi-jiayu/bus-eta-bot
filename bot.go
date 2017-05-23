@@ -3,28 +3,15 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"os"
 	"regexp"
 
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
-	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/urlfetch"
 )
 
 var illegalCharsRegex = regexp.MustCompile(`[^A-Z0-9 ]`)
-
-var (
-	gaTID = os.Getenv("GA_TID")
-	app   = App{
-		Name:    "Bus Eta Bot",
-		ID:      "github.com/yi-jiayu/bus-eta-bot-3",
-		Version: Version,
-	}
-)
 
 var handlers = Handlers{
 	CommandHandlers:           commandHandlers,
@@ -42,6 +29,7 @@ type BusEtaBot struct {
 	Handlers Handlers
 	Telegram *tgbotapi.BotAPI
 	Datamall *datamall.APIClient
+	GA       *GAClient
 }
 
 // Handlers contains all the handlers used by the bot.
@@ -150,58 +138,12 @@ func (b *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	}
 }
 
-func messageErrorHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error) {
-	log.Errorf(ctx, "%v", err)
-	go LogEvent(ctx, message.From.ID, "message", "error", "")
-
-	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
-	reply := tgbotapi.NewMessage(message.Chat.ID, text)
-	reply.ParseMode = "markdown"
-
-	_, err = bot.Telegram.Send(reply)
-	if err != nil {
-		log.Errorf(ctx, "%v", err)
-		go LogEvent(ctx, message.From.ID, "message", "error", "")
-	}
-}
-
-// LogEventWithValue logs an interaction with the bot with a value
-func LogEventWithValue(ctx context.Context, userID int, category, action, label string, value int) {
-	// don't record analytics data while testing
-	if gaTID == "" || ctx == nil || userID == 1 {
-		return
-	}
-
-	client := urlfetch.Client(ctx)
-	gaClient := NewClient(gaTID, client)
-
-	user := User{
-		UserID: fmt.Sprintf("%d", userID),
-	}
-
-	event := Event{
-		Category: category,
-		Action:   action,
-	}
-
-	if label != "" {
-		if len(label) > 500 {
-			label = label[:500]
+// LogEvent logs an event to the Measurement Protocol if a GAClient is set on the bot.
+func (b *BusEtaBot) LogEvent(ctx context.Context, user *tgbotapi.User, category, action, label string) {
+	if b.GA != nil {
+		_, err := b.GA.LogEvent(user.ID, user.LanguageCode, category, action, label)
+		if err != nil {
+			log.Errorf(ctx, "error while logging event: %v", err)
 		}
-		event.Label = &label
 	}
-
-	if value != 0 {
-		event.Value = &value
-	}
-
-	_, err := gaClient.Send(user, app, event)
-	if err != nil {
-		log.Errorf(ctx, "%v", err)
-	}
-}
-
-// LogEvent logs an interaction with the bot
-func LogEvent(ctx context.Context, userID int, category, action, label string) {
-	LogEventWithValue(ctx, userID, category, action, label, 0)
 }

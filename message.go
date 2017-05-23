@@ -7,6 +7,8 @@ import (
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 )
 
 // MessageHandler is a handler for incoming messages
@@ -23,18 +25,17 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 
 	// ignore the message if the bus stop was all invalid characters
 	if busStopID == "" {
-		go LogEvent(ctx, message.From.ID, "message", "text", "ignored")
+		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
 		return nil
 	}
 
 	var reply tgbotapi.MessageConfig
-	var label string
 
 	if len(busStopID) > 5 {
 		if message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
 			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
-			label = "continued_invalid"
 		} else {
+			go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
 			return nil
 		}
 	} else {
@@ -42,9 +43,8 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 		if err != nil {
 			if err == errNotFound {
 				reply = tgbotapi.NewMessage(chatID, text)
-				label = "continued_not_found"
 			} else {
-				go LogEvent(ctx, message.From.ID, "message", "text", "ignored")
+				go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
 				return err
 			}
 		} else {
@@ -73,11 +73,6 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 				},
 			}
 
-			if message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
-				label = "continued_ok"
-			} else {
-				label = "ok"
-			}
 		}
 	}
 
@@ -85,7 +80,11 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 		reply.ReplyToMessageID = message.MessageID
 	}
 
-	go LogEvent(ctx, message.From.ID, "message", "text_eta", label)
+	if message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
+		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionContinuedTextMessage, message.Chat.Type)
+	} else {
+		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionEtaTextMessage, message.Chat.Type)
+	}
 
 	_, err := bot.Telegram.Send(reply)
 	return err
@@ -106,9 +105,22 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 		text += fmt.Sprintf("%s (%s), ", bs.Description, bs.BusStopID)
 	}
 
-	go LogEvent(ctx, message.From.ID, "message", "location", "")
+	go bot.LogEvent(ctx, message.From, CategoryMessage, ActionLocationMessage, message.Chat.Type)
 
 	reply := tgbotapi.NewMessage(chatID, text)
 	_, err = bot.Telegram.Send(reply)
 	return err
+}
+
+func messageErrorHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error) {
+	log.Errorf(ctx, "%v", err)
+
+	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
+	reply := tgbotapi.NewMessage(message.Chat.ID, text)
+	reply.ParseMode = "markdown"
+
+	_, err = bot.Telegram.Send(reply)
+	if err != nil {
+		log.Errorf(ctx, "%v", err)
+	}
 }

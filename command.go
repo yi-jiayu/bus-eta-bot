@@ -56,7 +56,7 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 		reply.ReplyToMessageID = messageID
 	}
 
-	go LogEvent(ctx, message.From.ID, "command", "start", "")
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionStartCommand, message.Chat.Type)
 
 	_, err := bot.Telegram.Send(reply)
 	if err != nil {
@@ -77,7 +77,7 @@ func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Messa
 		reply.ReplyToMessageID = messageID
 	}
 
-	go LogEvent(ctx, message.From.ID, "command", "version", "")
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionVersionCommand, message.Chat.Type)
 
 	_, err := bot.Telegram.Send(reply)
 	return err
@@ -94,7 +94,7 @@ func AboutHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 		reply.ReplyToMessageID = messageID
 	}
 
-	go LogEvent(ctx, message.From.ID, "command", "about", "")
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionAboutCommand, message.Chat.Type)
 
 	_, err := bot.Telegram.Send(reply)
 	return err
@@ -109,7 +109,7 @@ func helpHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 	text := "Here's some help on how to use Bus Eta Bot:\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23"
 	reply := tgbotapi.NewMessage(chatID, text)
 
-	go LogEvent(ctx, message.From.ID, "command", "help", "")
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionHelpCommand, message.Chat.Type)
 
 	_, err := bot.Telegram.Send(reply)
 	return err
@@ -127,7 +127,7 @@ func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Messa
 		reply.ReplyToMessageID = messageID
 	}
 
-	go LogEvent(ctx, message.From.ID, "command", "privacy", "")
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionPrivacyCommand, message.Chat.Type)
 
 	_, err := bot.Telegram.Send(reply)
 	return err
@@ -141,20 +141,16 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 		busStopID, serviceNos := InferEtaQuery(args)
 
 		var reply tgbotapi.MessageConfig
-		var label string
 
 		if busStopID == "" {
-			label = "invalid"
 			reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
 		} else if len(busStopID) > 5 {
-			label = "invalid"
 			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
 		} else {
 
 			text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
 			if err != nil {
 				if err == errNotFound {
-					label = "not_found"
 					reply = tgbotapi.NewMessage(chatID, text)
 				} else {
 					return err
@@ -184,15 +180,13 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 						},
 					},
 				}
-
-				label = "ok"
 			}
 		}
 		if !message.Chat.IsPrivate() {
 			reply.ReplyToMessageID = message.MessageID
 		}
 
-		go LogEvent(ctx, message.From.ID, "command", "eta", label)
+		go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithArgs, message.Chat.Type)
 
 		_, err := bot.Telegram.Send(reply)
 		if err != nil {
@@ -209,7 +203,7 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 			Selective:  true,
 		}
 
-		go LogEvent(ctx, message.From.ID, "command", "et", "no_args")
+		go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
 
 		_, err := bot.Telegram.Send(reply)
 		if err != nil {

@@ -2,48 +2,38 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
 	"os"
 	"testing"
 )
 
 var tid = os.Getenv("GA_TID")
 
-func TestGAClient_Test(t *testing.T) {
-	t.Parallel()
-
+func TestGAClient_LogEvent(t *testing.T) {
 	if tid == "" {
 		return
 	}
 
-	client := NewDefaultClient(tid)
-
-	event := Event{
-		Category: "command",
-		Action:   "start",
+	gaClient := GAClient{
+		Endpoint:   MeasurementProtocolValidationEndpoint,
+		TrackingID: tid,
+		Client:     http.DefaultClient,
 	}
 
-	user := User{
-		UserID: "as8eknlll",
-	}
-
-	app := App{
-		Name:    "My App",
-		ID:      "com.platform.vending",
-		Version: "1.2",
-	}
-
-	resp, err := client.Test(user, app, event)
+	resp, err := gaClient.LogEvent(1, "en-US", CategoryMessage, ActionCallbackError, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var response ValidationServerResponse
-	err = json.NewDecoder(resp.Body).Decode(&response)
+	var vsr ValidationServerResponse
+	err = json.NewDecoder(resp.Body).Decode(&vsr)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !response.Results[0].Valid {
-		t.Fatalf("%+v", response)
+	if !vsr.Results[0].Valid {
+		fmt.Printf("%+v", vsr)
+		t.Fail()
 	}
 }

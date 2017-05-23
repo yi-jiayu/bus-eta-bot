@@ -78,13 +78,11 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 		NextOffset:    nextOffset,
 	}
 
-	var action string
 	if ilq.Offset == "" {
-		action = "new"
+		go bot.LogEvent(ctx, ilq.From, CategoryInlineQuery, ActionNewInlineQuery, "")
 	} else {
-		action = "offset"
+		go bot.LogEvent(ctx, ilq.From, CategoryInlineQuery, ActionOffsetInlineQuery, "")
 	}
-	go LogEvent(ctx, ilq.From.ID, "inline_query", action, "")
 
 	resp, err := bot.Telegram.AnswerInlineQuery(config)
 	if err != nil {
@@ -133,7 +131,7 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 		ParseMode: "markdown",
 	}
 
-	go LogEvent(ctx, cir.From.ID, "inline_query", "chosen_inline_result", "")
+	go bot.LogEvent(ctx, cir.From, CategoryInlineQuery, ActionChosenInlineResult, "")
 
 	_, err = bot.Telegram.Send(reply)
 	return err

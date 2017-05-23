@@ -10,9 +10,63 @@ import (
 
 // Measurement Protocol constants
 const (
-	ProtocolVersion = "1"
-	Endpoint        = "https://www.google-analytics.com/collect"
-	DebugEndpoint   = "https://www.google-analytics.com/debug/collect"
+	MeasurementProtocolVersion            = "1"
+	MeasurementProtocolEndpoint           = "https://www.google-analytics.com/collect"
+	MeasurementProtocolValidationEndpoint = "https://www.google-analytics.com/debug/collect"
+)
+
+// Event categories
+const (
+	CategoryCommand     = "command"
+	CategoryMessage     = "message"
+	CategoryInlineQuery = "inline_query"
+	CategoryCallback    = "callback_query"
+	CategoryError       = "error"
+)
+
+// Event actions
+const (
+	ActionEtaCommandWithArgs    = "eta_command"
+	ActionEtaCommandWithoutArgs = "eta_command"
+	ActionStartCommand          = "start_command"
+	ActionAboutCommand          = "about_command"
+	ActionVersionCommand        = "version_command"
+	ActionHelpCommand           = "help_command"
+	ActionPrivacyCommand        = "privacy_command"
+	ActionFeedbackCommand       = "feedback_command"
+
+	ActionEtaTextMessage       = "eta_text_message"
+	ActionContinuedTextMessage = "continued_text_message"
+	ActionIgnoredTextMessage   = "ignored_text_message"
+	ActionLocationMessage      = "location_message"
+
+	ActionNewInlineQuery     = "new_inline_query"
+	ActionOffsetInlineQuery  = "offset_inline_query"
+	ActionChosenInlineResult = "chosen_inline_result"
+
+	ActionRefreshCallback = "refresh_callback"
+	ActionResendCallback  = "resend_callback"
+	ActionEtaCallback     = "eta_callback"
+	ActionEtaDemoCallback = "eta_demo_callback"
+
+	ActionCommandError     = "command_error"
+	ActionMessageError     = "message_error"
+	ActionInlineQueryError = "inline_query_error"
+	ActionCallbackError    = "callback_error"
+)
+
+// Event labels
+const (
+	LabelCallbackFromInlineMessage = "inline_message"
+)
+
+var errStatusCode = errors.New("status code error")
+
+// Application details
+var (
+	ApplicationName    = "Bus Eta Bot"
+	ApplicationID      = "github.com/yi-jiayu/bus-eta-bot-3"
+	ApplicationVersion = Version
 )
 
 // GAClient contains the endpoint, tracking id and http client to use to send hits to the Measurement Protocol
@@ -20,33 +74,6 @@ type GAClient struct {
 	Endpoint   string
 	TrackingID string
 	Client     *http.Client
-}
-
-// User contains a client id or a user id
-type User struct {
-	ClientID string
-	UserID   string
-}
-
-// Event represents an event hit type
-type Event struct {
-	Category string  `json:"ec"`
-	Action   string  `json:"ea"`
-	Label    *string `json:"el"`
-	Value    *int    `json:"ev"`
-}
-
-// App contains information for app tracking
-type App struct {
-	Name        string
-	ID          string
-	Version     string
-	InstallerID string
-}
-
-// Hit represents any object which can be serialised into the Measurement Protocol
-type Hit interface {
-	Values() map[string]string
 }
 
 // ValidationServerResponse is a response from the Measurement Protocol Validation Server
@@ -68,50 +95,10 @@ type ParserMessage struct {
 	Parameter   string `json:"parameter"`
 }
 
-// Values serialises an Event's properties
-func (e Event) Values() map[string]string {
-	values := map[string]string{
-		"t":  "event",
-		"ec": e.Category,
-		"ea": e.Action,
-	}
-
-	if e.Label != nil {
-		values["el"] = *e.Label
-	}
-
-	if e.Value != nil {
-		values["ev"] = fmt.Sprintf("%d", *e.Value)
-	}
-
-	return values
-}
-
-// Values serialises an App's properties
-func (a App) Values() map[string]string {
-	values := map[string]string{
-		"an": a.Name,
-	}
-
-	if a.ID != "" {
-		values["aid"] = a.ID
-	}
-
-	if a.Version != "" {
-		values["av"] = a.Version
-	}
-
-	if a.InstallerID != "" {
-		values["aiid"] = a.InstallerID
-	}
-
-	return values
-}
-
 // NewDefaultClient returns a GAClient which uses http.DefaultClient
 func NewDefaultClient(tid string) GAClient {
 	return GAClient{
-		Endpoint:   Endpoint,
+		Endpoint:   MeasurementProtocolEndpoint,
 		TrackingID: tid,
 		Client:     http.DefaultClient,
 	}
@@ -120,30 +107,42 @@ func NewDefaultClient(tid string) GAClient {
 // NewClient constructs a GAClient with the provided tid and http.Client
 func NewClient(tid string, client *http.Client) GAClient {
 	return GAClient{
-		Endpoint:   Endpoint,
+		Endpoint:   MeasurementProtocolEndpoint,
 		TrackingID: tid,
 		Client:     client,
 	}
 }
 
-func (c GAClient) do(endpoint string, user User, hits ...Hit) (*http.Response, error) {
+// LogEvent logs an event to the Measurement Protocol.
+func (c GAClient) LogEvent(userID int, languageCode, category, action, label string) (*http.Response, error) {
 	values := url.Values{}
-	values.Set("v", ProtocolVersion)
+
+	// protocol version
+	values.Set("v", MeasurementProtocolVersion)
+
+	// tid
 	values.Set("tid", c.TrackingID)
 
-	if user.ClientID != "" {
-		values.Set("cid", user.ClientID)
-	} else {
-		values.Set("uid", user.UserID)
+	// user ID and language code
+	values.Set("uid", fmt.Sprintf("%d", userID))
+	if languageCode != "" {
+		values.Set("ul", languageCode)
 	}
 
-	for _, hit := range hits {
-		for k, v := range hit.Values() {
-			values.Set(k, v)
-		}
-	}
+	// hit type
+	values.Set("t", "event")
 
-	req, err := http.NewRequest("POST", endpoint, strings.NewReader(values.Encode()))
+	// application details
+	values.Set("an", ApplicationName)
+	values.Set("aid", ApplicationID)
+	values.Set("av", ApplicationVersion)
+
+	// event details
+	values.Set("ec", category)
+	values.Set("ea", action)
+	values.Set("el", label)
+
+	req, err := http.NewRequest("POST", c.Endpoint, strings.NewReader(values.Encode()))
 	if err != nil {
 		return nil, err
 	}
@@ -153,19 +152,9 @@ func (c GAClient) do(endpoint string, user User, hits ...Hit) (*http.Response, e
 		return resp, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return resp, errors.New("status code error")
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return resp, errStatusCode
 	}
 
 	return resp, nil
-}
-
-// Send sends a hit to the measurement protocol
-func (c GAClient) Send(user User, hits ...Hit) (*http.Response, error) {
-	return c.do(c.Endpoint, user, hits...)
-}
-
-// Test sends a hit to the measurement protocol validation server
-func (c GAClient) Test(user User, hits ...Hit) (*http.Response, error) {
-	return c.do(DebugEndpoint, user, hits...)
 }

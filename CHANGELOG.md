@@ -1,16 +1,20 @@
 # Change Log
 
-## v3.4.6 - 2017-05-22
+## 3.4.7 - 2017-05-24
+### Changed
+- Standardised event types for analytics
+
+## v3.4.6 - 2017-05-23
 ### Changed
 - When an eta slash command is invoked directly, the bot will complain if the provided bus stop code was invalid.
 - The bot will only include `next_offset` when answering inline queries if 50 results are returned.
 - Reduce the amount of information logged to Google Analytics
 
-## v3.4.5 - 2017-05-22
+## v3.4.5 - 2017-05-23
 ### Changed
 - Refactored bot implementation for testing
 
-## v3.4.4 - 2017-05-22
+## v3.4.4 - 2017-05-23
 ### Changed
 - The bot will now ignore text messages where the first word is longer than 5 characters
 - When an eta slash command is invoked directly, the bot will complain if the provided bus stop code is longer than 5 
