@@ -135,7 +135,7 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callb
 	var bsID string
 	var sNos []string
 	if data.Argstr != "" {
-		bsID, sNos = InferEtaQuery(data.Argstr)
+		bsID, sNos, _ = InferEtaQuery(data.Argstr)
 	} else {
 		bsID = data.BusStopID
 		sNos = data.ServiceNos

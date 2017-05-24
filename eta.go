@@ -1,13 +1,23 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
 	"golang.org/x/net/context"
+)
+
+var collapseWhitespaceRegex = regexp.MustCompile(`\s+`)
+var illegalCharsRegex = regexp.MustCompile(`[^A-Z0-9 ]`)
+
+var (
+	errBusStopIDTooLong = errors.New("bus stop id too long")
+	errBusStopIDInvalid = errors.New("bus stop id invalid")
 )
 
 // BusEtas represents the calculated time before buses arrive at a bus stop
@@ -26,19 +36,24 @@ type EtaCallbackData struct {
 }
 
 // InferEtaQuery extracts a bus stop ID and service numbers from a text message.
-func InferEtaQuery(text string) (string, []string) {
-	// todo: report if the bus stop id contains illegal characters
-
+func InferEtaQuery(text string) (string, []string, error) {
 	if len(text) > 30 {
 		text = text[:30]
 	}
 
 	text = strings.ToUpper(text)
-	text = illegalCharsRegex.ReplaceAllString(text, "")
-	tokens := strings.Split(text, " ")
+	tokens := collapseWhitespaceRegex.Split(text, -1)
 	busStopID, serviceNos := tokens[0], tokens[1:]
 
-	return busStopID, serviceNos
+	if len(busStopID) > 5 {
+		return busStopID, serviceNos, errBusStopIDTooLong
+	}
+
+	if illegalCharsRegex.MatchString(busStopID) {
+		return busStopID, serviceNos, errBusStopIDInvalid
+	}
+
+	return busStopID, serviceNos, nil
 }
 
 // CalculateEtas calculates the time before buses arrive from the LTA DataMall bus arrival response

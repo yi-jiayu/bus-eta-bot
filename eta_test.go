@@ -76,54 +76,88 @@ func NewEmptyMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {
 func TestInferEtaQuery(t *testing.T) {
 	t.Parallel()
 
-	t.Run("Bus stop ID only", func(t *testing.T) {
-		query := "96049"
-
-		busStopID, serviceNos := InferEtaQuery(query)
-		actual := struct {
+	testCases := []struct {
+		Name     string
+		Text     string
+		Expected struct {
 			BusStopID  string
 			ServiceNos []string
-		}{
-			busStopID,
-			serviceNos,
+			Err        error
 		}
-		expected := struct {
-			BusStopID  string
-			ServiceNos []string
-		}{
-			"96049",
-			[]string{},
-		}
+	}{
+		{
+			Name: "Bus stop ID only",
+			Text: "96049",
+			Expected: struct {
+				BusStopID  string
+				ServiceNos []string
+				Err        error
+			}{
+				BusStopID:  "96049",
+				ServiceNos: []string{},
+			},
+		},
+		{
+			Name: "Bus stop ID and services",
+			Text: "96049 2 24",
+			Expected: struct {
+				BusStopID  string
+				ServiceNos []string
+				Err        error
+			}{
+				BusStopID:  "96049",
+				ServiceNos: []string{"2", "24"},
+			},
+		},
+		{
+			Name: "Bus stop ID too long",
+			Text: "!@#$%!",
+			Expected: struct {
+				BusStopID  string
+				ServiceNos []string
+				Err        error
+			}{
+				Err: errBusStopIDTooLong,
+			},
+		},
+		{
+			Name: "Invalid bus stop ID",
+			Text: "!@#$%",
+			Expected: struct {
+				BusStopID  string
+				ServiceNos []string
+				Err        error
+			}{
+				Err: errBusStopIDInvalid,
+			},
+		},
+	}
 
-		if !reflect.DeepEqual(actual, expected) {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	})
-	t.Run("Bus stop ID and services", func(t *testing.T) {
-		query := "96049 2 24"
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			text := tc.Text
+			busStopID, serviceNos, err := InferEtaQuery(text)
+			if err != nil {
+				if expected := tc.Expected.Err; err != expected {
+					fmt.Printf("Expected error: %v\nActual error:   %v\n", expected, err)
+					t.Fail()
+				}
+			} else {
+				actual := struct {
+					BusStopID  string
+					ServiceNos []string
+					Err        error
+				}{
+					BusStopID:  busStopID,
+					ServiceNos: serviceNos,
+				}
 
-		busStopID, serviceNos := InferEtaQuery(query)
-		actual := struct {
-			BusStopID  string
-			ServiceNos []string
-		}{
-			busStopID,
-			serviceNos,
-		}
-		expected := struct {
-			BusStopID  string
-			ServiceNos []string
-		}{
-			"96049",
-			[]string{"2", "24"},
-		}
-
-		if !reflect.DeepEqual(actual, expected) {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	})
+				if !reflect.DeepEqual(actual, tc.Expected) {
+					fmt.Printf("Expected: %v\nActual:   %v\n", tc.Expected, actual)
+				}
+			}
+		})
+	}
 }
 
 func TestCalculateEtas(t *testing.T) {

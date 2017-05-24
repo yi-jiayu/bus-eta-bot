@@ -21,22 +21,20 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 	}
 
 	chatID := message.Chat.ID
-	busStopID, serviceNos := InferEtaQuery(message.Text)
-
-	// ignore the message if the bus stop was all invalid characters
-	if busStopID == "" {
-		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
-		return nil
-	}
+	continuation := message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for."
 
 	var reply tgbotapi.MessageConfig
-
-	if len(busStopID) > 5 {
-		if message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
-			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
-		} else {
+	busStopID, serviceNos, err := InferEtaQuery(message.Text)
+	if err != nil {
+		if !continuation {
 			go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
 			return nil
+		}
+
+		if err == errBusStopIDInvalid {
+			reply = tgbotapi.NewMessage(chatID, "Oops, that bus stop code was invalid.")
+		} else {
+			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
 		}
 	} else {
 		text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
@@ -85,7 +83,7 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionEtaTextMessage, message.Chat.Type)
 	}
 
-	_, err := bot.Telegram.Send(reply)
+	_, err = bot.Telegram.Send(reply)
 	return err
 }
 

@@ -137,58 +137,58 @@ func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Messa
 func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
+	var reply tgbotapi.MessageConfig
 	if args := message.CommandArguments(); args != "" {
-		busStopID, serviceNos := InferEtaQuery(args)
-
-		var reply tgbotapi.MessageConfig
-
-		if busStopID == "" {
-			reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
-		} else if len(busStopID) > 5 {
+		busStopID, serviceNos, err := InferEtaQuery(args)
+		if err == errBusStopIDTooLong {
 			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
-		} else {
+		} else if err == errBusStopIDInvalid {
+			reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
+		} else if err != nil {
+			return err
+		}
 
-			text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
-			if err != nil {
-				if err == errNotFound {
-					reply = tgbotapi.NewMessage(chatID, text)
-				} else {
-					return err
-				}
-			} else {
-				callbackData := EtaCallbackData{
-					Type:       "refresh",
-					BusStopID:  busStopID,
-					ServiceNos: serviceNos,
-				}
-
-				callbackDataJSON, err := json.Marshal(callbackData)
-				if err != nil {
-					return err
-				}
-				callbackDataJSONStr := string(callbackDataJSON)
-
+		text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
+		if err != nil {
+			if err == errNotFound {
 				reply = tgbotapi.NewMessage(chatID, text)
-				reply.ParseMode = "markdown"
-				reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-					InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-						{
-							tgbotapi.InlineKeyboardButton{
-								Text:         "Refresh",
-								CallbackData: &callbackDataJSONStr,
-							},
+			} else {
+				return err
+			}
+		} else {
+			callbackData := EtaCallbackData{
+				Type:       "refresh",
+				BusStopID:  busStopID,
+				ServiceNos: serviceNos,
+			}
+
+			callbackDataJSON, err := json.Marshal(callbackData)
+			if err != nil {
+				return err
+			}
+			callbackDataJSONStr := string(callbackDataJSON)
+
+			reply = tgbotapi.NewMessage(chatID, text)
+			reply.ParseMode = "markdown"
+			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+					{
+						tgbotapi.InlineKeyboardButton{
+							Text:         "Refresh",
+							CallbackData: &callbackDataJSONStr,
 						},
 					},
-				}
+				},
 			}
 		}
+
 		if !message.Chat.IsPrivate() {
 			reply.ReplyToMessageID = message.MessageID
 		}
 
 		go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithArgs, message.Chat.Type)
 
-		_, err := bot.Telegram.Send(reply)
+		_, err = bot.Telegram.Send(reply)
 		if err != nil {
 			return err
 		}

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"regexp"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
@@ -11,8 +10,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
 )
-
-var illegalCharsRegex = regexp.MustCompile(`[^A-Z0-9 ]`)
 
 var handlers = Handlers{
 	CommandHandlers:           commandHandlers,
