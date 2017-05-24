@@ -57,7 +57,7 @@ const (
 
 // Event labels
 const (
-	LabelCallbackFromInlineMessage = "inline_message"
+	LabelInlineMessage = "inline_message"
 )
 
 var errStatusCode = errors.New("status code error")

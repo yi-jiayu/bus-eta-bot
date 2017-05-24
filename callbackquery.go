@@ -63,7 +63,7 @@ func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 	if cbq.Message != nil {
 		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRefreshCallback, cbq.Message.Chat.Type)
 	} else {
-		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRefreshCallback, LabelCallbackFromInlineMessage)
+		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRefreshCallback, LabelInlineMessage)
 	}
 
 	answer := tgbotapi.NewCallback(cbq.ID, "Etas updated!")
