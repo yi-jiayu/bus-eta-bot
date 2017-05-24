@@ -44,7 +44,7 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 			},
 			{
 				{
-					Text: "Try an inline query",
+					Text:                         "Try an inline query",
 					SwitchInlineQueryCurrentChat: &s2,
 				},
 			},
@@ -146,39 +146,39 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 			reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
 		} else if err != nil {
 			return err
-		}
-
-		text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
-		if err != nil {
-			if err == errNotFound {
-				reply = tgbotapi.NewMessage(chatID, text)
-			} else {
-				return err
-			}
 		} else {
-			callbackData := EtaCallbackData{
-				Type:       "refresh",
-				BusStopID:  busStopID,
-				ServiceNos: serviceNos,
-			}
-
-			callbackDataJSON, err := json.Marshal(callbackData)
+			text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
 			if err != nil {
-				return err
-			}
-			callbackDataJSONStr := string(callbackDataJSON)
+				if err == errNotFound {
+					reply = tgbotapi.NewMessage(chatID, text)
+				} else {
+					return err
+				}
+			} else {
+				callbackData := EtaCallbackData{
+					Type:       "refresh",
+					BusStopID:  busStopID,
+					ServiceNos: serviceNos,
+				}
 
-			reply = tgbotapi.NewMessage(chatID, text)
-			reply.ParseMode = "markdown"
-			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-					{
-						tgbotapi.InlineKeyboardButton{
-							Text:         "Refresh",
-							CallbackData: &callbackDataJSONStr,
+				callbackDataJSON, err := json.Marshal(callbackData)
+				if err != nil {
+					return err
+				}
+				callbackDataJSONStr := string(callbackDataJSON)
+
+				reply = tgbotapi.NewMessage(chatID, text)
+				reply.ParseMode = "markdown"
+				reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+					InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+						{
+							tgbotapi.InlineKeyboardButton{
+								Text:         "Refresh",
+								CallbackData: &callbackDataJSONStr,
+							},
 						},
 					},
-				},
+				}
 			}
 		}
 
