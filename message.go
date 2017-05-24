@@ -44,7 +44,6 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 			if err == errNotFound {
 				reply = tgbotapi.NewMessage(chatID, text)
 			} else {
-				go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
 				return err
 			}
 		} else {

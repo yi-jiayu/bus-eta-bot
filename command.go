@@ -33,7 +33,7 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 	reply := tgbotapi.NewMessage(chatID, text)
 	reply.ParseMode = "markdown"
 
-	s1, s2 := `{"t":"eta_demo"}`, "Changi"
+	s1, s2 := `{"t":"eta_demo"}`, "Tropicana"
 	reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 			{

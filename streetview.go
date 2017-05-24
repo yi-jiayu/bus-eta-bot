@@ -34,6 +34,7 @@ func (s StreetViewAPI) GetPhotoURLByLocation(lat, lon float64, width, height int
 	return s.getPhotoURL(params)
 }
 
+// NewStreetViewAPI returns a StreetViewAPI with an API key.
 func NewStreetViewAPI(key string) StreetViewAPI {
 	return StreetViewAPI{
 		Endpoint: StreetViewEndpoint,

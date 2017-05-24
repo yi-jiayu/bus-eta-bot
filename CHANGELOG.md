@@ -1,5 +1,12 @@
 # Change Log
 
+## 3.6.0
+### Added
+- Added support for old eta refresh callback queries and the demo eta button in the welcome message.
+
+### Changed
+- Change demo inline query search term to "Tropicana"
+
 ## 3.5.0 - 2017-05-24
 ### Added
 - Inline queries now have thumbnails when available.

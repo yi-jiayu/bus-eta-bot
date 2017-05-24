@@ -23,7 +23,8 @@ type BusEtas struct {
 type EtaCallbackData struct {
 	Type       string   `json:"t"`
 	BusStopID  string   `json:"b"`
-	ServiceNos []string `json:"s"`
+	ServiceNos []string `json:"s,omitempty"`
+	Argstr     string   `json:"a,omitempty"`
 }
 
 // InferEtaQuery extracts a bus stop ID and service numbers from a text message.
