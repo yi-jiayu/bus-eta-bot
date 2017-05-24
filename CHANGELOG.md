@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.5.0 - 2017-05-24
+### Added
+- Inline queries now have thumbnails when available.
+
 ## 3.4.9 - 2017-05-24
 ### Fixed
 - Fixed incorrect constants in analytics event action strings

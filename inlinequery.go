@@ -3,12 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
 )
+
+var streetView *StreetViewAPI
 
 // InlineQueryHandler handles inline queries
 func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.InlineQuery) error {
@@ -32,6 +35,18 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 	for _, bs := range busStops {
 		text := fmt.Sprintf("*%s (%s)*\n%s\n`Fetching etas...`", bs.Description, bs.BusStopID, bs.Road)
 
+		var thumbnail string
+		if streetView != nil {
+			if lat, lon := bs.Location.Lat, bs.Location.Lng; lat != 0 && lon != 0 {
+				tn, err := streetView.GetPhotoURLByLocation(lat, lon, 100, 100)
+				if err != nil {
+					log.Errorf(ctx, "%v", err)
+				} else {
+					thumbnail = tn
+				}
+			}
+		}
+
 		callbackData := EtaCallbackData{
 			Type:      "refresh",
 			BusStopID: bs.BusStopID,
@@ -49,6 +64,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 			ID:          bs.BusStopID,
 			Title:       fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopID),
 			Description: bs.Road,
+			ThumbURL:    thumbnail,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
 				Text:      text,
 				ParseMode: "markdown",
@@ -135,4 +151,13 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 
 	_, err = bot.Telegram.Send(reply)
 	return err
+}
+
+func init() {
+	if key := os.Getenv("GOOGLE_API_KEY"); key != "" {
+		streetView = &StreetViewAPI{
+			Endpoint: StreetViewEndpoint,
+			APIKey:   key,
+		}
+	}
 }

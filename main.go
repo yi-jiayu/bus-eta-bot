@@ -58,9 +58,9 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ga := &GAClient{
-		Endpoint: MeasurementProtocolEndpoint,
+		Endpoint:   MeasurementProtocolEndpoint,
 		TrackingID: os.Getenv("GA_TID"),
-		Client:   client,
+		Client:     client,
 	}
 
 	bot := NewBusEtaBot(handlers, tg, dm)
