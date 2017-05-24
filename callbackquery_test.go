@@ -37,9 +37,6 @@ func TestRefreshCallbackHandler(t *testing.T) {
 	defer tgAPI.Close()
 
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	nowFunc = func() time.Time {
-		return now
-	}
 	dmAPI, err := NewMockBusArrivalAPI(now)
 	if err != nil {
 		t.Fatal(err)
@@ -57,6 +54,9 @@ func TestRefreshCallbackHandler(t *testing.T) {
 	}
 
 	bot := NewBusEtaBot(handlers, tg, dm)
+	bot.NowFunc = func() time.Time {
+		return now
+	}
 
 	message := MockMessage()
 
@@ -177,9 +177,6 @@ func TestEtaCallbackHandler(t *testing.T) {
 	defer tgAPI.Close()
 
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	nowFunc = func() time.Time {
-		return now
-	}
 	dmAPI, err := NewMockBusArrivalAPI(now)
 	if err != nil {
 		t.Fatal(err)
@@ -199,6 +196,9 @@ func TestEtaCallbackHandler(t *testing.T) {
 	message := MockMessage()
 
 	bot := NewBusEtaBot(handlers, tg, dm)
+	bot.NowFunc = func() time.Time {
+		return now
+	}
 
 	testCases := []struct {
 		Name            string
@@ -317,9 +317,6 @@ func TestEtaDemoCallbackHandler(t *testing.T) {
 	defer tgAPI.Close()
 
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	nowFunc = func() time.Time {
-		return now
-	}
 	dmAPI, err := NewMockBusArrivalAPI(now)
 	if err != nil {
 		t.Fatal(err)
@@ -339,6 +336,9 @@ func TestEtaDemoCallbackHandler(t *testing.T) {
 	message := MockMessage()
 
 	bot := NewBusEtaBot(handlers, tg, dm)
+	bot.NowFunc = func() time.Time {
+		return now
+	}
 
 	cbq := MockCallbackQuery()
 	cbq.Data = `{"t":"eta_demo"}`

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
+	"time"
 
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
@@ -31,6 +32,7 @@ type BusEtaBot struct {
 	Datamall   *datamall.APIClient
 	GA         *GAClient
 	StreetView *StreetViewAPI
+	NowFunc    func() time.Time
 }
 
 // Handlers contains all the handlers used by the bot.
@@ -47,11 +49,15 @@ type Handlers struct {
 
 // NewBusEtaBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.
 func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient) BusEtaBot {
-	return BusEtaBot{
+	bot := BusEtaBot{
 		Handlers: handlers,
 		Telegram: tg,
 		Datamall: dm,
 	}
+
+	bot.NowFunc = time.Now
+
+	return bot
 }
 
 // HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type

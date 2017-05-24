@@ -303,9 +303,6 @@ func TestEtaMessage(t *testing.T) {
 	defer done()
 
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	nowFunc = func() time.Time {
-		return now
-	}
 	dmAPI, err := NewEmptyMockBusArrivalAPI(now)
 	if err != nil {
 		t.Fatal(err)
@@ -316,6 +313,9 @@ func TestEtaMessage(t *testing.T) {
 		Datamall: &datamall.APIClient{
 			Endpoint: dmAPI.URL,
 			Client:   http.DefaultClient,
+		},
+		NowFunc: func() time.Time {
+			return now
 		},
 	}
 

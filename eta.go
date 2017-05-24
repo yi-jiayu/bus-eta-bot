@@ -10,8 +10,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-var nowFunc = time.Now
-
 // BusEtas represents the calculated time before buses arrive at a bus stop
 type BusEtas struct {
 	BusStopID   string
@@ -235,7 +233,7 @@ func EtaMessage(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNo
 		return "", err
 	}
 
-	etas, err := CalculateEtas(nowFunc(), busArrival)
+	etas, err := CalculateEtas(bot.NowFunc(), busArrival)
 	if err != nil {
 		return "", err
 	}

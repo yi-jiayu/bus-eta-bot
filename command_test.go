@@ -145,9 +145,6 @@ func TestEtaHandler(t *testing.T) {
 	defer tgAPI.Close()
 
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	nowFunc = func() time.Time {
-		return now
-	}
 	dmAPI, err := NewMockBusArrivalAPI(now)
 	if err != nil {
 		t.Fatal(err)
@@ -165,6 +162,9 @@ func TestEtaHandler(t *testing.T) {
 	}
 
 	bot := NewBusEtaBot(handlers, tg, dm)
+	bot.NowFunc = func() time.Time {
+		return now
+	}
 
 	testCases := []struct {
 		Name     string
