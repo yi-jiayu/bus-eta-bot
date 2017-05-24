@@ -6,7 +6,7 @@ import (
 )
 
 func TestStreetViewAPI_GetPhotoUrlByLocation(t *testing.T) {
-	sv := NewStreetViewAPIWithClient("API_KEY", nil)
+	sv := NewStreetViewAPI("API_KEY")
 
 	lat, lon := 1.34041450268626, 103.96127892061004
 	height, width := 100, 100

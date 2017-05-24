@@ -26,10 +26,11 @@ var handlers = Handlers{
 
 // BusEtaBot contains all the bot's dependencies
 type BusEtaBot struct {
-	Handlers Handlers
-	Telegram *tgbotapi.BotAPI
-	Datamall *datamall.APIClient
-	GA       *GAClient
+	Handlers   Handlers
+	Telegram   *tgbotapi.BotAPI
+	Datamall   *datamall.APIClient
+	GA         *GAClient
+	StreetView *StreetViewAPI
 }
 
 // Handlers contains all the handlers used by the bot.
