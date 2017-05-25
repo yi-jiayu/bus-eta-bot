@@ -1,21 +1,21 @@
-# Change Log
+# Bus Eta Bot Release Notes
 
-## 3.8.0 - 2017-05-25
+## v3.8.0 - 2017-05-25
 ### Added
 #### Location-based inline queries
 - Bus Eta Bot now requests permission to access your location when sending inline queries, and show you bus stops 
 within 1 km of your location when you send an empty inline query with location enabled.
 
-## 3.7.2 - 2017-05-25
+## v3.7.2 - 2017-05-25
 ### Fixed
 - Add delay when sending nearby bus stops so that the nearest one is received first
 
-## 3.7.1 - 2017-05-25
+## v3.7.1 - 2017-05-25
 ### Fixed
 - Fixed bug in nearby bus stop queries which returned your own location instead of the nearby bus stop locations
 - Increased nearby bus stop search distance to 500 m.
 
-## 3.7.0 - 2017-05-25
+## v3.7.0 - 2017-05-25
 ### Added
 #### Nearby bus stops
 - Send the bot a location to look up the nearest 5 bus stops within 400 m!
@@ -23,18 +23,18 @@ within 1 km of your location when you send an empty inline query with location e
 #### Others
 - Updated privacy policy and /privacy command
 
-## 3.6.0 - 2017-05-24
+## v3.6.0 - 2017-05-24
 ### Added
 - Added support for old eta refresh callback queries and the demo eta button in the welcome message.
 
 ### Changed
 - Change demo inline query search term to "Tropicana"
 
-## 3.5.0 - 2017-05-24
+## v3.5.0 - 2017-05-24
 ### Added
 - Inline queries now have thumbnails when available.
 
-## 3.4.9 - 2017-05-24
+## v3.4.9 - 2017-05-24
 ### Fixed
 - Fixed incorrect constants in analytics event action strings
 
@@ -42,7 +42,7 @@ within 1 km of your location when you send an empty inline query with location e
 ### Fixed
 - Fixed GA_TID not being set
 
-## 3.4.7 - 2017-05-24
+## v3.4.7 - 2017-05-24
 ### Changed
 - Standardised event types for analytics
 
