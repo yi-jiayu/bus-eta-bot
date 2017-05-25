@@ -16,5 +16,7 @@ handlers:
   secure: always
 
 env_variables:
-  TELEGRAM_BOT_TOKEN: --your bot token here--
-  DATAMALL_ACCOUNT_KEY: --your datamall account key here--
+  TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
+  DATAMALL_ACCOUNT_KEY: $DATMALL_ACCOUNT_KEY
+  GA_TID: $GA_TID
+  GOOGLE_API_KEY: $GOOGLE_API_KEY
