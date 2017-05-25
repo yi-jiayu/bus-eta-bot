@@ -67,7 +67,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 		Client:   http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, dm)
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
 	bot.NowFunc = func() time.Time {
 		return now
 	}
@@ -209,7 +209,7 @@ func TestEtaCallbackHandler(t *testing.T) {
 
 	message := MockMessage()
 
-	bot := NewBusEtaBot(handlers, tg, dm)
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
 	bot.NowFunc = func() time.Time {
 		return now
 	}
@@ -349,7 +349,7 @@ func TestEtaDemoCallbackHandler(t *testing.T) {
 
 	message := MockMessage()
 
-	bot := NewBusEtaBot(handlers, tg, dm)
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
 	bot.NowFunc = func() time.Time {
 		return now
 	}
@@ -426,7 +426,7 @@ func TestNewEtaHandler(t *testing.T) {
 		Client:   http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, dm)
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
 	bot.NowFunc = func() time.Time {
 		return now
 	}

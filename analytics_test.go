@@ -10,18 +10,18 @@ import (
 
 var tid = os.Getenv("GA_TID")
 
-func TestGAClient_LogEvent(t *testing.T) {
+func TestMeasurementProtocolClient_LogEvent(t *testing.T) {
 	if tid == "" {
 		return
 	}
 
-	gaClient := GAClient{
+	mp := MeasurementProtocolClient{
 		Endpoint:   MeasurementProtocolValidationEndpoint,
 		TrackingID: tid,
 		Client:     http.DefaultClient,
 	}
 
-	resp, err := gaClient.LogEvent(1, "en-US", CategoryMessage, ActionCallbackError, "")
+	resp, err := mp.LogEvent(1, "en-US", CategoryMessage, ActionCallbackError, "")
 	if err != nil {
 		t.Fatal(err)
 	}

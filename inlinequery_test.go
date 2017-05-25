@@ -63,11 +63,9 @@ func TestInlineQueryHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil)
-	bot.StreetView = &StreetViewAPI{
-		Endpoint: StreetViewEndpoint,
-		APIKey:   "API_KEY",
-	}
+	sv := NewStreetViewAPI("API_KEY")
+
+	bot := NewBusEtaBot(handlers, tg, nil, &sv, nil)
 
 	location := &tgbotapi.Location{
 		Latitude:  1.33995375346513,
@@ -194,7 +192,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 		Client:   http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, dm)
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
 	bot.NowFunc = func() time.Time {
 		return now
 	}

@@ -25,7 +25,7 @@ func TestAboutHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil)
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
 	message := MockMessage()
 
 	err := AboutHandler(nil, &bot, &message)
@@ -61,7 +61,7 @@ func TestStartHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil)
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
 	message := MockMessage()
 
 	err := StartHandler(nil, &bot, &message)
@@ -97,7 +97,7 @@ func TestHelpHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil)
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
 	message := MockMessage()
 
 	err := HelpHandler(nil, &bot, &message)
@@ -133,7 +133,9 @@ func TestPrivacyHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil)
+	sv := NewStreetViewAPI("API_KEY")
+
+	bot := NewBusEtaBot(handlers, tg, nil, &sv, nil)
 	message := MockMessage()
 
 	err := PrivacyHandler(nil, &bot, &message)
@@ -199,7 +201,7 @@ func TestEtaHandler(t *testing.T) {
 		Client:   http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, dm)
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
 	bot.NowFunc = func() time.Time {
 		return now
 	}

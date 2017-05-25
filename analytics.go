@@ -73,8 +73,8 @@ var (
 	ApplicationVersion = Version
 )
 
-// GAClient contains the endpoint, tracking id and http client to use to send hits to the Measurement Protocol
-type GAClient struct {
+// MeasurementProtocolClient contains the endpoint, tracking id and http client to use to send hits to the Measurement Protocol
+type MeasurementProtocolClient struct {
 	Endpoint   string
 	TrackingID string
 	Client     *http.Client
@@ -99,18 +99,9 @@ type ParserMessage struct {
 	Parameter   string `json:"parameter"`
 }
 
-// NewDefaultClient returns a GAClient which uses http.DefaultClient
-func NewDefaultClient(tid string) GAClient {
-	return GAClient{
-		Endpoint:   MeasurementProtocolEndpoint,
-		TrackingID: tid,
-		Client:     http.DefaultClient,
-	}
-}
-
-// NewClient constructs a GAClient with the provided tid and http.Client
-func NewClient(tid string, client *http.Client) GAClient {
-	return GAClient{
+// NewMeasurementProtocolClientWithClient constructs a MeasurementProtocolClient with the provided tid and http.Client
+func NewMeasurementProtocolClientWithClient(tid string, client *http.Client) MeasurementProtocolClient {
+	return MeasurementProtocolClient{
 		Endpoint:   MeasurementProtocolEndpoint,
 		TrackingID: tid,
 		Client:     client,
@@ -118,7 +109,7 @@ func NewClient(tid string, client *http.Client) GAClient {
 }
 
 // LogEvent logs an event to the Measurement Protocol.
-func (c GAClient) LogEvent(userID int, languageCode, category, action, label string) (*http.Response, error) {
+func (c MeasurementProtocolClient) LogEvent(userID int, languageCode, category, action, label string) (*http.Response, error) {
 	values := url.Values{}
 
 	// protocol version

@@ -24,12 +24,12 @@ var handlers = Handlers{
 
 // BusEtaBot contains all the bot's dependencies
 type BusEtaBot struct {
-	Handlers   Handlers
-	Telegram   *tgbotapi.BotAPI
-	Datamall   *datamall.APIClient
-	GA         *GAClient
-	StreetView *StreetViewAPI
-	NowFunc    func() time.Time
+	Handlers            Handlers
+	Telegram            *tgbotapi.BotAPI
+	Datamall            *datamall.APIClient
+	StreetView          *StreetViewAPI
+	MeasurementProtocol *MeasurementProtocolClient
+	NowFunc             func() time.Time
 }
 
 // Handlers contains all the handlers used by the bot.
@@ -45,11 +45,13 @@ type Handlers struct {
 }
 
 // NewBusEtaBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.
-func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient) BusEtaBot {
+func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient, sv *StreetViewAPI, mp *MeasurementProtocolClient) BusEtaBot {
 	bot := BusEtaBot{
-		Handlers: handlers,
-		Telegram: tg,
-		Datamall: dm,
+		Handlers:            handlers,
+		Telegram:            tg,
+		Datamall:            dm,
+		StreetView:          sv,
+		MeasurementProtocol: mp,
 	}
 
 	bot.NowFunc = time.Now
@@ -142,10 +144,10 @@ func (b *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	}
 }
 
-// LogEvent logs an event to the Measurement Protocol if a GAClient is set on the bot.
+// LogEvent logs an event to the Measurement Protocol if a MeasurementProtocolClient is set on the bot.
 func (b *BusEtaBot) LogEvent(ctx context.Context, user *tgbotapi.User, category, action, label string) {
-	if b.GA != nil {
-		_, err := b.GA.LogEvent(user.ID, user.LanguageCode, category, action, label)
+	if b.MeasurementProtocol != nil {
+		_, err := b.MeasurementProtocol.LogEvent(user.ID, user.LanguageCode, category, action, label)
 		if err != nil {
 			log.Errorf(ctx, "error while logging event: %v", err)
 		}

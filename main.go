@@ -57,20 +57,11 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		Client:     client,
 	}
 
-	ga := &GAClient{
-		Endpoint:   MeasurementProtocolEndpoint,
-		TrackingID: os.Getenv("GA_TID"),
-		Client:     client,
-	}
+	mp := NewMeasurementProtocolClientWithClient(os.Getenv("GA_TID"), client)
 
-	sv := &StreetViewAPI{
-		Endpoint: StreetViewEndpoint,
-		APIKey:   os.Getenv("GOOGLE_API_KEY"),
-	}
+	sv := NewStreetViewAPI(os.Getenv("GOOGLE_API_KEY"))
 
-	bot := NewBusEtaBot(handlers, tg, dm)
-	bot.GA = ga
-	bot.StreetView = sv
+	bot := NewBusEtaBot(handlers, tg, dm, &sv, &mp)
 
 	bot.HandleUpdate(ctx, &update)
 }

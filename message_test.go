@@ -55,7 +55,7 @@ func TestTextHandler(t *testing.T) {
 		Client:   http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, dm)
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
 	bot.NowFunc = func() time.Time {
 		return now
 	}
@@ -158,7 +158,7 @@ func TestLocationHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil)
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
 
 	message := MockMessage()
 	message.Location = &tgbotapi.Location{
@@ -222,7 +222,7 @@ func TestLocationHandlerNothingNearby(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil)
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
 
 	message := MockMessage()
 	message.Location = &tgbotapi.Location{
