@@ -2,9 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
+)
+
+// Links to relevant documents
+const (
+	PrivacyPolicyURL = "https://t.me/iv?url=https%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot-3%2Fblob%2Fmaster%2FPRIVACY.md&rhash=a44cb5372834ee"
+	HelpURL          = "http://telegra.ph/Bus-Eta-Bot-Help-02-23"
 )
 
 var commandHandlers = map[string]MessageHandler{
@@ -12,7 +19,7 @@ var commandHandlers = map[string]MessageHandler{
 	"about":   AboutHandler,
 	"version": VersionHandler,
 	//"feedback": feedbackHandler,
-	"help":    helpHandler,
+	"help":    HelpHandler,
 	"privacy": PrivacyHandler,
 	"eta":     EtaHandler,
 }
@@ -44,7 +51,7 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 			},
 			{
 				{
-					Text:                         "Try an inline query",
+					Text: "Try an inline query",
 					SwitchInlineQueryCurrentChat: &s2,
 				},
 			},
@@ -104,10 +111,17 @@ func feedbackHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotap
 	return nil
 }
 
-func helpHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+// HelpHandler handles the /help command
+func HelpHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
-	text := "Here's some help on how to use Bus Eta Bot:\nhttp://telegra.ph/Bus-Eta-Bot-Help-02-23"
+
+	text := fmt.Sprintf("You can find help on how to use Bus Eta Bot [here](%s).", HelpURL)
 	reply := tgbotapi.NewMessage(chatID, text)
+	reply.ParseMode = "markdown"
+	if !message.Chat.IsPrivate() {
+		messageID := message.MessageID
+		reply.ReplyToMessageID = messageID
+	}
 
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionHelpCommand, message.Chat.Type)
 
@@ -119,7 +133,7 @@ func helpHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
-	text := "You can find Bus Eta Bot's privacy policy [here](http://telegra.ph/Bus-Eta-Bot-Privacy-Policy-03-09)."
+	text := fmt.Sprintf("You can find Bus Eta Bot's privacy policy [here](%s).", PrivacyPolicyURL)
 	reply := tgbotapi.NewMessage(chatID, text)
 	reply.ParseMode = "markdown"
 	if !message.Chat.IsPrivate() {

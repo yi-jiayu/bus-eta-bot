@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -84,6 +86,42 @@ func TestStartHandler(t *testing.T) {
 	}
 }
 
+func TestHelpHandler(t *testing.T) {
+	t.Parallel()
+
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
+		Client:      http.DefaultClient,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, nil)
+	message := MockMessage()
+
+	err := HelpHandler(nil, &bot, &message)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	select {
+	case req := <-reqChan:
+		actual := req
+		expected := Request{
+			Path: "/bot/sendMessage",
+			Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&text=You+can+find+help+on+how+to+use+Bus+Eta+Bot+%5Bhere%5D%28$HELP_URL%29.", "$HELP_URL", url.QueryEscape(HelpURL), 1),
+		}
+
+		if actual != expected {
+			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+			t.Fail()
+		}
+	case err := <-errChan:
+		t.Fatalf("%v", err)
+	}
+}
+
 func TestPrivacyHandler(t *testing.T) {
 	t.Parallel()
 
@@ -108,7 +146,7 @@ func TestPrivacyHandler(t *testing.T) {
 		actual := req
 		expected := Request{
 			Path: "/bot/sendMessage",
-			Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&text=You+can+find+Bus+Eta+Bot%27s+privacy+policy+%5Bhere%5D%28http%3A%2F%2Ftelegra.ph%2FBus-Eta-Bot-Privacy-Policy-03-09%29.",
+			Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&text=You+can+find+Bus+Eta+Bot%27s+privacy+policy+%5Bhere%5D%28$PRIVACY_POLICY_URL%29.", "$PRIVACY_POLICY_URL", url.QueryEscape(PrivacyPolicyURL), 1),
 		}
 
 		if actual != expected {
