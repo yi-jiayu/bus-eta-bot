@@ -1,5 +1,10 @@
 # Change Log
 
+## 3.7.1 - 2017-05-25
+### Fixed
+- Fixed bug in nearby bus stop queries which returned your own location instead of the nearby bus stop locations
+- Increased nearby bus stop search distance to 500 m.
+
 ## 3.7.0 - 2017-05-25
 ### Added
 #### Nearby bus stops

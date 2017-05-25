@@ -145,7 +145,7 @@ func GetNearbyBusStops(ctx context.Context, lat, lng float64, limit int) ([]BusS
 		},
 	}
 
-	for t := index.Search(ctx, fmt.Sprintf("distance(Location, geopoint(%f, %f)) < 400", lat, lng), opts); ; {
+	for t := index.Search(ctx, fmt.Sprintf("distance(Location, geopoint(%f, %f)) < 500", lat, lng), opts); ; {
 		var busStop BusStop
 		_, err := t.Next(&busStop)
 		if err != nil {

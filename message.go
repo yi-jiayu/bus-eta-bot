@@ -126,7 +126,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 			}
 			callbackDataJSONStr := string(callbackDataJSON)
 
-			reply := tgbotapi.NewVenue(chatID, fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopID), fmt.Sprintf("%s (%.2f m) away", bs.Road, distance), location.Latitude, location.Longitude)
+			reply := tgbotapi.NewVenue(chatID, fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopID), fmt.Sprintf("%.2f m away", distance), bs.Location.Lat, bs.Location.Lng)
 			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 					{
@@ -152,7 +152,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 		return nil
 	}
 
-	reply := tgbotapi.NewMessage(chatID, "Oops, I couldn't find any bus stops within 400 m of your location.")
+	reply := tgbotapi.NewMessage(chatID, "Oops, I couldn't find any bus stops within 500 m of your location.")
 	_, err = bot.Telegram.Send(reply)
 	return err
 }
