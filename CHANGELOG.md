@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.7.2 - 2017-05-25
+### Fixed
+- Add delay when sending nearby bus stops so that the nearest one is received first
+
 ## 3.7.1 - 2017-05-25
 ### Fixed
 - Fixed bug in nearby bus stop queries which returned your own location instead of the nearby bus stop locations

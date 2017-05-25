@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
@@ -138,6 +139,8 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 				},
 			}
 
+			time.Sleep(250 * time.Millisecond)
+
 			go func() {
 				defer wg.Done()
 
@@ -151,6 +154,8 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 		wg.Wait()
 		return nil
 	}
+
+	go bot.LogEvent(ctx, message.From, CategoryMessage, ActionLocationMessage, message.Chat.Type)
 
 	reply := tgbotapi.NewMessage(chatID, "Oops, I couldn't find any bus stops within 500 m of your location.")
 	_, err = bot.Telegram.Send(reply)
