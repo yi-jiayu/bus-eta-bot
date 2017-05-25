@@ -93,7 +93,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 	chatID := message.Chat.ID
 	location := message.Location
 
-	nearby, err := GetNearbyBusStops(ctx, location.Latitude, location.Longitude, 3)
+	nearby, err := GetNearbyBusStops(ctx, location.Latitude, location.Longitude, 500, 5)
 	if err != nil {
 		return err
 	}

@@ -17,11 +17,12 @@ const (
 
 // Event categories
 const (
-	CategoryCommand     = "command"
-	CategoryMessage     = "message"
-	CategoryInlineQuery = "inline_query"
-	CategoryCallback    = "callback_query"
-	CategoryError       = "error"
+	CategoryCommand            = "command"
+	CategoryMessage            = "message"
+	CategoryInlineQuery        = "inline_query"
+	CategoryChosenInlineResult = "chosen_inline_result"
+	CategoryCallback           = "callback_query"
+	CategoryError              = "error"
 )
 
 // Event actions
@@ -40,9 +41,11 @@ const (
 	ActionIgnoredTextMessage   = "ignored_text_message"
 	ActionLocationMessage      = "location_message"
 
-	ActionNewInlineQuery     = "new_inline_query"
-	ActionOffsetInlineQuery  = "offset_inline_query"
-	ActionChosenInlineResult = "chosen_inline_result"
+	ActionNewInlineQuery    = "new_inline_query"
+	ActionOffsetInlineQuery = "offset_inline_query"
+
+	ActionChosenInlineResult       = "chosen_inline_result"
+	ActionChosenNearbyInlineResult = "chosen_nearby_inline_result"
 
 	ActionRefreshCallback         = "refresh_callback"
 	ActionResendCallback          = "resend_callback"

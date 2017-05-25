@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.8.0 - 2017-05-25
+### Added
+#### Location-based inline queries
+- Bus Eta Bot now requests permission to access your location when sending inline queries, and show you bus stops 
+within 1 km of your location when you send an empty inline query with location enabled.
+
 ## 3.7.2 - 2017-05-25
 ### Fixed
 - Add delay when sending nearby bus stops so that the nearest one is received first

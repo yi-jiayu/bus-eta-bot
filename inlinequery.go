@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
@@ -23,9 +24,32 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 		}
 	}
 
-	busStops, err := SearchBusStops(ctx, query, offset)
-	if err != nil {
-		return err
+	var busStops []BusStop
+	var err error
+	var showingNearby bool
+	if query == "" && ilq.Location != nil {
+		showingNearby = true
+
+		lat, lon := ilq.Location.Latitude, ilq.Location.Longitude
+		busStops, err = GetNearbyBusStops(ctx, lat, lon, 1000, 50)
+		if err != nil {
+			return err
+		}
+
+		if len(busStops) == 0 {
+			showingNearby = false
+			busStops, err = SearchBusStops(ctx, query, offset)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		showingNearby = false
+
+		busStops, err = SearchBusStops(ctx, query, offset)
+		if err != nil {
+			return err
+		}
 	}
 
 	results := make([]interface{}, 0)
@@ -56,11 +80,22 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 		}
 		callbackDataJSONStr := string(callbackDataJSON)
 
+		var id, desc string
+		if showingNearby {
+			id = bs.BusStopID + " geo"
+
+			lat, lon := ilq.Location.Latitude, ilq.Location.Longitude
+			desc = fmt.Sprintf("%.2f m away", bs.DistanceFrom(lat, lon))
+		} else {
+			id = bs.BusStopID
+			desc = bs.Road
+		}
+
 		result := tgbotapi.InlineQueryResultArticle{
 			Type:        "article",
-			ID:          bs.BusStopID,
+			ID:          id,
 			Title:       fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopID),
-			Description: bs.Road,
+			Description: desc,
 			ThumbURL:    thumbnail,
 			InputMessageContent: tgbotapi.InputTextMessageContent{
 				Text:      text,
@@ -80,6 +115,13 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 		results = append(results, result)
 	}
 
+	var cacheTime int
+	if ilq.Query == "" {
+		cacheTime = 0
+	} else {
+		cacheTime = 24 * 3600
+	}
+
 	var nextOffset string
 	if len(busStops) == 50 {
 		nextOffset = fmt.Sprintf("%d", offset+50)
@@ -88,6 +130,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 	config := tgbotapi.InlineConfig{
 		InlineQueryID: ilq.ID,
 		Results:       results,
+		CacheTime:     cacheTime,
 		NextOffset:    nextOffset,
 	}
 
@@ -108,7 +151,8 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 
 // ChosenInlineResultHandler handles a chosen inline result
 func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotapi.ChosenInlineResult) error {
-	busStopID := cir.ResultID
+	tokens := strings.Split(cir.ResultID, " ")
+	busStopID := tokens[0]
 
 	text, err := EtaMessage(ctx, bot, busStopID, nil)
 	if err != nil {
@@ -144,7 +188,11 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 		ParseMode: "markdown",
 	}
 
-	go bot.LogEvent(ctx, cir.From, CategoryInlineQuery, ActionChosenInlineResult, "")
+	if len(tokens) > 1 && tokens[1] == "geo" {
+		go bot.LogEvent(ctx, cir.From, CategoryChosenInlineResult, ActionChosenNearbyInlineResult, "")
+	} else {
+		go bot.LogEvent(ctx, cir.From, CategoryChosenInlineResult, ActionChosenInlineResult, "")
+	}
 
 	_, err = bot.Telegram.Send(reply)
 	return err

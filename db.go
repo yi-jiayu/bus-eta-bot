@@ -125,7 +125,7 @@ func PutBusStopsSearch(ctx context.Context, busStops []BusStopJSON) (string, err
 }
 
 // GetNearbyBusStops returns nearby bus stops to a specified location
-func GetNearbyBusStops(ctx context.Context, lat, lng float64, limit int) ([]BusStop, error) {
+func GetNearbyBusStops(ctx context.Context, lat, lng float64, radius, limit int) ([]BusStop, error) {
 	index, err := search.Open("BusStops")
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func GetNearbyBusStops(ctx context.Context, lat, lng float64, limit int) ([]BusS
 		},
 	}
 
-	for t := index.Search(ctx, fmt.Sprintf("distance(Location, geopoint(%f, %f)) < 500", lat, lng), opts); ; {
+	for t := index.Search(ctx, fmt.Sprintf("distance(Location, geopoint(%f, %f)) < %d", lat, lng, radius), opts); ; {
 		var busStop BusStop
 		_, err := t.Next(&busStop)
 		if err != nil {
