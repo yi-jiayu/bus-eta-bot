@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
@@ -69,7 +70,6 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 					},
 				},
 			}
-
 		}
 	}
 
@@ -92,19 +92,67 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 	chatID := message.Chat.ID
 	location := message.Location
 
-	nearby, err := GetNearbyBusStops(ctx, location.Latitude, location.Longitude)
+	nearby, err := GetNearbyBusStops(ctx, location.Latitude, location.Longitude, 3)
 	if err != nil {
 		return err
 	}
 
-	text := "Nearby bus stops: "
-	for _, bs := range nearby {
-		text += fmt.Sprintf("%s (%s), ", bs.Description, bs.BusStopID)
+	if len(nearby) > 0 {
+		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionLocationMessage, message.Chat.Type)
+
+		reply := tgbotapi.NewMessage(chatID, "Here are some bus stops near your location:")
+		if !message.Chat.IsPrivate() {
+			reply.ReplyToMessageID = message.MessageID
+		}
+		_, err := bot.Telegram.Send(reply)
+		if err != nil {
+			return err
+		}
+
+		var wg sync.WaitGroup
+		wg.Add(len(nearby))
+
+		for _, bs := range nearby {
+			distance := bs.DistanceFrom(location.Latitude, location.Longitude)
+
+			callbackData := EtaCallbackData{
+				Type:      "new_eta",
+				BusStopID: bs.BusStopID,
+			}
+
+			callbackDataJSON, err := json.Marshal(callbackData)
+			if err != nil {
+				return err
+			}
+			callbackDataJSONStr := string(callbackDataJSON)
+
+			reply := tgbotapi.NewVenue(chatID, fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopID), fmt.Sprintf("%s (%.2f m) away", bs.Road, distance), location.Latitude, location.Longitude)
+			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+					{
+						tgbotapi.InlineKeyboardButton{
+							Text:         "Get etas",
+							CallbackData: &callbackDataJSONStr,
+						},
+					},
+				},
+			}
+
+			go func() {
+				defer wg.Done()
+
+				_, err := bot.Telegram.Send(reply)
+				if err != nil {
+					log.Errorf(ctx, "%v", err)
+				}
+			}()
+		}
+
+		wg.Wait()
+		return nil
 	}
 
-	go bot.LogEvent(ctx, message.From, CategoryMessage, ActionLocationMessage, message.Chat.Type)
-
-	reply := tgbotapi.NewMessage(chatID, text)
+	reply := tgbotapi.NewMessage(chatID, "Oops, I couldn't find any bus stops within 400 m of your location.")
 	_, err = bot.Telegram.Send(reply)
 	return err
 }

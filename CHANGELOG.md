@@ -1,6 +1,14 @@
 # Change Log
 
-## 3.6.0
+## 3.7.0 - 2017-05-25
+### Added
+#### Nearby bus stops
+- Send the bot a location to look up the nearest 5 bus stops within 400 m!
+
+#### Others
+- Updated privacy policy and /privacy command
+
+## 3.6.0 - 2017-05-24
 ### Added
 - Added support for old eta refresh callback queries and the demo eta button in the welcome message.
 

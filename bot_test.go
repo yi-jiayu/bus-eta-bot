@@ -57,8 +57,8 @@ func (s *Spy) ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir
 }
 
 func NewMockTelegramAPIWithPath() (*httptest.Server, chan Request, chan error) {
-	reqChan := make(chan Request, 2)
-	errChan := make(chan error, 2)
+	reqChan := make(chan Request, 1)
+	errChan := make(chan error, 1)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
@@ -68,7 +68,9 @@ func NewMockTelegramAPIWithPath() (*httptest.Server, chan Request, chan error) {
 				return
 			}
 
-			reqChan <- Request{r.URL.Path, string(body)}
+			go func() {
+				reqChan <- Request{Path: r.URL.Path, Body: string(body)}
+			}()
 		}
 
 		w.Write([]byte(`{"ok":true}`))

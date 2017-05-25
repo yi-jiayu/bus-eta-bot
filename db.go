@@ -35,6 +35,11 @@ type BusStopJSON struct {
 	Longitude   float64
 }
 
+// DistanceFrom returns the distance between a bus stop and a reference coordinate.
+func (b BusStop) DistanceFrom(lat, lon float64) float64 {
+	return Distance(b.Location.Lat, b.Location.Lng, lat, lon)
+}
+
 // GetBusStop looks up a bus stop by id from the datastore
 func GetBusStop(ctx context.Context, id string) (BusStop, error) {
 	var busStop BusStop
@@ -120,14 +125,27 @@ func PutBusStopsSearch(ctx context.Context, busStops []BusStopJSON) (string, err
 }
 
 // GetNearbyBusStops returns nearby bus stops to a specified location
-func GetNearbyBusStops(ctx context.Context, lat, lng float64) ([]BusStop, error) {
+func GetNearbyBusStops(ctx context.Context, lat, lng float64, limit int) ([]BusStop, error) {
 	index, err := search.Open("BusStops")
 	if err != nil {
 		return nil, err
 	}
 
 	var busStops []BusStop
-	for t := index.Search(ctx, fmt.Sprintf("distance(Location, geopoint(%f, %f)) < 500", lat, lng), nil); ; {
+
+	opts := &search.SearchOptions{
+		Limit: limit,
+		Sort: &search.SortOptions{
+			Expressions: []search.SortExpression{
+				{
+					Expr:    fmt.Sprintf("distance(Location, geopoint(%f, %f))", lat, lng),
+					Reverse: true,
+				},
+			},
+		},
+	}
+
+	for t := index.Search(ctx, fmt.Sprintf("distance(Location, geopoint(%f, %f)) < 400", lat, lng), opts); ; {
 		var busStop BusStop
 		_, err := t.Next(&busStop)
 		if err != nil {

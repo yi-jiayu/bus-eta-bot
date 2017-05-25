@@ -44,10 +44,11 @@ const (
 	ActionOffsetInlineQuery  = "offset_inline_query"
 	ActionChosenInlineResult = "chosen_inline_result"
 
-	ActionRefreshCallback = "refresh_callback"
-	ActionResendCallback  = "resend_callback"
-	ActionEtaCallback     = "eta_callback"
-	ActionEtaDemoCallback = "eta_demo_callback"
+	ActionRefreshCallback         = "refresh_callback"
+	ActionResendCallback          = "resend_callback"
+	ActionEtaCallback             = "eta_callback"
+	ActionEtaDemoCallback         = "eta_demo_callback"
+	ActionEtaFromLocationCallback = "eta_from_location_callback"
 
 	ActionCommandError     = "command_error"
 	ActionMessageError     = "message_error"

@@ -16,6 +16,7 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 	"refresh":  RefreshCallbackHandler,
 	"eta":      EtaCallbackHandler,
 	"eta_demo": EtaDemoCallbackHandler,
+	"new_eta":  NewEtaHandler,
 }
 
 // CallbackQueryHandler is a handler for callback queries
@@ -197,6 +198,61 @@ func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 	answer := tgbotapi.NewCallback(cbq.ID, "")
 
 	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaDemoCallback, cbq.Message.Chat.Type)
+
+	err = answerCallbackQuery(bot, reply, answer)
+	return err
+}
+
+// NewEtaHandler sends etas for a bus stop when a user taps "Get etas" on a bus stop location returned from a
+// location query
+func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+	chatID := cbq.Message.Chat.ID
+
+	var data EtaCallbackData
+	err := json.Unmarshal([]byte(cbq.Data), &data)
+	if err != nil {
+		return err
+	}
+
+	bsID, sNos := data.BusStopID, data.ServiceNos
+
+	text, err := EtaMessage(ctx, bot, bsID, sNos)
+	if err != nil {
+		return err
+	}
+
+	callbackData := EtaCallbackData{
+		Type:       "new_eta",
+		BusStopID:  bsID,
+		ServiceNos: sNos,
+	}
+
+	callbackDataJSON, err := json.Marshal(callbackData)
+	if err != nil {
+		return err
+	}
+	callbackDataJSONStr := string(callbackDataJSON)
+
+	reply := tgbotapi.NewMessage(chatID, text)
+	reply.ParseMode = "markdown"
+	reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+			{
+				tgbotapi.InlineKeyboardButton{
+					Text:         "Refresh",
+					CallbackData: &callbackDataJSONStr,
+				},
+			},
+		},
+	}
+
+	if !cbq.Message.Chat.IsPrivate() {
+		reply.ReplyToMessageID = cbq.Message.MessageID
+	}
+
+	answer := tgbotapi.NewCallback(cbq.ID, "")
+
+	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaFromLocationCallback, cbq.Message.Chat.Type)
 
 	err = answerCallbackQuery(bot, reply, answer)
 	return err
