@@ -18,10 +18,8 @@ script:
 after_success:
 - bash <(curl -s https://codecov.io/bash)
 before_deploy:
-- openssl aes-256-cbc -K $encrypted_b04a62d8fcad_key -iv $encrypted_b04a62d8fcad_iv
-  -in travis-ci-service-account.json.enc -out travis-ci-service-account.json -d
-- openssl aes-256-cbc -K $encrypted_b04a62d8fcad_key -iv $encrypted_b04a62d8fcad_iv
-  -in staging.app.yaml.enc -out staging.app.yaml -d
+- echo $STAGING_APP_YAML | base64 -d > staging.app.yaml
+- echo $TRAVIS_CI_SERVICE_ACCOUNT | base64 -d > travis-ci-service-account.json
 deploy:
   provider: gae
   skip_cleanup: true
