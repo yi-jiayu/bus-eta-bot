@@ -1,5 +1,10 @@
 # Bus Eta Bot Release Notes
 
+## v3.8.2 - 2017-05-26
+### Fixed
+- Fixed incorrect callback button action on nearby bus stop results
+- Corrected some links to point at the right GitHub repository
+
 ## v3.8.0 - 2017-05-25
 ### Added
 #### Location-based inline queries

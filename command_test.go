@@ -38,7 +38,7 @@ func TestAboutHandler(t *testing.T) {
 		actual := req
 		expected := Request{
 			Path: "/bot/sendMessage",
-			Body: fmt.Sprintf("chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Bus+Eta+Bot+v%s%%0Ahttps%%3A%%2F%%2Fgithub.com%%2Fyi-jiayu%%2Fbus-eta-bot-3", Version),
+			Body: fmt.Sprintf("chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Bus+Eta+Bot+v%s%%0Ahttps%%3A%%2F%%2Fgithub.com%%2Fyi-jiayu%%2Fbus-eta-bot", Version),
 		}
 
 		if actual != expected {

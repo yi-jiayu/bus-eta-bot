@@ -6,7 +6,6 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Go SDK" level="project" />
-    <orderEntry type="library" name="GOPATH &lt;bus-eta-bot-3&gt;" level="project" />
     <orderEntry type="library" name="GOPATH &lt;bus-eta-bot&gt;" level="project" />
   </component>
 </module>

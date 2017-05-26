@@ -10,7 +10,8 @@ import (
 
 // Links to relevant documents
 const (
-	PrivacyPolicyURL = "https://t.me/iv?url=https%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot-3%2Fblob%2Fmaster%2FPRIVACY.md&rhash=a44cb5372834ee"
+	RepoURL          = "https://github.com/yi-jiayu/bus-eta-bot"
+	PrivacyPolicyURL = "https://t.me/iv?url=https%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot%2Fblob%2Fmaster%2FPRIVACY.md&rhash=a44cb5372834ee"
 	HelpURL          = "http://telegra.ph/Bus-Eta-Bot-Help-02-23"
 )
 
@@ -77,7 +78,7 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
-	text := "Bus Eta Bot v" + Version + "\nhttps://github.com/yi-jiayu/bus-eta-bot-3"
+	text := "Bus Eta Bot v" + Version + "\n" + RepoURL
 	reply := tgbotapi.NewMessage(chatID, text)
 	if !message.Chat.IsPrivate() {
 		messageID := message.MessageID
@@ -94,7 +95,7 @@ func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Messa
 func AboutHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
-	text := "Bus Eta Bot v" + Version + "\nhttps://github.com/yi-jiayu/bus-eta-bot-3"
+	text := "Bus Eta Bot v" + Version + "\n" + RepoURL
 	reply := tgbotapi.NewMessage(chatID, text)
 	if !message.Chat.IsPrivate() {
 		messageID := message.MessageID
