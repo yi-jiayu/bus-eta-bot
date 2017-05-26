@@ -1,6 +1,6 @@
 # Bus Eta Bot
-[![Build Status](https://travis-ci.org/yi-jiayu/bus-eta-bot-3.svg?branch=master)](https://travis-ci.org/yi-jiayu/bus-eta-bot-3)
-[![codecov](https://codecov.io/gh/yi-jiayu/bus-eta-bot-3/branch/master/graph/badge.svg)](https://codecov.io/gh/yi-jiayu/bus-eta-bot-3)
+[![Build Status](https://travis-ci.org/yi-jiayu/bus-eta-bot.svg?branch=master)](https://travis-ci.org/yi-jiayu/bus-eta-bot)
+[![codecov](https://codecov.io/gh/yi-jiayu/bus-eta-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/yi-jiayu/bus-eta-bot)
 
 A practical Telegram bot for getting bus etas in Singapore supporting refreshing, bus stop search and showing nearby bus stops.
 
