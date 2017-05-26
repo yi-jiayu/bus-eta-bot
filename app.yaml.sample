@@ -1,0 +1,22 @@
+runtime: go
+api_version: go1
+
+handlers:
+- url: /$
+  static_files: index.html
+  upload: index.html
+  secure: always
+- url: /static/*
+  static_dir: static
+  secure: always
+- url: /.well-known
+  static_dir: .well-known
+- url: /.*
+  script: _go_app
+  secure: always
+
+env_variables:
+  TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
+  DATAMALL_ACCOUNT_KEY: $DATMALL_ACCOUNT_KEY
+  GA_TID: $GA_TID
+  GOOGLE_API_KEY: $GOOGLE_API_KEY

@@ -1,25 +1,26 @@
 # Bus Eta Bot Privacy Policy
+Last modified: 2017-05-25. Applicable to Bus Eta Bot v3.0.0 and above.
 
-## What information does Bus Eta Bot have access to?
+## What data does Bus Eta Bot collect?
+Bus Eta Bot collects two types of data: application logs and usage statistics. 
 
-As a Telegram bot, Bus Eta Bot has access to the first name, last name and username you have set on Telegram, as well
-as all messages you send to the bot.
+### Application logs
+The contents of each update received from the Telegram Bot are logged. This includes, but is not restricted to, message contents, timestamps, user identifiers and public profile information. A detailed description of what these updates contain can be found in the [Telegram Bot API documentation](https://core.telegram.org/bots/api).
 
-Bus Eta Bot does not receive messages in group chats unless the message is a command targeted specifically at the bot, 
-or it is a reply to a message sent by Bus Eta Bot.
+### Usage statistics
+The type, timestamp and user identifier of each user interaction with the bot are recorded. The type of user interaction corresponds to the action taken on Telegram, for example sending a bot commmand, making an inline query, or pressing an inline keyboard button, while the user identifier is a unique number assigned to each user.
 
-Bus Eta Bot has inline location enabled, so your location may be sent when you make an inline query.
+## How is this data collected?
+Application logs are written to the application log, while usage statistics are recorded using the [Google Analytics Measurement Protocol](https://developers.google.com/analytics/devguides/collection/protocol/v1/).
 
-## What information does Bus Eta Bot collect?
+## What is this data collected for?
+Application logs are used to monitor the status of the bot and to facilitate error identification, diagnosis and rectification. Usage statistics help to reveal patterns in user engagement with the bot, such as which features are more or less popular, and to determine how the bot can be improved.
 
-Bus Eta Bot DOES NOT save any of the above information permanently. However, Bus Eta Bot does log all messages it 
-receives, so your information will remain accessible temporarily until logs are rotated. Please do not send any 
-sensitive information to Bus Eta Bot.
+## Who will have access to this data, and how is it protected.
+Only the bot creator has access to this data, and best practices such as using randomly generated strong passwords and multi-factor authentication are taken to ensure there is no unauthorised access to the Google Cloud Platform project and Google Analytics account containing this data.
 
-Bus Eta Bot does collect anonymous usage statistics on usage. Specifically, we track:
-1. Your unique user id on Telegram. This is not linked to your first name, last name, or username.
-2. The type of your interaction with the bot eg. /start command, /eta command
-3. The date and time of your interaction with the bot
+## How can I be notified if this privacy policy changes?
+This document is an authoritative reference for the Bus Eta Bot privacy policy. Any changes to it are updates to the privacy policy and will be reflected in this repository. This privacy policy can be accessed from within the bot using the `/privacy` command.
 
-We use this information to keep track of how popular certain features may be and how often the bot is used in general, 
-in order to improve Bus Eta Bot.
+## Who can I contact with questions about this privacy policy?
+You may raise an issue in this repository or contact the bot creator at privacy@bus-eta-bot.jiayu.io.

@@ -1,28 +1,27 @@
-[![Build Status](https://semaphoreci.com/api/v1/jiayu/bus-eta-bot/branches/master/shields_badge.svg)](https://semaphoreci.com/jiayu/bus-eta-bot)
-[![Coverage Status](https://coveralls.io/repos/github/yi-jiayu/bus-eta-bot/badge.svg?branch=master)](https://coveralls.io/github/yi-jiayu/bus-eta-bot?branch=master)
-
 # Bus Eta Bot
-A Telegram bot for checking bus etas in Singapore
+[![Build Status](https://travis-ci.org/yi-jiayu/bus-eta-bot-3.svg?branch=master)](https://travis-ci.org/yi-jiayu/bus-eta-bot-3)
+[![codecov](https://codecov.io/gh/yi-jiayu/bus-eta-bot-3/branch/master/graph/badge.svg)](https://codecov.io/gh/yi-jiayu/bus-eta-bot-3)
 
-### Check etas
-![Checking etas](eta-query.gif)
-
-### Search bus stops
-![Searching bus stops](inline-query.gif)
+A practical Telegram bot for getting bus etas in Singapore supporting refreshing, bus stop search and showing nearby bus stops.
 
 ## Getting started
-
-Contact [@BusEtaBot](https://t.me/BusEtaBot/) on Telegram now!
+Telegram: [@BusEtaBot](https://t.me/BusEtaBot)
 
 ## Features
+### Get etas by bus stop code
+![Etas by bus stop code](screenshots/eta-query.png)
 
-[Changelog](CHANGELOG.md)
+### Get etas by bus stop code and service
+![Etas by bus stop code and service](screenshots/eta-query-filtered.png)
 
-- Request etas for all buses or specific buses at a bus stop by id.
-- Search all bus stops by id, description and road name via inline query.
-- **(WIP)** Query bus stops by location.
+### Send a location to get nearby bus stops
+![Looking up nearby bus stops](screenshots/nearby-bus-stops.png)
 
-## Architecture
-Bus Eta Bot is deployed as a [Cloud Function](https://cloud.google.com/functions/) on [Google Cloud Platform](https://cloud.google.com/) responding to [Telegram Bot API](https://core.telegram.org/bots/api) webhooks.
+### Search bus stops by bus stop code, description or road name
+![Searching bus stops](screenshots/search-bus-stops.png)
 
-## [Privacy Policy](PRIVACY.md)
+### Get nearby bus stops
+![Location-based inline query](screenshots/nearby-bus-stops-inline.png)
+
+### Send etas as inline messages
+![Inline message](screenshots/inline-message.png)

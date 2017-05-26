@@ -1,103 +1,83 @@
-# Change log
+# Bus Eta Bot Release Notes
 
-## 2.2.0 - 2017-3-23
+## v3.8.0 - 2017-05-25
+### Added
+#### Location-based inline queries
+- Bus Eta Bot now requests permission to access your location when sending inline queries, and show you bus stops 
+within 1 km of your location when you send an empty inline query with location enabled.
 
-### Removed
-
-- Bus Eta Bot does not request inline location anymore, and empty inline queries will not return nearby bus stops. This 
-feature will be replaced later on by directly sending the bot a location.
-
-## 2.1.4 - 2017-3-17
-
+## v3.7.2 - 2017-05-25
 ### Fixed
+- Add delay when sending nearby bus stops so that the nearest one is received first
 
-- Made sure not to cache results for empty inline queries
-
-## 2.1.3 - 2017-3-13
-
+## v3.7.1 - 2017-05-25
 ### Fixed
+- Fixed bug in nearby bus stop queries which returned your own location instead of the nearby bus stop locations
+- Increased nearby bus stop search distance to 500 m.
 
-- Made bot backwards compatible with older callback query which used different callback_data formats
-
-## 2.1.2 - 2017-3-13
-
-### Fixed
-
-- Fixed broken resend button on eta results sent by the bot
-
-## 2.1.1 - 2017-3-13
-
+## v3.7.0 - 2017-05-25
 ### Added
+#### Nearby bus stops
+- Send the bot a location to look up the nearest 5 bus stops within 400 m!
 
-- When the bot is unable to find etas for a bus stop, it will mention what bus code it tried to look up.
-- The bot will now mention if there are no bus services serving a bus stop, even if it has information about it. (This 
-is the case for bus stop codes such as "TPE" or "TENN9".)
+#### Others
+- Updated privacy policy and /privacy command
 
-### Fixed
-
-- Bot will not respond with an error message when sent an inline query result from itself
-
-## 2.1.0-rc1 - 2017-3-9
-
+## v3.6.0 - 2017-05-24
 ### Added
-
-- Added /privacy command which links to the privacy policy.
-
-## 2.0.10 - 2017-3-9
-
-### Added
-
-- Bot will respond to /feedback commands with a placeholder message while the feedback command is still being 
-implemented.
-- Added privacy policy [here](PRIVACY.md) with regards to the addition of analytics code.
-
-### Under the hood
-
-- Added analytics code to track anonymous usage statics.
-
-## 2.0.9 - 2017-3-7
-
-### Added
-
-- Eta results sent directly by the bot will have a resend button to have the bot send that eta query as a new message.
-
-## 2.0.8 - 2017-2-28
-
-### Added
-
-- Bot with respond with /help commands with a link to a helpful article.
-
-## 2.0.7 - 2017-2-21
+- Added support for old eta refresh callback queries and the demo eta button in the welcome message.
 
 ### Changed
+- Change demo inline query search term to "Tropicana"
 
-- Empty inline queries sent with location will now return nearby bus stops sorted by closest first
+## v3.5.0 - 2017-05-24
+### Added
+- Inline queries now have thumbnails when available.
 
-## 2.0.6 - 2017-2-21
-## 2.0.5 - 2017-2-21
-
+## v3.4.9 - 2017-05-24
 ### Fixed
+- Fixed incorrect constants in analytics event action strings
 
-- Fixed bug causing bot to never send nearby bus stops
-
-## 2.0.4 - 2017-2-21
-
-### Added
-
-- Bot will respond to empty inline queries with bus stops within a 1 km radius.
-
-## 2.0.3 - 2017-2-21
-
-### Added
-
-- Bot will respond with a helpful (hopefully) welcome message after receiving /start.
-
-## 2.0.2 - 2017-2-20
-
+## 3.4.8 - 2017-05-24
 ### Fixed
+- Fixed GA_TID not being set
 
-- Fixed bot not responding to callback queries
+## v3.4.7 - 2017-05-24
+### Changed
+- Standardised event types for analytics
 
+## v3.4.6 - 2017-05-23
+### Changed
+- When an eta slash command is invoked directly, the bot will complain if the provided bus stop code was invalid.
+- The bot will only include `next_offset` when answering inline queries if 50 results are returned.
+- Reduce the amount of information logged to Google Analytics
+
+## v3.4.5 - 2017-05-23
+### Changed
+- Refactored bot implementation for testing
+
+## v3.4.4 - 2017-05-23
+### Changed
+- The bot will now ignore text messages where the first word is longer than 5 characters
+- When an eta slash command is invoked directly, the bot will complain if the provided bus stop code is longer than 5 
+characters.
+- Changed bot's response when a bus stop code is invalid
+
+## v3.4.3 - 2017-05-22
 ### Added
+- More tests.
 
-- Remove progress bar on telegram clients after handling callback queries
+## v3.4.2 - 2017-05-22
+### Added
+- Added Google Analytics for tracking usage statistics.
+
+## v3.3.0 - 2017-05-21
+### Added
+- You can now send the bot a location and it will return a list of nearby bus stops.
+
+### Changed
+- The format of eta messages was changed slightly.
+
+### Removed
+- Resend buttons will no longer be included in new messages, and the bot will no longer respond to resend button 
+callbacks.
