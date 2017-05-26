@@ -7,6 +7,9 @@ coverage.txt
 # service account key
 travis-ci-service-account.json
 
+## base64 encoded sensitive files
+*.base64
+
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
 # Binaries for programs and plugins
