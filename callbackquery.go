@@ -222,7 +222,7 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 	}
 
 	callbackData := EtaCallbackData{
-		Type:       "new_eta",
+		Type:       "refresh",
 		BusStopID:  bsID,
 		ServiceNos: sNos,
 	}
