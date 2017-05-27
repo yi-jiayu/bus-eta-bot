@@ -29,6 +29,7 @@ deploy:
     project: bus-eta-bot
     keyfile: travis-ci-service-account.json
     config: staging.app.yaml
+    version: $($(git describe --tags) | sed 's/\./-/g')
     on:
       condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$STAGING_APP_YAML"
   - provider: gae
