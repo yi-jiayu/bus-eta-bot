@@ -1,5 +1,9 @@
 # Bus Eta Bot Release Notes
 
+## v3.8.3 - 2017-05-27
+### Fixed
+- Re-parse received callback query data before updating messages
+
 ## v3.8.2 - 2017-05-26
 ### Fixed
 - Fixed incorrect callback button action on nearby bus stop results

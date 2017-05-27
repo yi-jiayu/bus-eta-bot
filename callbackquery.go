@@ -87,13 +87,25 @@ func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callbac
 		}
 	}
 
+	callbackData := EtaCallbackData{
+		Type:       "refresh",
+		BusStopID:  busStopID,
+		ServiceNos: serviceNos,
+	}
+
+	callbackDataJSON, err := json.Marshal(callbackData)
+	if err != nil {
+		return err
+	}
+	callbackDataJSONStr := string(callbackDataJSON)
+
 	reply.ParseMode = "markdown"
 	reply.ReplyMarkup = &tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 			{
 				tgbotapi.InlineKeyboardButton{
 					Text:         "Refresh",
-					CallbackData: &cbq.Data,
+					CallbackData: &callbackDataJSONStr,
 				},
 			},
 		},
