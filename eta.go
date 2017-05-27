@@ -1,13 +1,13 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall"
 	"golang.org/x/net/context"
 )
@@ -245,7 +245,7 @@ func EtaTable(etas [][4]string) string {
 func EtaMessage(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
 	busArrival, err := bot.Datamall.GetBusArrival(busStopID, nil)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error getting etas from datamall")
 	}
 
 	etas, err := CalculateEtas(bot.NowFunc(), busArrival)
