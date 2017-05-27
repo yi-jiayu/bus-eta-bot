@@ -27,10 +27,10 @@ type BusEtas struct {
 	Services    [][4]string
 }
 
-// EtaCallbackData represents the data to be included with the Refresh inline keyboard button in eta messages.
-type EtaCallbackData struct {
+// CallbackData represents the data to be included with the Refresh inline keyboard button in eta messages.
+type CallbackData struct {
 	Type       string   `json:"t"`
-	BusStopID  string   `json:"b"`
+	BusStopID  string   `json:"b,omitempty"`
 	ServiceNos []string `json:"s,omitempty"`
 	Argstr     string   `json:"a,omitempty"`
 }
@@ -162,7 +162,7 @@ func FormatEtas(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
 
 	shown := fmt.Sprintf("Showing %d out of %d services for this bus stop.", showing, len(busEtas.Services))
 
-	sgt := time.FixedZone("SGT", 8 * 3600)
+	sgt := time.FixedZone("SGT", 8*3600)
 	updated := fmt.Sprintf("Last updated at %s", busEtas.UpdatedTime.In(sgt).Format(time.RFC822))
 
 	formatted := fmt.Sprintf("%s```\n%s```\n%s\n\n_%s_", header, table, shown, updated)

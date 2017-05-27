@@ -419,7 +419,7 @@ func TestEtaHandlerPrivate(t *testing.T) {
 			Text: "/eta",
 			Expected: []Request{
 				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22force_reply%22%3Atrue%2C%22selective%22%3Atrue%7D&text=Alright%2C+send+me+a+bus+stop+code+to+get+etas+for."},
-				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
+				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Don%27t+show+again%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22no_show_redundant_eta_command%5C%22%7D%22%7D%5D%5D%7D&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
 			},
 		},
 		{
@@ -427,7 +427,7 @@ func TestEtaHandlerPrivate(t *testing.T) {
 			Text: "/eta 96049",
 			Expected: []Request{
 				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Refresh%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22refresh%5C%22%2C%5C%22b%5C%22%3A%5C%2296049%5C%22%7D%22%7D%5D%5D%7D&text=%2AOpp+Tropicana+Condo+%2896049%29%2A%0AUpp+Changi+Rd+East%0A%60%60%60%0A%7C+Svc+%7C+Next+%7C++2nd+%7C++3rd+%7C%0A%7C-----%7C------%7C------%7C------%7C%0A%7C+2+++%7C+++-1+%7C+++10+%7C+++36+%7C%0A%7C+24++%7C++++1+%7C++++3+%7C++++6+%7C%60%60%60%0AShowing+2+out+of+2+services+for+this+bus+stop.%0A%0A_Last+updated+at+01+Jan+01+08%3A00+SGT_"},
-				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
+				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Don%27t+show+again%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22no_show_redundant_eta_command%5C%22%7D%22%7D%5D%5D%7D&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
 			},
 		},
 		{
@@ -435,14 +435,14 @@ func TestEtaHandlerPrivate(t *testing.T) {
 			Text: "/eta 96049 2",
 			Expected: []Request{
 				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Refresh%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22refresh%5C%22%2C%5C%22b%5C%22%3A%5C%2296049%5C%22%2C%5C%22s%5C%22%3A%5B%5C%222%5C%22%5D%7D%22%7D%5D%5D%7D&text=%2AOpp+Tropicana+Condo+%2896049%29%2A%0AUpp+Changi+Rd+East%0A%60%60%60%0A%7C+Svc+%7C+Next+%7C++2nd+%7C++3rd+%7C%0A%7C-----%7C------%7C------%7C------%7C%0A%7C+2+++%7C+++-1+%7C+++10+%7C+++36+%7C%60%60%60%0AShowing+1+out+of+2+services+for+this+bus+stop.%0A%0A_Last+updated+at+01+Jan+01+08%3A00+SGT_"},
-				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
+				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Don%27t+show+again%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22no_show_redundant_eta_command%5C%22%7D%22%7D%5D%5D%7D&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
 			},
 		},
 		{
 			Name: "Invalid bus stop code",
 			Text: "/eta !#@$% 2",
 			Expected: []Request{
-				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
+				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Don%27t+show+again%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22no_show_redundant_eta_command%5C%22%7D%22%7D%5D%5D%7D&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
 				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Oops%2C+that+did+not+seem+to+be+a+valid+bus+stop+code."},
 			},
 		},
@@ -450,7 +450,7 @@ func TestEtaHandlerPrivate(t *testing.T) {
 			Name: "Too long bus stop code",
 			Text: "/eta 960499 2",
 			Expected: []Request{
-				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
+				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Don%27t+show+again%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22no_show_redundant_eta_command%5C%22%7D%22%7D%5D%5D%7D&text=Did+you+know+that+in+a+private+chat%2C+you+can+just+send+a+bus+stop+code+directly%2C+without+using+the+%2Feta+command%3F"},
 				{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Oops%2C+a+bus+stop+code+can+only+contain+a+maximum+of+5+characters."},
 			},
 		},
@@ -491,6 +491,135 @@ func TestEtaHandlerPrivate(t *testing.T) {
 				for _, a := range actual {
 					fmt.Printf("%#v\n", a)
 				}
+				t.Fail()
+			}
+		})
+	}
+}
+
+func TestEtaHandlerPrivateNoReminder(t *testing.T) {
+	t.Parallel()
+
+	ctx, done, err := aetest.NewContext()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer done()
+
+	busStop := BusStop{
+		BusStopID:   "96049",
+		Road:        "Upp Changi Rd East",
+		Description: "Opp Tropicana Condo",
+	}
+
+	key1 := datastore.NewKey(ctx, busStopKind, "96049", 0, nil)
+	_, err = datastore.Put(ctx, key1, &busStop)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	prefs := UserPreferences{
+		NoRedundantEtaCommandReminder: true,
+	}
+
+	err = SetUserPreferences(ctx, 1, &prefs)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	now, _ := time.Parse(time.RFC3339, time.RFC3339)
+	dmAPI, err := NewMockBusArrivalAPI(now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dmAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
+		Client:      http.DefaultClient,
+	}
+
+	dm := &datamall.APIClient{
+		Endpoint: dmAPI.URL,
+		Client:   http.DefaultClient,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
+	bot.NowFunc = func() time.Time {
+		return now
+	}
+
+	testCases := []struct {
+		Name     string
+		Text     string
+		Expected Request
+	}{
+		{
+			Name: "No arguments",
+			Text: "/eta",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22force_reply%22%3Atrue%2C%22selective%22%3Atrue%7D&text=Alright%2C+send+me+a+bus+stop+code+to+get+etas+for.",
+			},
+		},
+		{
+			Name: "Bus stop code only",
+			Text: "/eta 96049",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Refresh%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22refresh%5C%22%2C%5C%22b%5C%22%3A%5C%2296049%5C%22%7D%22%7D%5D%5D%7D&text=%2AOpp+Tropicana+Condo+%2896049%29%2A%0AUpp+Changi+Rd+East%0A%60%60%60%0A%7C+Svc+%7C+Next+%7C++2nd+%7C++3rd+%7C%0A%7C-----%7C------%7C------%7C------%7C%0A%7C+2+++%7C+++-1+%7C+++10+%7C+++36+%7C%0A%7C+24++%7C++++1+%7C++++3+%7C++++6+%7C%60%60%60%0AShowing+2+out+of+2+services+for+this+bus+stop.%0A%0A_Last+updated+at+01+Jan+01+08%3A00+SGT_",
+			},
+		},
+		{
+			Name: "Bus stop code and services",
+			Text: "/eta 96049 2",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Refresh%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22refresh%5C%22%2C%5C%22b%5C%22%3A%5C%2296049%5C%22%2C%5C%22s%5C%22%3A%5B%5C%222%5C%22%5D%7D%22%7D%5D%5D%7D&text=%2AOpp+Tropicana+Condo+%2896049%29%2A%0AUpp+Changi+Rd+East%0A%60%60%60%0A%7C+Svc+%7C+Next+%7C++2nd+%7C++3rd+%7C%0A%7C-----%7C------%7C------%7C------%7C%0A%7C+2+++%7C+++-1+%7C+++10+%7C+++36+%7C%60%60%60%0AShowing+1+out+of+2+services+for+this+bus+stop.%0A%0A_Last+updated+at+01+Jan+01+08%3A00+SGT_",
+			},
+		},
+		{
+			Name: "Invalid bus stop code",
+			Text: "/eta !#@$% 2",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Oops%2C+that+did+not+seem+to+be+a+valid+bus+stop+code.",
+			},
+		},
+		{
+			Name: "Too long bus stop code",
+			Text: "/eta 960499 2",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Oops%2C+a+bus+stop+code+can+only+contain+a+maximum+of+5+characters.",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			message := MockMessageWithType(ChatTypePrivate)
+			message.Text = tc.Text
+
+			err := EtaHandler(ctx, &bot, &message)
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+
+			var actual Request
+			select {
+			case req := <-reqChan:
+				actual = req
+			case err := <-errChan:
+				t.Fatalf("%v", err)
+			}
+
+			expected := tc.Expected
+			if actual != expected {
+				fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
 				t.Fail()
 			}
 		})

@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	busStopKind = "BusStop"
+	busStopKind         = "BusStop"
+	userPreferencesKind = "UserPreferences"
 )
 
 var (
@@ -26,13 +27,18 @@ type BusStop struct {
 	Location    appengine.GeoPoint
 }
 
-// BusStopJSON is a bus stop deserialised from JSON
+// BusStopJSON is a bus stop deserialised from JSON.
 type BusStopJSON struct {
 	BusStopCode string
 	RoadName    string
 	Description string
 	Latitude    float64
 	Longitude   float64
+}
+
+// UserPreferences represents a bus eta bot user's preferences.
+type UserPreferences struct {
+	NoRedundantEtaCommandReminder bool
 }
 
 // DistanceFrom returns the distance between a bus stop and a reference coordinate.
@@ -56,7 +62,7 @@ func GetBusStop(ctx context.Context, id string) (BusStop, error) {
 	return busStop, nil
 }
 
-// PutBusStopsDatastore inserts a list of bus stops into datastore
+// PutBusStopsDatastore inserts a list of bus stops into datastore.
 func PutBusStopsDatastore(ctx context.Context, busStops []BusStopJSON) (string, error) {
 	keys := make([]*datastore.Key, 0)
 	entities := make([]BusStop, 0)
@@ -94,7 +100,7 @@ func PutBusStopsDatastore(ctx context.Context, busStops []BusStopJSON) (string, 
 	return last.BusStopCode, nil
 }
 
-// PutBusStopsSearch inserts a list of bus stops into the search index
+// PutBusStopsSearch inserts a list of bus stops into the search index.
 func PutBusStopsSearch(ctx context.Context, busStops []BusStopJSON) (string, error) {
 	index, err := search.Open("BusStops")
 	if err != nil {
@@ -124,7 +130,7 @@ func PutBusStopsSearch(ctx context.Context, busStops []BusStopJSON) (string, err
 	return fmt.Sprintf("%d", put), nil
 }
 
-// GetNearbyBusStops returns nearby bus stops to a specified location
+// GetNearbyBusStops returns nearby bus stops to a specified location.
 func GetNearbyBusStops(ctx context.Context, lat, lng float64, radius, limit int) ([]BusStop, error) {
 	index, err := search.Open("BusStops")
 	if err != nil {
@@ -160,7 +166,7 @@ func GetNearbyBusStops(ctx context.Context, lat, lng float64, radius, limit int)
 	}
 }
 
-// SearchBusStops returns bus stops containing query
+// SearchBusStops returns bus stops containing query.
 func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, error) {
 	index, err := search.Open("BusStops")
 	if err != nil {
@@ -185,4 +191,28 @@ func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, e
 
 		busStops = append(busStops, bs)
 	}
+}
+
+// GetUserPreferences retrieves a user's preferences.
+func GetUserPreferences(ctx context.Context, userID int) (UserPreferences, error) {
+	var prefs UserPreferences
+	key := datastore.NewKey(ctx, userPreferencesKind, "", int64(userID), nil)
+
+	err := datastore.Get(ctx, key, &prefs)
+	if err != nil {
+		if err == datastore.ErrNoSuchEntity {
+			return UserPreferences{}, nil
+		}
+
+		return UserPreferences{}, err
+	}
+
+	return prefs, nil
+}
+
+// SetUserPreferences sets a user's preferences.
+func SetUserPreferences(ctx context.Context, userID int, prefs *UserPreferences) error {
+	key := datastore.NewKey(ctx, userPreferencesKind, "", int64(userID), nil)
+	_, err := datastore.Put(ctx, key, prefs)
+	return err
 }

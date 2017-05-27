@@ -47,7 +47,7 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 				return err
 			}
 		} else {
-			callbackData := EtaCallbackData{
+			callbackData := CallbackData{
 				Type:       "refresh",
 				BusStopID:  busStopID,
 				ServiceNos: serviceNos,
@@ -116,7 +116,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 		for _, bs := range nearby {
 			distance := bs.DistanceFrom(location.Latitude, location.Longitude)
 
-			callbackData := EtaCallbackData{
+			callbackData := CallbackData{
 				Type:      "new_eta",
 				BusStopID: bs.BusStopID,
 			}

@@ -68,7 +68,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 			}
 		}
 
-		callbackData := EtaCallbackData{
+		callbackData := CallbackData{
 			Type:      "refresh",
 			BusStopID: bs.BusStopID,
 		}
@@ -159,7 +159,7 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 		return err
 	}
 
-	callbackData := EtaCallbackData{
+	callbackData := CallbackData{
 		Type:      "refresh",
 		BusStopID: busStopID,
 	}

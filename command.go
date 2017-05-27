@@ -152,9 +152,40 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 
 	if message.Chat.IsPrivate() {
 		go func() {
+			prefs, err := GetUserPreferences(ctx, message.From.ID)
+			if err != nil {
+				log.Errorf(ctx, "%v", err)
+				return
+			}
+
+			if prefs.NoRedundantEtaCommandReminder {
+				return
+			}
+
+			callbackData := CallbackData{
+				Type: "no_show_redundant_eta_command",
+			}
+			callbackDataJSON, err := json.Marshal(callbackData)
+			if err != nil {
+				log.Errorf(ctx, "%v", err)
+				return
+			}
+			callbackDataJSONStr := string(callbackDataJSON)
+
 			text := "Did you know that in a private chat, you can just send a bus stop code directly, without using the /eta command?"
 			info := tgbotapi.NewMessage(chatID, text)
-			_, err := bot.Telegram.Send(info)
+			info.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+					{
+						tgbotapi.InlineKeyboardButton{
+							Text:         "Don't show again",
+							CallbackData: &callbackDataJSONStr,
+						},
+					},
+				},
+			}
+
+			_, err = bot.Telegram.Send(info)
 			if err != nil {
 				log.Errorf(ctx, "%v", err)
 			}
@@ -179,7 +210,7 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 					return err
 				}
 			} else {
-				callbackData := EtaCallbackData{
+				callbackData := CallbackData{
 					Type:       "refresh",
 					BusStopID:  busStopID,
 					ServiceNos: serviceNos,

@@ -13,10 +13,11 @@ import (
 )
 
 var callbackQueryHandlers = map[string]CallbackQueryHandler{
-	"refresh":  RefreshCallbackHandler,
-	"eta":      EtaCallbackHandler,
-	"eta_demo": EtaDemoCallbackHandler,
-	"new_eta":  NewEtaHandler,
+	"refresh":                       RefreshCallbackHandler,
+	"eta":                           EtaCallbackHandler,
+	"eta_demo":                      EtaDemoCallbackHandler,
+	"new_eta":                       NewEtaHandler,
+	"no_show_redundant_eta_command": NoShowRedundantEtaCommandCallbackHandler,
 }
 
 // CallbackQueryHandler is a handler for callback queries
@@ -87,7 +88,7 @@ func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callbac
 		}
 	}
 
-	callbackData := EtaCallbackData{
+	callbackData := CallbackData{
 		Type:       "refresh",
 		BusStopID:  busStopID,
 		ServiceNos: serviceNos,
@@ -125,7 +126,7 @@ func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callbac
 
 // RefreshCallbackHandler handles the callback for the Refresh button on an eta message.
 func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
-	var data EtaCallbackData
+	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
 		return err
@@ -139,7 +140,7 @@ func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 // EtaCallbackHandler handles callback queries from eta messages from old versions of the bot for
 // backwards-compatibility.
 func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
-	var data EtaCallbackData
+	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
 		return err
@@ -154,7 +155,7 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callb
 		sNos = data.ServiceNos
 	}
 
-	callbackData := EtaCallbackData{
+	callbackData := CallbackData{
 		Type:       "refresh",
 		BusStopID:  bsID,
 		ServiceNos: sNos,
@@ -179,7 +180,7 @@ func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 		return err
 	}
 
-	callbackData := EtaCallbackData{
+	callbackData := CallbackData{
 		Type:      "refresh",
 		BusStopID: "96049",
 	}
@@ -220,7 +221,7 @@ func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	chatID := cbq.Message.Chat.ID
 
-	var data EtaCallbackData
+	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
 		return err
@@ -233,7 +234,7 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 		return err
 	}
 
-	callbackData := EtaCallbackData{
+	callbackData := CallbackData{
 		Type:       "refresh",
 		BusStopID:  bsID,
 		ServiceNos: sNos,
@@ -267,6 +268,34 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaFromLocationCallback, cbq.Message.Chat.Type)
 
 	err = answerCallbackQuery(bot, reply, answer)
+	return err
+}
+
+func NoShowRedundantEtaCommandCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+	chatID := cbq.Message.Chat.ID
+	messageID := cbq.Message.MessageID
+	userID := cbq.From.ID
+
+	prefs, err := GetUserPreferences(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	prefs.NoRedundantEtaCommandReminder = true
+
+	err = SetUserPreferences(ctx, userID, &prefs)
+	if err != nil {
+		return err
+	}
+
+	markup := tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{},
+	}
+	edit := tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup)
+
+	answer := tgbotapi.NewCallback(cbq.ID, "Got it!")
+
+	err = answerCallbackQuery(bot, edit, answer)
 	return err
 }
 
