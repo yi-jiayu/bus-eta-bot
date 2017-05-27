@@ -161,7 +161,10 @@ func FormatEtas(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
 	}
 
 	shown := fmt.Sprintf("Showing %d out of %d services for this bus stop.", showing, len(busEtas.Services))
-	updated := fmt.Sprintf("Last updated at %s", busEtas.UpdatedTime.Format(time.RFC822))
+
+	sgt := time.FixedZone("SGT", 8 * 3600)
+	updated := fmt.Sprintf("Last updated at %s", busEtas.UpdatedTime.In(sgt).Format(time.RFC822))
+
 	formatted := fmt.Sprintf("%s```\n%s```\n%s\n\n_%s_", header, table, shown, updated)
 
 	return formatted

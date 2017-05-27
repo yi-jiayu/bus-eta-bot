@@ -309,7 +309,7 @@ func TestFormatEtas(t *testing.T) {
 
 	t.Run("Showing all bus stops", func(t *testing.T) {
 		actual := FormatEtas(etas, &busStop, nil)
-		expected := "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 00:00 UTC_"
+		expected := "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_"
 
 		if actual != expected {
 			fmt.Printf("Expected:\n%q\nActual:\n%q\n", expected, actual)
@@ -318,7 +318,7 @@ func TestFormatEtas(t *testing.T) {
 	})
 	t.Run("Showing filtered bus stops", func(t *testing.T) {
 		actual := FormatEtas(etas, &busStop, []string{"2"})
-		expected := "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |```\nShowing 1 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 00:00 UTC_"
+		expected := "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |```\nShowing 1 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_"
 
 		if actual != expected {
 			fmt.Printf("Expected:\n%q\nActual:\n%q\n", expected, actual)
