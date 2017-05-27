@@ -20,7 +20,6 @@ after_success:
 before_deploy:
 # embed current version into source
 - cat version.go | sed s/VERSION/$(git describe --tags)/ > version.go
-- DEPLOY_VERSION=$($(git describe --tags) | sed 's/\./-/g')
 - echo $TRAVIS_CI_SERVICE_ACCOUNT | base64 -d > travis-ci-service-account.json
 - echo $STAGING_APP_YAML | base64 -d > staging.app.yaml
 - echo $PROD_APP_YAML | base64 -d > prod.app.yaml
@@ -30,7 +29,7 @@ deploy:
     project: bus-eta-bot
     keyfile: travis-ci-service-account.json
     config: staging.app.yaml
-    version: $DEPLOY_VERSION
+    version: $(echo $(git describe --tags) | sed 's/\./-/g')
     on:
       condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$STAGING_APP_YAML"
   - provider: gae
