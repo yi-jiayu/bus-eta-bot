@@ -6,6 +6,7 @@ import (
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
+	"google.golang.org/appengine/log"
 )
 
 // Links to relevant documents
@@ -152,6 +153,17 @@ func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Messa
 func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
+	if message.Chat.IsPrivate() {
+		go func() {
+			text := "Did you know that in a private chat, you can just send a bus stop code directly, without using the /eta command?"
+			info := tgbotapi.NewMessage(chatID, text)
+			_, err := bot.Telegram.Send(info)
+			if err != nil {
+				log.Errorf(ctx, "%v", err)
+			}
+		}()
+	}
+
 	var reply tgbotapi.MessageConfig
 	if args := message.CommandArguments(); args != "" {
 		busStopID, serviceNos, err := InferEtaQuery(args)
@@ -204,27 +216,21 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 		go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithArgs, message.Chat.Type)
 
 		_, err = bot.Telegram.Send(reply)
-		if err != nil {
-			return err
-		}
-	} else {
-		text := "Alright, send me a bus stop code to get etas for."
-		reply := tgbotapi.NewMessage(chatID, text)
-		if !message.Chat.IsPrivate() {
-			reply.ReplyToMessageID = message.MessageID
-		}
-		reply.ReplyMarkup = tgbotapi.ForceReply{
-			ForceReply: true,
-			Selective:  true,
-		}
-
-		go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
-
-		_, err := bot.Telegram.Send(reply)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
-	return nil
+	text := "Alright, send me a bus stop code to get etas for."
+	reply = tgbotapi.NewMessage(chatID, text)
+	if !message.Chat.IsPrivate() {
+		reply.ReplyToMessageID = message.MessageID
+	}
+	reply.ReplyMarkup = tgbotapi.ForceReply{
+		ForceReply: true,
+		Selective:  true,
+	}
+
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
+
+	_, err := bot.Telegram.Send(reply)
+	return err
 }

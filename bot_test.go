@@ -10,6 +10,14 @@ import (
 	"golang.org/x/net/context"
 )
 
+// Telegram chat types
+const (
+	ChatTypePrivate    = "private"
+	ChatTypeGroup      = "group"
+	ChatTypeSupergroup = "supergroup"
+	ChatTypeChannel    = "channel"
+)
+
 type Request struct {
 	Path string
 	Body string
@@ -79,11 +87,18 @@ func NewMockTelegramAPIWithPath() (*httptest.Server, chan Request, chan error) {
 	return ts, reqChan, errChan
 }
 
-// todo: differentiate between private and non-private messages
 func MockMessage() tgbotapi.Message {
 	return tgbotapi.Message{
 		Chat: &tgbotapi.Chat{ID: 1},
 		From: &tgbotapi.User{ID: 1, FirstName: "Jiayu"},
+	}
+}
+
+func MockMessageWithType(chatType string) tgbotapi.Message {
+	return tgbotapi.Message{
+		MessageID: 1,
+		Chat:      &tgbotapi.Chat{ID: 1, Type: chatType},
+		From:      &tgbotapi.User{ID: 1, FirstName: "Jiayu"},
 	}
 }
 
