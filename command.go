@@ -75,36 +75,33 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 	return nil
 }
 
-// VersionHandler handles the /version command
-func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+func aboutMessage(message *tgbotapi.Message) tgbotapi.MessageConfig {
 	chatID := message.Chat.ID
 
-	text := "Bus Eta Bot v" + Version + "\n" + RepoURL
+	text := "Bus Eta Bot " + Version + "\n" + RepoURL
 	reply := tgbotapi.NewMessage(chatID, text)
 	if !message.Chat.IsPrivate() {
 		messageID := message.MessageID
 		reply.ReplyToMessageID = messageID
 	}
 
+	return reply
+}
+
+// VersionHandler handles the /version command
+func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionVersionCommand, message.Chat.Type)
 
+	reply := aboutMessage(message)
 	_, err := bot.Telegram.Send(reply)
 	return err
 }
 
 // AboutHandler handles the /about command
 func AboutHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
-	chatID := message.Chat.ID
-
-	text := "Bus Eta Bot v" + Version + "\n" + RepoURL
-	reply := tgbotapi.NewMessage(chatID, text)
-	if !message.Chat.IsPrivate() {
-		messageID := message.MessageID
-		reply.ReplyToMessageID = messageID
-	}
-
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionAboutCommand, message.Chat.Type)
 
+	reply := aboutMessage(message)
 	_, err := bot.Telegram.Send(reply)
 	return err
 }

@@ -26,27 +26,111 @@ func TestAboutHandler(t *testing.T) {
 	}
 
 	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
-	message := MockMessage()
 
-	err := AboutHandler(nil, &bot, &message)
-	if err != nil {
-		t.Fatalf("%v", err)
+	testCases := []struct {
+		Name     string
+		ChatType string
+		Expected Request
+	}{
+		{
+			Name:     "Private chat",
+			ChatType: ChatTypePrivate,
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
+			},
+		},
+		{
+			Name: "Group, supergroup or channel",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_to_message_id=1&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
+			},
+		},
 	}
 
-	select {
-	case req := <-reqChan:
-		actual := req
-		expected := Request{
-			Path: "/bot/sendMessage",
-			Body: fmt.Sprintf("chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Bus+Eta+Bot+v%s%%0Ahttps%%3A%%2F%%2Fgithub.com%%2Fyi-jiayu%%2Fbus-eta-bot", Version),
-		}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			message := MockMessageWithType(tc.ChatType)
 
-		if actual != expected {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	case err := <-errChan:
-		t.Fatalf("%v", err)
+			err := AboutHandler(nil, &bot, &message)
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+
+			select {
+			case req := <-reqChan:
+				actual := req
+				expected := tc.Expected
+
+				if actual != expected {
+					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+					t.Fail()
+				}
+			case err := <-errChan:
+				t.Fatalf("%v", err)
+			}
+		})
+	}
+}
+
+func TestVersionHandler(t *testing.T) {
+	t.Parallel()
+
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
+		Client:      http.DefaultClient,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+
+	testCases := []struct {
+		Name     string
+		ChatType string
+		Expected Request
+	}{
+		{
+			Name:     "Private chat",
+			ChatType: ChatTypePrivate,
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
+			},
+		},
+		{
+			Name: "Group, supergroup or channel",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_to_message_id=1&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			message := MockMessageWithType(tc.ChatType)
+
+			err := VersionHandler(nil, &bot, &message)
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+
+			select {
+			case req := <-reqChan:
+				actual := req
+				expected := tc.Expected
+
+				if actual != expected {
+					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+					t.Fail()
+				}
+			case err := <-errChan:
+				t.Fatalf("%v", err)
+			}
+		})
 	}
 }
 
