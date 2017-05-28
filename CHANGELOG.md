@@ -1,5 +1,14 @@
 # Bus Eta Bot Release Notes
 
+## v3.8.4 - 2017-05-28
+### Changed
+- When sending a `/eta` command in a private chat, the bot will mention that it's not necessary.
+- The bot version string is now generated at CI time based on the exact commit being deployed.
+- Display current bot version, date and link to GitHub in `index.html`.
+
+### Added
+- Laid the groundwork for having persistent user preferences.
+
 ## v3.8.3 - 2017-05-27
 ### Fixed
 - Re-parse received callback query data before updating messages
