@@ -1,5 +1,6 @@
 machine:
   environment:
+    PATH: $HOME/google-cloud-sdk/bin:$PATH
     GCLOUD_VERSION: 156.0.0
 cache_directories:
   - "$HOME/google-cloud-sdk"
@@ -7,7 +8,6 @@ dependencies:
   pre:
     - if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz
       && tar -x -C $HOME -f google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz; fi
-    - PATH=$HOME/google-cloud-sdk/bin:$PATH
     - gcloud --quiet components install app-engine-go
     - gcloud --quiet components install app-engine-python
     - gcloud --quiet components update --version $GCLOUD_VERSION
