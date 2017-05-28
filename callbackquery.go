@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
@@ -41,6 +41,7 @@ func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.C
 
 		_, err := bot.Telegram.Send(c)
 		if err != nil {
+			err = errors.Wrap(err, fmt.Sprintf("%#v", c))
 			errChan <- err
 		}
 	}()
@@ -50,6 +51,7 @@ func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.C
 
 		_, err := bot.Telegram.AnswerCallbackQuery(answer)
 		if err != nil {
+			err = errors.Wrap(err, fmt.Sprintf("%#v", answer))
 			errChan <- err
 		}
 	}()
@@ -61,7 +63,7 @@ func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.C
 	case 1:
 		return errs[0]
 	case 2:
-		return errors.New(errs[0].Error() + "\n" + errs[1].Error())
+		return fmt.Errorf("%v\n%v", errs[0], errs[1])
 	default:
 		return nil
 	}
@@ -143,7 +145,7 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callb
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
 	}
 
 	var bsID string
@@ -187,7 +189,7 @@ func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 
 	callbackDataJSON, err := json.Marshal(callbackData)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", callbackData))
 	}
 	callbackDataJSONStr := string(callbackDataJSON)
 
@@ -224,7 +226,7 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
 	}
 
 	bsID, sNos := data.BusStopID, data.ServiceNos
@@ -242,7 +244,7 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 
 	callbackDataJSON, err := json.Marshal(callbackData)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", callbackData))
 	}
 	callbackDataJSONStr := string(callbackDataJSON)
 
@@ -271,6 +273,8 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 	return err
 }
 
+// NoShowRedundantEtaCommandCallbackHandler handles the "Don't show again" callback button on the reminder sent to
+// users that the /eta command isn't necessary in a private chat.
 func NoShowRedundantEtaCommandCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	chatID := cbq.Message.Chat.ID
 	messageID := cbq.Message.MessageID
@@ -308,6 +312,7 @@ func callbackErrorHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Cal
 
 	_, err = bot.Telegram.AnswerCallbackQuery(answer)
 	if err != nil {
+		err := errors.Wrap(err, fmt.Sprintf("%#v", answer))
 		log.Errorf(ctx, "%v", err)
 	}
 }
