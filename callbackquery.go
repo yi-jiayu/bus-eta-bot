@@ -305,7 +305,7 @@ func NoShowRedundantEtaCommandCallbackHandler(ctx context.Context, bot *BusEtaBo
 
 // callbackErrorHandler is for informing the user about an error while processing a callback query.
 func callbackErrorHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, err error) {
-	log.Errorf(ctx, "%v", err)
+	log.Errorf(ctx, "%+v", err)
 
 	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
 	answer := tgbotapi.NewCallbackWithAlert(cbq.ID, text)
@@ -313,6 +313,6 @@ func callbackErrorHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Cal
 	_, err = bot.Telegram.AnswerCallbackQuery(answer)
 	if err != nil {
 		err := errors.Wrap(err, fmt.Sprintf("%#v", answer))
-		log.Errorf(ctx, "%v", err)
+		log.Errorf(ctx, "%+v", err)
 	}
 }
