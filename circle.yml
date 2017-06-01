@@ -1,11 +1,11 @@
 machine:
   node:
-    version: 6.9.1
+    version: 8.0.0
   environment:
     GCLOUD_PROJECT: bus-eta-bot
 test:
   override:
-    - npm run nyc --silent
+    - npm run nyc
     - npm run coverage
   post:
     - bash <(curl -s https://codecov.io/bash)

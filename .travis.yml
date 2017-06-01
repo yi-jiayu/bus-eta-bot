@@ -1,0 +1,13 @@
+language: node_js
+cache:
+  yarn: true
+node_js:
+  - 8.0.0
+script:
+  - npm run nyc
+  - npm run coverage
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+env:
+  global:
+    - GCLOUD_PROJECT: bus-eta-bot
