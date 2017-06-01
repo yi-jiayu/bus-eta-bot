@@ -6,11 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
-	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
@@ -45,8 +43,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	withTimeout, _ := context.WithTimeout(ctx, 60*time.Second)
-	client := urlfetch.Client(withTimeout)
+	client := urlfetch.Client(ctx)
 
 	tg := &tgbotapi.BotAPI{
 		APIEndpoint: tgbotapi.APIEndpoint,
