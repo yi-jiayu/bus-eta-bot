@@ -9,7 +9,6 @@ import (
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
-	"sync"
 )
 
 var handlers = Handlers{
