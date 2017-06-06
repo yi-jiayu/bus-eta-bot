@@ -9,6 +9,7 @@ import (
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"sync"
 )
 
 var handlers = Handlers{
@@ -60,38 +61,20 @@ func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient
 }
 
 // HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type
-func (b *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
+func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
 		if command := message.Command(); command != "" {
-			// handle command
-			if handler, exists := b.Handlers.CommandHandlers[command]; exists {
-				err := handler(ctx, b, message)
-				if err != nil {
-					messageErrorHandler(ctx, b, message, err)
-					return
-				}
-			}
-
+			bot.HandleCommand(ctx, command, message)
 			return
 		}
 
 		if text := message.Text; text != "" {
-			err := b.Handlers.TextHandler(ctx, b, message)
-			if err != nil {
-				messageErrorHandler(ctx, b, message, err)
-				return
-			}
-
+			bot.HandleText(ctx, message)
 			return
 		}
 
 		if location := message.Location; location != nil {
-			err := b.Handlers.LocationHandler(ctx, b, message)
-			if err != nil {
-				messageErrorHandler(ctx, b, message, err)
-				return
-			}
-
+			bot.HandleLocation(ctx, message)
 			return
 		}
 
@@ -99,55 +82,82 @@ func (b *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	}
 
 	if cbq := update.CallbackQuery; cbq != nil {
-		var data map[string]interface{}
-		err := json.Unmarshal([]byte(cbq.Data), &data)
-		if err != nil {
-			callbackErrorHandler(ctx, b, cbq, err)
-			return
-		}
-
-		if cbqType, ok := data["t"].(string); ok {
-			if handler, ok := b.Handlers.CallbackQueryHandlers[cbqType]; ok {
-				err := handler(ctx, b, cbq)
-				if err != nil {
-					callbackErrorHandler(ctx, b, cbq, err)
-					return
-				}
-			}
-		} else {
-			callbackErrorHandler(ctx, b, cbq, errors.New("unrecognised callback query"))
-			return
-		}
-
+		bot.HandleCallbackQuery(ctx, cbq)
 		return
 	}
 
 	if ilq := update.InlineQuery; ilq != nil {
-		// handle inline query
-		err := b.Handlers.InlineQueryHandler(ctx, b, ilq)
-		if err != nil {
-			log.Errorf(ctx, "%v", err)
-			return
-		}
-
+		bot.HandleInlineQuery(ctx, ilq)
 		return
 	}
 
 	if cir := update.ChosenInlineResult; cir != nil {
-		err := b.Handlers.ChosenInlineResultHandler(ctx, b, cir)
-		if err != nil {
-			log.Errorf(ctx, "%v", err)
-			return
-		}
-
+		bot.HandleChosenInlineResult(ctx, cir)
 		return
 	}
 }
 
+func (bot *BusEtaBot) HandleCommand(ctx context.Context, command string, message *tgbotapi.Message) {
+	if handler, exists := bot.Handlers.CommandHandlers[command]; exists {
+		err := handler(ctx, bot, message)
+		if err != nil {
+			messageErrorHandler(ctx, bot, message, err)
+		}
+	}
+}
+
+func (bot *BusEtaBot) HandleText(ctx context.Context, message *tgbotapi.Message) {
+	err := bot.Handlers.TextHandler(ctx, bot, message)
+	if err != nil {
+		messageErrorHandler(ctx, bot, message, err)
+	}
+}
+
+func (bot *BusEtaBot) HandleLocation(ctx context.Context, message *tgbotapi.Message) {
+	err := bot.Handlers.LocationHandler(ctx, bot, message)
+	if err != nil {
+		messageErrorHandler(ctx, bot, message, err)
+	}
+}
+
+func (bot *BusEtaBot) HandleCallbackQuery(ctx context.Context, cbq *tgbotapi.CallbackQuery) {
+	var data map[string]interface{}
+	err := json.Unmarshal([]byte(cbq.Data), &data)
+	if err != nil {
+		callbackErrorHandler(ctx, bot, cbq, err)
+		return
+	}
+
+	if cbqType, ok := data["t"].(string); ok {
+		if handler, ok := bot.Handlers.CallbackQueryHandlers[cbqType]; ok {
+			err := handler(ctx, bot, cbq)
+			if err != nil {
+				callbackErrorHandler(ctx, bot, cbq, err)
+			}
+		}
+	} else {
+		callbackErrorHandler(ctx, bot, cbq, errors.New("unrecognised callback query"))
+	}
+}
+
+func (bot *BusEtaBot) HandleInlineQuery(ctx context.Context, ilq *tgbotapi.InlineQuery) {
+	err := bot.Handlers.InlineQueryHandler(ctx, bot, ilq)
+	if err != nil {
+		log.Errorf(ctx, "%v", err)
+	}
+}
+
+func (bot *BusEtaBot) HandleChosenInlineResult(ctx context.Context, cir *tgbotapi.ChosenInlineResult) {
+	err := bot.Handlers.ChosenInlineResultHandler(ctx, bot, cir)
+	if err != nil {
+		log.Errorf(ctx, "%v", err)
+	}
+}
+
 // LogEvent logs an event to the Measurement Protocol if a MeasurementProtocolClient is set on the bot.
-func (b *BusEtaBot) LogEvent(ctx context.Context, user *tgbotapi.User, category, action, label string) {
-	if b.MeasurementProtocol != nil {
-		_, err := b.MeasurementProtocol.LogEvent(user.ID, user.LanguageCode, category, action, label)
+func (bot *BusEtaBot) LogEvent(ctx context.Context, user *tgbotapi.User, category, action, label string) {
+	if bot.MeasurementProtocol != nil {
+		_, err := bot.MeasurementProtocol.LogEvent(user.ID, user.LanguageCode, category, action, label)
 		if err != nil {
 			log.Errorf(ctx, "error while logging event: %v", err)
 		}
