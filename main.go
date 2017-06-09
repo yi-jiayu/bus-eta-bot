@@ -12,6 +12,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
+	"bytes"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +22,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
-	bytes, err := ioutil.ReadAll(r.Body)
+	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
 
@@ -31,10 +32,15 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// log update
-	log.Infof(ctx, string(bytes))
+	var pretty bytes.Buffer
+	err = json.Indent(&pretty, bs, "", "  ")
+	if err != nil {
+		log.Errorf(ctx, "%v", err)
+	}
+	log.Infof(ctx, "%s", pretty.String())
 
 	var update tgbotapi.Update
-	err = json.Unmarshal(bytes, &update)
+	err = json.Unmarshal(bs, &update)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
 
