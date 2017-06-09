@@ -63,17 +63,17 @@ func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient
 func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
 		if command := message.Command(); command != "" {
-			bot.HandleCommand(ctx, command, message)
+			bot.handleCommand(ctx, command, message)
 			return
 		}
 
 		if text := message.Text; text != "" {
-			bot.HandleText(ctx, message)
+			bot.handleText(ctx, message)
 			return
 		}
 
 		if location := message.Location; location != nil {
-			bot.HandleLocation(ctx, message)
+			bot.handleLocation(ctx, message)
 			return
 		}
 
@@ -81,22 +81,22 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 	}
 
 	if cbq := update.CallbackQuery; cbq != nil {
-		bot.HandleCallbackQuery(ctx, cbq)
+		bot.handleCallbackQuery(ctx, cbq)
 		return
 	}
 
 	if ilq := update.InlineQuery; ilq != nil {
-		bot.HandleInlineQuery(ctx, ilq)
+		bot.handleInlineQuery(ctx, ilq)
 		return
 	}
 
 	if cir := update.ChosenInlineResult; cir != nil {
-		bot.HandleChosenInlineResult(ctx, cir)
+		bot.handleChosenInlineResult(ctx, cir)
 		return
 	}
 }
 
-func (bot *BusEtaBot) HandleCommand(ctx context.Context, command string, message *tgbotapi.Message) {
+func (bot *BusEtaBot) handleCommand(ctx context.Context, command string, message *tgbotapi.Message) {
 	if handler, exists := bot.Handlers.CommandHandlers[command]; exists {
 		err := handler(ctx, bot, message)
 		if err != nil {
@@ -105,21 +105,21 @@ func (bot *BusEtaBot) HandleCommand(ctx context.Context, command string, message
 	}
 }
 
-func (bot *BusEtaBot) HandleText(ctx context.Context, message *tgbotapi.Message) {
+func (bot *BusEtaBot) handleText(ctx context.Context, message *tgbotapi.Message) {
 	err := bot.Handlers.TextHandler(ctx, bot, message)
 	if err != nil {
 		messageErrorHandler(ctx, bot, message, err)
 	}
 }
 
-func (bot *BusEtaBot) HandleLocation(ctx context.Context, message *tgbotapi.Message) {
+func (bot *BusEtaBot) handleLocation(ctx context.Context, message *tgbotapi.Message) {
 	err := bot.Handlers.LocationHandler(ctx, bot, message)
 	if err != nil {
 		messageErrorHandler(ctx, bot, message, err)
 	}
 }
 
-func (bot *BusEtaBot) HandleCallbackQuery(ctx context.Context, cbq *tgbotapi.CallbackQuery) {
+func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.CallbackQuery) {
 	var data map[string]interface{}
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
@@ -139,14 +139,14 @@ func (bot *BusEtaBot) HandleCallbackQuery(ctx context.Context, cbq *tgbotapi.Cal
 	}
 }
 
-func (bot *BusEtaBot) HandleInlineQuery(ctx context.Context, ilq *tgbotapi.InlineQuery) {
+func (bot *BusEtaBot) handleInlineQuery(ctx context.Context, ilq *tgbotapi.InlineQuery) {
 	err := bot.Handlers.InlineQueryHandler(ctx, bot, ilq)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)
 	}
 }
 
-func (bot *BusEtaBot) HandleChosenInlineResult(ctx context.Context, cir *tgbotapi.ChosenInlineResult) {
+func (bot *BusEtaBot) handleChosenInlineResult(ctx context.Context, cir *tgbotapi.ChosenInlineResult) {
 	err := bot.Handlers.ChosenInlineResultHandler(ctx, bot, cir)
 	if err != nil {
 		log.Errorf(ctx, "%v", err)

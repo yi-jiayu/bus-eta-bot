@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,7 +13,6 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
-	"bytes"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
