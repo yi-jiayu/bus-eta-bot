@@ -13,6 +13,7 @@ import (
 
 var handlers = Handlers{
 	CommandHandlers:           commandHandlers,
+	FallbackCommandHandler:    FallbackCommandHandler,
 	TextHandler:               TextHandler,
 	LocationHandler:           LocationHandler,
 	CallbackQueryHandlers:     callbackQueryHandlers,
@@ -35,6 +36,7 @@ type BusEtaBot struct {
 // Handlers contains all the handlers used by the bot.
 type Handlers struct {
 	CommandHandlers           map[string]MessageHandler
+	FallbackCommandHandler    MessageHandler
 	TextHandler               MessageHandler
 	LocationHandler           MessageHandler
 	CallbackQueryHandlers     map[string]CallbackQueryHandler
@@ -99,6 +101,11 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 func (bot *BusEtaBot) handleCommand(ctx context.Context, command string, message *tgbotapi.Message) {
 	if handler, exists := bot.Handlers.CommandHandlers[command]; exists {
 		err := handler(ctx, bot, message)
+		if err != nil {
+			messageErrorHandler(ctx, bot, message, err)
+		}
+	} else {
+		err := bot.Handlers.FallbackCommandHandler(ctx, bot, message)
 		if err != nil {
 			messageErrorHandler(ctx, bot, message, err)
 		}

@@ -133,6 +133,9 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 	privacyCmdSpy := Spy{}
 	etaCmdSpy := Spy{}
 
+	// command fallback
+	fallbackCmdSpy := Spy{}
+
 	// text handler
 	textHandlerSpy := Spy{}
 
@@ -158,8 +161,9 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 				"privacy": privacyCmdSpy.MessageHandler,
 				"eta":     etaCmdSpy.MessageHandler,
 			},
-			TextHandler:     textHandlerSpy.MessageHandler,
-			LocationHandler: locationHandlerSpy.MessageHandler,
+			FallbackCommandHandler: fallbackCmdSpy.MessageHandler,
+			TextHandler:            textHandlerSpy.MessageHandler,
+			LocationHandler:        locationHandlerSpy.MessageHandler,
 			CallbackQueryHandlers: map[string]CallbackQueryHandler{
 				"refresh": refreshCbqSpy.CallbackQueryHandler,
 			},

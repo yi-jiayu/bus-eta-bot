@@ -14,6 +14,86 @@ import (
 	"google.golang.org/appengine/datastore"
 )
 
+func TestFallbackCommandHandler(t *testing.T) {
+	t.Parallel()
+
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
+		Client:      http.DefaultClient,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+
+	testCases := []struct {
+		Name     string
+		ChatType string
+		Text     string
+		Expected Request
+	}{
+		{
+			Name:     "Bus stop code with slash in front, private chat",
+			ChatType: ChatTypePrivate,
+			Text:     "/96049",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Oops%2C+that+was+not+a+valid+command%21+If+you+wanted+to+get+etas+for+bus+stop+96049%2C+just+send+the+bus+stop+code+without+the+leading+slash.",
+			},
+		},
+		{
+			Name: "Bus stop code with slash in front, group chat",
+			Text: "/96049",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_to_message_id=1&text=Oops%2C+that+was+not+a+valid+command%21+If+you+wanted+to+get+etas+for+bus+stop+96049%2C+just+send+the+bus+stop+code+without+the+leading+slash.",
+			},
+		},
+		{
+			Name: "Invalid command, private chat",
+			Text: "/invalid",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_to_message_id=1&text=Oops%2C+that+was+not+a+valid+command%21",
+			},
+		},
+		{
+			Name: "Invalid command, group chat",
+			Text: "/invalid",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_to_message_id=1&text=Oops%2C+that+was+not+a+valid+command%21",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			message := MockMessageWithType(tc.ChatType)
+			message.Text = tc.Text
+
+			err := FallbackCommandHandler(nil, &bot, &message)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			select {
+			case req := <-reqChan:
+				actual := req
+				expected := tc.Expected
+
+				if actual != expected {
+					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+					t.Fail()
+				}
+			case err := <-errChan:
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
 func TestAboutHandler(t *testing.T) {
 	t.Parallel()
 

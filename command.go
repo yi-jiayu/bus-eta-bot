@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
@@ -16,6 +17,10 @@ const (
 	HelpURL          = "http://telegra.ph/Bus-Eta-Bot-Help-02-23"
 )
 
+var (
+	busStopRegex = regexp.MustCompile(`\d{5}`)
+)
+
 var commandHandlers = map[string]MessageHandler{
 	"start":   StartHandler,
 	"about":   AboutHandler,
@@ -24,6 +29,29 @@ var commandHandlers = map[string]MessageHandler{
 	"help":    HelpHandler,
 	"privacy": PrivacyHandler,
 	"eta":     EtaHandler,
+}
+
+// FallbackCommandHandler catches commands which don't match any other handler.
+func FallbackCommandHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+
+	var reply tgbotapi.MessageConfig
+	if busStopRegex.MatchString(message.Command()) {
+		text := fmt.Sprintf("Oops, that was not a valid command! If you wanted to get etas for bus "+
+			"stop %s, just send the bus stop code without the leading slash.", message.Command())
+		reply = tgbotapi.NewMessage(chatID, text)
+	} else {
+		text := "Oops, that was not a valid command!"
+		reply = tgbotapi.NewMessage(chatID, text)
+	}
+
+	if !message.Chat.IsPrivate() {
+		messageID := message.MessageID
+		reply.ReplyToMessageID = messageID
+	}
+
+	_, err := bot.Telegram.Send(reply)
+	return err
 }
 
 // StartHandler handles a /start command.
