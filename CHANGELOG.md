@@ -1,5 +1,13 @@
 # Bus Eta Bot Release Notes
 
+## v3.8.6 - 2017-06-10
+### Changed
+- Pretty print logged incoming updates
+
+## v3.8.5 - 2017-05-28
+### Changed
+- Log errors together with a stack trace for callback queries (TODO: do this everywhere)
+
 ## v3.8.4 - 2017-05-28
 ### Changed
 - When sending a `/eta` command in a private chat, the bot will mention that it's not necessary.
