@@ -29,7 +29,7 @@ func sliceCompare(actual, expected []Request) bool {
 func TestRefreshCallbackHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +192,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 func TestEtaCallbackHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -332,7 +332,7 @@ func TestEtaCallbackHandler(t *testing.T) {
 func TestEtaDemoCallbackHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -411,7 +411,7 @@ func TestEtaDemoCallbackHandler(t *testing.T) {
 func TestNewEtaHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}

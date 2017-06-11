@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
@@ -15,16 +17,26 @@ const (
 	userPreferencesKind = "UserPreferences"
 )
 
+const (
+	DevEnvironment        = "dev"
+	StagingEnvironment    = "staging"
+	ProductionEnvironment = "prod"
+)
+
 var (
 	errNotFound = errors.New("not found")
 )
 
+var namespace = GetBotEnvironment()
+
 // BusStop is a bus stop as represented inside app engine datastore and search.
 type BusStop struct {
 	BusStopID   string
+	ID          string
 	Road        string
 	Description string
 	Location    appengine.GeoPoint
+	UpdatedTime time.Time
 }
 
 // BusStopJSON is a bus stop deserialised from JSON.
@@ -41,6 +53,17 @@ type UserPreferences struct {
 	NoRedundantEtaCommandReminder bool
 }
 
+func GetBotEnvironment() string {
+	switch os.Getenv("BOT_ENVIRONMENT") {
+	case StagingEnvironment:
+		return StagingEnvironment
+	case ProductionEnvironment:
+		return ProductionEnvironment
+	default:
+		return DevEnvironment
+	}
+}
+
 // DistanceFrom returns the distance between a bus stop and a reference coordinate.
 func (b BusStop) DistanceFrom(lat, lon float64) float64 {
 	return Distance(b.Location.Lat, b.Location.Lng, lat, lon)
@@ -48,9 +71,15 @@ func (b BusStop) DistanceFrom(lat, lon float64) float64 {
 
 // GetBusStop looks up a bus stop by id from the datastore
 func GetBusStop(ctx context.Context, id string) (BusStop, error) {
+	// set namespace
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return BusStop{}, err
+	}
+
 	var busStop BusStop
 	key := datastore.NewKey(ctx, busStopKind, id, 0, nil)
-	err := datastore.Get(ctx, key, &busStop)
+	err = datastore.Get(ctx, key, &busStop)
 	if err != nil {
 		if err == datastore.ErrNoSuchEntity {
 			return BusStop{}, errNotFound
@@ -62,76 +91,14 @@ func GetBusStop(ctx context.Context, id string) (BusStop, error) {
 	return busStop, nil
 }
 
-// PutBusStopsDatastore inserts a list of bus stops into datastore.
-func PutBusStopsDatastore(ctx context.Context, busStops []BusStopJSON) (string, error) {
-	keys := make([]*datastore.Key, 0)
-	entities := make([]BusStop, 0)
-	var last BusStopJSON
-	for _, busStop := range busStops {
-		keys = append(keys, datastore.NewKey(ctx, busStopKind, busStop.BusStopCode, 0, nil))
-		entities = append(entities, BusStop{
-			BusStopID:   busStop.BusStopCode,
-			Road:        busStop.RoadName,
-			Description: busStop.Description,
-			Location: appengine.GeoPoint{
-				Lat: busStop.Latitude,
-				Lng: busStop.Longitude,
-			},
-		})
-
-		last = busStop
-
-		if len(entities) == 50 {
-			_, err := datastore.PutMulti(ctx, keys, entities)
-			if err != nil {
-				return last.BusStopCode, err
-			}
-
-			keys = make([]*datastore.Key, 0)
-			entities = make([]BusStop, 0)
-		}
-	}
-
-	_, err := datastore.PutMulti(ctx, keys, entities)
-	if err != nil {
-		return last.BusStopCode, err
-	}
-
-	return last.BusStopCode, nil
-}
-
-// PutBusStopsSearch inserts a list of bus stops into the search index.
-func PutBusStopsSearch(ctx context.Context, busStops []BusStopJSON) (string, error) {
-	index, err := search.Open("BusStops")
-	if err != nil {
-		return "", err
-	}
-
-	put := 0
-	for _, busStop := range busStops {
-		document := BusStop{
-			BusStopID:   busStop.BusStopCode,
-			Road:        busStop.RoadName,
-			Description: busStop.Description,
-			Location: appengine.GeoPoint{
-				Lat: busStop.Latitude,
-				Lng: busStop.Longitude,
-			},
-		}
-
-		_, err := index.Put(ctx, document.BusStopID, &document)
-		if err != nil {
-			return document.BusStopID, err
-		}
-
-		put++
-	}
-
-	return fmt.Sprintf("%d", put), nil
-}
-
 // GetNearbyBusStops returns nearby bus stops to a specified location.
 func GetNearbyBusStops(ctx context.Context, lat, lng float64, radius, limit int) ([]BusStop, error) {
+	// set namespace
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+
 	index, err := search.Open("BusStops")
 	if err != nil {
 		return nil, err
@@ -168,6 +135,12 @@ func GetNearbyBusStops(ctx context.Context, lat, lng float64, radius, limit int)
 
 // SearchBusStops returns bus stops containing query.
 func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, error) {
+	// set namespace
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+
 	index, err := search.Open("BusStops")
 	if err != nil {
 		return nil, err
@@ -195,10 +168,16 @@ func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, e
 
 // GetUserPreferences retrieves a user's preferences.
 func GetUserPreferences(ctx context.Context, userID int) (UserPreferences, error) {
+	// set namespace
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return UserPreferences{}, err
+	}
+
 	var prefs UserPreferences
 	key := datastore.NewKey(ctx, userPreferencesKind, "", int64(userID), nil)
 
-	err := datastore.Get(ctx, key, &prefs)
+	err = datastore.Get(ctx, key, &prefs)
 	if err != nil {
 		if err == datastore.ErrNoSuchEntity {
 			return UserPreferences{}, nil
@@ -212,7 +191,13 @@ func GetUserPreferences(ctx context.Context, userID int) (UserPreferences, error
 
 // SetUserPreferences sets a user's preferences.
 func SetUserPreferences(ctx context.Context, userID int, prefs *UserPreferences) error {
+	// set namespace
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return err
+	}
+
 	key := datastore.NewKey(ctx, userPreferencesKind, "", int64(userID), nil)
-	_, err := datastore.Put(ctx, key, prefs)
+	_, err = datastore.Put(ctx, key, prefs)
 	return err
 }

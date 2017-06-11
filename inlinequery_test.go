@@ -9,7 +9,6 @@ import (
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/aetest"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/search"
 )
@@ -17,7 +16,7 @@ import (
 func TestInlineQueryHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +153,7 @@ func TestInlineQueryHandler(t *testing.T) {
 func TestChosenInlineResultHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}

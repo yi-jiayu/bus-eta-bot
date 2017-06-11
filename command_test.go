@@ -10,7 +10,6 @@ import (
 
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
-	"google.golang.org/appengine/aetest"
 	"google.golang.org/appengine/datastore"
 )
 
@@ -327,7 +326,7 @@ func TestPrivacyHandler(t *testing.T) {
 func TestEtaHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -446,7 +445,7 @@ func TestEtaHandler(t *testing.T) {
 func TestEtaHandlerPrivate(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -580,7 +579,7 @@ func TestEtaHandlerPrivate(t *testing.T) {
 func TestEtaHandlerPrivateNoReminder(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := aetest.NewContext()
+	ctx, done, err := NewDevContext()
 	if err != nil {
 		t.Fatal(err)
 	}

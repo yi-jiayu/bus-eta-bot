@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -72,69 +71,10 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	bot.HandleUpdate(ctx, &update)
 }
 
-func addBusStopsToDatastoreHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		if r.Header.Get("Telegram-Bot-Token") != os.Getenv("TELEGRAM_BOT_TOKEN") {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		var busStops []BusStopJSON
-		err := json.NewDecoder(r.Body).Decode(&busStops)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("%v", err)))
-		}
-
-		ctx := appengine.NewContext(r)
-
-		n, err := PutBusStopsDatastore(ctx, busStops)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("%v", err)))
-		}
-
-		w.Write([]byte(n))
-	case http.MethodPut:
-	}
-}
-
-func addBusStopsToSearchHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		if r.Header.Get("Telegram-Bot-Token") != os.Getenv("TELEGRAM_BOT_TOKEN") {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		var busStops []BusStopJSON
-		err := json.NewDecoder(r.Body).Decode(&busStops)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("%v", err)))
-		}
-
-		ctx := appengine.NewContext(r)
-
-		n, err := PutBusStopsSearch(ctx, busStops)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("%s %v", n, err)))
-		}
-
-		w.Write([]byte(n))
-	case http.MethodPut:
-	}
-
-}
-
 func init() {
 	http.HandleFunc("/", rootHandler)
 
 	if token := os.Getenv("TELEGRAM_BOT_TOKEN"); token != "" {
 		http.HandleFunc("/"+token, webhookHandler)
-		http.HandleFunc("/datastore/bus-stops", addBusStopsToDatastoreHandler)
-		http.HandleFunc("/search/bus-stops", addBusStopsToSearchHandler)
 	}
 }
