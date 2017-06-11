@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
-import urllib.request
 import json
 import os
 import sys
-
+import urllib.request
 
 endpoint = 'http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip='
 
@@ -15,6 +14,7 @@ def get_bus_stops(account_key: str, offset: int):
     with urllib.request.urlopen(req) as f:
         bus_stops = json.load(f)
         return bus_stops
+
 
 def main():
 
