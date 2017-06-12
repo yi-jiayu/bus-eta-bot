@@ -82,7 +82,7 @@ func initialiseDbAsync(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
 	task := taskqueue.Task{
-		Path:   "/initialise-db/?environment=" + env,
+		Path:   "/initialise-db?environment=" + env,
 		Method: http.MethodGet,
 	}
 
@@ -109,6 +109,8 @@ func initialiseDb(w http.ResponseWriter, r *http.Request) {
 	if env = r.URL.Query().Get("environment"); env == "" {
 		env = "dev"
 	}
+
+	log.Infof(ctx, "Populating bus stops...")
 
 	err := PopulateBusStops(ctx, env, time.Now(), accountKey, datamall.DataMallEndpoint)
 	if err != nil {

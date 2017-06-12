@@ -11,6 +11,12 @@ handlers:
   secure: always
 - url: /.well-known
   static_dir: .well-known
+- url: /initialise-db
+  script: _go_app
+  login: admin
+- url: /initialise-db-async
+  script: _go_app
+  login: admin
 - url: /.*
   script: _go_app
   secure: always
@@ -20,3 +26,4 @@ env_variables:
   DATAMALL_ACCOUNT_KEY: $DATMALL_ACCOUNT_KEY
   GA_TID: $GA_TID
   GOOGLE_API_KEY: $GOOGLE_API_KEY
+  BOT_ENVIRONMENT: "staging" | "prod"
