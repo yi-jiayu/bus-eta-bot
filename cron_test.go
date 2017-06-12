@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -16,7 +15,9 @@ import (
 )
 
 func TestUpdateBusStops(t *testing.T) {
-	ctx, done, err := NewDevContext()
+	t.Parallel()
+
+	ctx, done, err := NewStronglyConsistentContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,10 +107,12 @@ func TestUpdateBusStops(t *testing.T) {
 		}
 	}
 
-	err = PopulateBusStops(ctx, time.Time{}, "", ts.URL)
+	err = PopulateBusStops(ctx, GetBotEnvironment(), time.Time{}, "", ts.URL)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
+
+	ctx, _ = appengine.Namespace(ctx, GetBotEnvironment())
 
 	// check that the bus stops exist now
 	for _, bs := range expected {
@@ -121,7 +124,7 @@ func TestUpdateBusStops(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(bs, busStop) {
+		if !bs.Equal(busStop) {
 			fmt.Println("Datastore lookup:")
 			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", bs, busStop)
 			t.Fail()
@@ -132,11 +135,10 @@ func TestUpdateBusStops(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if bs.Description != busStop.Description {
+		if !bs.Equal(busStop) {
 			fmt.Println("Search lookup:")
 			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", bs, busStop)
 			t.Fail()
-
 		}
 	}
 }

@@ -69,6 +69,13 @@ func (b BusStop) DistanceFrom(lat, lon float64) float64 {
 	return Distance(b.Location.Lat, b.Location.Lng, lat, lon)
 }
 
+func (b BusStop) Equal(bs BusStop) bool {
+	return b.ID == bs.ID &&
+		b.Description == bs.Description &&
+		b.Road == bs.Road &&
+		b.Location == bs.Location
+}
+
 // GetBusStop looks up a bus stop by id from the datastore
 func GetBusStop(ctx context.Context, id string) (BusStop, error) {
 	// set namespace

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -74,30 +73,44 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	bot.HandleUpdate(ctx, &update)
 }
 
-func initialiseDbHandler(w http.ResponseWriter, r *http.Request) {
+func initialiseDbAsync(w http.ResponseWriter, r *http.Request) {
+	var env string
+	if env = r.URL.Query().Get("environment"); env == "" {
+		env = "dev"
+	}
+
+	ctx := appengine.NewContext(r)
+
 	task := taskqueue.Task{
-		Path:   fmt.Sprintf("/%s/initDbAsync", os.Getenv("TELEGRAM_BOT_TOKEN")),
+		Path:   "/initialise-db/?environment=" + env,
 		Method: http.MethodGet,
 	}
 
-	ctx := appengine.NewContext(r)
 	_, err := taskqueue.Add(ctx, &task, "")
 	if err != nil {
-		log.Errorf(ctx, "error adding new task to task queue: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
+
+	w.Write([]byte(http.StatusText(http.StatusOK)))
 }
 
-func initialiseDbAsync(w http.ResponseWriter, r *http.Request) {
+func initialiseDb(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+
 	accountKey := os.Getenv("DATAMALL_ACCOUNT_KEY")
 	if accountKey == "" {
 		log.Errorf(ctx, "DATAMALL_ACCOUNT_KEY not set")
 		return
 	}
 
-	err := PopulateBusStops(ctx, time.Now(), accountKey, datamall.DataMallEndpoint)
+	var env string
+	if env = r.URL.Query().Get("environment"); env == "" {
+		env = "dev"
+	}
+
+	err := PopulateBusStops(ctx, env, time.Now(), accountKey, datamall.DataMallEndpoint)
 	if err != nil {
 		log.Errorf(ctx, "error populating bus stops: %+v", err)
 	}
@@ -105,10 +118,10 @@ func initialiseDbAsync(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/initialise-db", initialiseDb)
+	http.HandleFunc("/initialise-db-async", initialiseDbAsync)
 
 	if token := os.Getenv("TELEGRAM_BOT_TOKEN"); token != "" {
 		http.HandleFunc("/"+token, webhookHandler)
-		http.HandleFunc("/"+token+"/initDb", initialiseDbHandler)
-		http.HandleFunc("/"+token+"/initDbAsync", initialiseDbAsync)
 	}
 }
