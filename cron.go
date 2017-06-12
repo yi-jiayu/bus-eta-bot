@@ -101,6 +101,8 @@ func PopulateBusStops(ctx context.Context, env string, updateTime time.Time, acc
 			}
 		}
 
+		log.Infof(ctx, "Updating %d changed bus stops", len(toPut))
+
 		_, err = datastore.PutMulti(ctx, toPutKeys, toPut)
 		if err != nil {
 			return errors.Wrapf(err, "error storing bus stops into datastore at offset %d", offset)
