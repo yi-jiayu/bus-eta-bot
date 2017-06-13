@@ -13,6 +13,8 @@ import (
 	"google.golang.org/appengine/urlfetch"
 )
 
+// PopulateBusStops gets information about all bus stops from the LTA DataMall API and updates the bus stop information
+// in datastore and search.
 func PopulateBusStops(ctx context.Context, env string, updateTime time.Time, accountKey, datamallEndpoint string) error {
 	// wrap context in namespace
 	ctx, err := appengine.Namespace(ctx, env)
@@ -42,7 +44,7 @@ func PopulateBusStops(ctx context.Context, env string, updateTime time.Time, acc
 			return errors.Wrapf(err, "error fetching bus stops at offset %d", offset)
 		}
 
-		if GetBotEnvironment() == "dev" && offset > 100 {
+		if getBotEnvironment() == "dev" && offset > 100 {
 			break
 		}
 
@@ -103,15 +105,17 @@ func PopulateBusStops(ctx context.Context, env string, updateTime time.Time, acc
 
 		log.Infof(ctx, "Updating %d changed bus stops", len(toPut))
 
-		_, err = datastore.PutMulti(ctx, toPutKeys, toPut)
-		if err != nil {
-			return errors.Wrapf(err, "error storing bus stops into datastore at offset %d", offset)
-		}
-
-		for _, bs := range toPut {
-			_, err = index.Put(ctx, bs.ID, &bs)
+		if len(toPut) > 0 {
+			_, err = datastore.PutMulti(ctx, toPutKeys, toPut)
 			if err != nil {
-				return errors.Wrapf(err, "error storing bus stop %v into search at offset %d", bs, offset)
+				return errors.Wrapf(err, "error storing bus stops into datastore at offset %d", offset)
+			}
+
+			for _, bs := range toPut {
+				_, err = index.Put(ctx, bs.ID, &bs)
+				if err != nil {
+					return errors.Wrapf(err, "error storing bus stop %v into search at offset %d", bs, offset)
+				}
 			}
 		}
 

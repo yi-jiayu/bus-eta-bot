@@ -107,12 +107,12 @@ func TestUpdateBusStops(t *testing.T) {
 		}
 	}
 
-	err = PopulateBusStops(ctx, GetBotEnvironment(), time.Time{}, "", ts.URL)
+	err = PopulateBusStops(ctx, getBotEnvironment(), time.Time{}, "", ts.URL)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 
-	ctx, _ = appengine.Namespace(ctx, GetBotEnvironment())
+	ctx, _ = appengine.Namespace(ctx, getBotEnvironment())
 
 	// check that the bus stops exist now
 	for _, bs := range expected {

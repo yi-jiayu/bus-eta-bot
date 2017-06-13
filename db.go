@@ -18,16 +18,16 @@ const (
 )
 
 const (
-	DevEnvironment        = "dev"
-	StagingEnvironment    = "staging"
-	ProductionEnvironment = "prod"
+	devEnvironment        = "dev"
+	stagingEnvironment    = "staging"
+	productionEnvironment = "prod"
 )
 
 var (
 	errNotFound = errors.New("not found")
 )
 
-var namespace = GetBotEnvironment()
+var namespace = getBotEnvironment()
 
 // BusStop is a bus stop as represented inside app engine datastore and search.
 type BusStop struct {
@@ -53,14 +53,14 @@ type UserPreferences struct {
 	NoRedundantEtaCommandReminder bool
 }
 
-func GetBotEnvironment() string {
+func getBotEnvironment() string {
 	switch os.Getenv("BOT_ENVIRONMENT") {
-	case StagingEnvironment:
-		return StagingEnvironment
-	case ProductionEnvironment:
-		return ProductionEnvironment
+	case stagingEnvironment:
+		return stagingEnvironment
+	case productionEnvironment:
+		return productionEnvironment
 	default:
-		return DevEnvironment
+		return devEnvironment
 	}
 }
 
@@ -69,6 +69,7 @@ func (b BusStop) DistanceFrom(lat, lon float64) float64 {
 	return Distance(b.Location.Lat, b.Location.Lng, lat, lon)
 }
 
+// Equal checks if a bus stop's information is the same as another one.
 func (b BusStop) Equal(bs BusStop) bool {
 	return b.ID == bs.ID &&
 		b.Description == bs.Description &&
