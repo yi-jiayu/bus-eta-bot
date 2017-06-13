@@ -1,5 +1,12 @@
 # Bus Eta Bot Release Notes
 
+## v3.9.0 - 2017-06-10
+### Added
+- Bus stop information is now updated automatically every month
+
+### Changed
+- Separate databases by environment (dev, staging, prod)
+
 ## v3.8.6 - 2017-06-10
 ### Changed
 - Pretty print logged incoming updates
