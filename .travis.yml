@@ -27,11 +27,13 @@ before_deploy:
 deploy:
   - provider: script
     script: deploy.sh staging
+    skip_cleanup: true
     on:
       all_branches: true
       condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$STAGING_APP_YAML"
   - provider: script
     script: deploy.sh prod
+    skip_cleanup: true
     on:
       condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$PROD_APP_YAML"
       tags: true
