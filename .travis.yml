@@ -26,13 +26,13 @@ before_deploy:
 - echo $PROD_APP_YAML | base64 -d > prod.app.yaml
 deploy:
   - provider: script
-    script: deploy.sh staging
+    script: deploy.sh $(which gcloud) staging
     skip_cleanup: true
     on:
       all_branches: true
       condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$STAGING_APP_YAML"
   - provider: script
-    script: deploy.sh prod
+    script: deploy.sh $(which gcloud) prod
     skip_cleanup: true
     on:
       condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$PROD_APP_YAML"
