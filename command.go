@@ -22,13 +22,13 @@ var (
 )
 
 var commandHandlers = map[string]MessageHandler{
-	"start":   StartHandler,
-	"about":   AboutHandler,
-	"version": VersionHandler,
-	//"feedback": feedbackHandler,
-	"help":    HelpHandler,
-	"privacy": PrivacyHandler,
-	"eta":     EtaHandler,
+	"start":    StartHandler,
+	"about":    AboutHandler,
+	"version":  VersionHandler,
+	"feedback": FeedbackCmdHandler,
+	"help":     HelpHandler,
+	"privacy":  PrivacyHandler,
+	"eta":      EtaHandler,
 }
 
 // FallbackCommandHandler catches commands which don't match any other handler.
@@ -134,8 +134,22 @@ func AboutHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 	return err
 }
 
-func feedbackHandler(ctx context.Context, bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
-	return nil
+// FeedbackCmdHandler handles the /feedback command.
+func FeedbackCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+
+	text := fmt.Sprintf("Oops, the feedback command has not been implemented yet. In the meantime, you can raise issues or show your support for Bus Eta Bot at its GitHub repository [here](%s).", RepoURL)
+	reply := tgbotapi.NewMessage(chatID, text)
+	reply.ParseMode = "markdown"
+	if !message.Chat.IsPrivate() {
+		messageID := message.MessageID
+		reply.ReplyToMessageID = messageID
+	}
+
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionFeedbackCommand, message.Chat.Type)
+
+	_, err := bot.Telegram.Send(reply)
+	return err
 }
 
 // HelpHandler handles the /help command

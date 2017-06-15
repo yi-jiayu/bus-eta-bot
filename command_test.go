@@ -704,3 +704,64 @@ func TestEtaHandlerPrivateNoReminder(t *testing.T) {
 		})
 	}
 }
+
+func TestFeedbackCmdHandler(t *testing.T) {
+	t.Parallel()
+
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
+		Client:      http.DefaultClient,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+
+	testCases := []struct {
+		Name     string
+		ChatType string
+		Expected Request
+	}{
+		{
+			Name:     "Private chat",
+			ChatType: ChatTypePrivate,
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&text=Oops%2C+the+feedback+command+has+not+been+implemented+yet.+In+the+meantime%2C+you+can+raise+issues+or+show+your+support+for+Bus+Eta+Bot+at+its+GitHub+repository+%5Bhere%5D%28$REPO_URL%29.", "$REPO_URL", url.QueryEscape(RepoURL), 1),
+			},
+		},
+		{
+			Name: "Group, supergroup or channel",
+			Expected: Request{
+				Path: "/bot/sendMessage",
+				Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&reply_to_message_id=1&text=Oops%2C+the+feedback+command+has+not+been+implemented+yet.+In+the+meantime%2C+you+can+raise+issues+or+show+your+support+for+Bus+Eta+Bot+at+its+GitHub+repository+%5Bhere%5D%28$REPO_URL%29.", "$REPO_URL", url.QueryEscape(RepoURL), 1),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			message := MockMessageWithType(tc.ChatType)
+
+			err := FeedbackCmdHandler(nil, &bot, &message)
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
+
+			select {
+			case req := <-reqChan:
+				actual := req
+				expected := tc.Expected
+
+				if actual != expected {
+					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+					t.Fail()
+				}
+			case err := <-errChan:
+				t.Fatalf("%v", err)
+			}
+		})
+	}
+
+}
