@@ -28,6 +28,7 @@ deploy:
   - provider: script
     script: deploy.sh staging
     on:
+      all_branches: true
       condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$STAGING_APP_YAML"
   - provider: script
     script: deploy.sh prod
