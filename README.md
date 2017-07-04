@@ -1,4 +1,5 @@
 # Bus Eta Bot
+![Weekly Users](https://us-central1-bus-eta-bot.cloudfunctions.net/bus-eta-bot-weekly-users)
 [![Build Status](https://travis-ci.org/yi-jiayu/bus-eta-bot.svg?branch=master)](https://travis-ci.org/yi-jiayu/bus-eta-bot)
 [![Build Status](https://semaphoreci.com/api/v1/yi-jiayu/bus-eta-bot/branches/master/shields_badge.svg)](https://semaphoreci.com/yi-jiayu/bus-eta-bot)
 [![CircleCI](https://circleci.com/gh/yi-jiayu/bus-eta-bot.svg?style=shield)](https://circleci.com/gh/yi-jiayu/bus-eta-bot)
