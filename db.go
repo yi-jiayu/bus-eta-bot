@@ -1,11 +1,11 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
@@ -82,7 +82,7 @@ func GetBusStop(ctx context.Context, id string) (BusStop, error) {
 	// set namespace
 	ctx, err := appengine.Namespace(ctx, namespace)
 	if err != nil {
-		return BusStop{}, err
+		return BusStop{}, errors.Wrap(err, "error setting namespace on context")
 	}
 
 	var busStop BusStop
@@ -93,7 +93,7 @@ func GetBusStop(ctx context.Context, id string) (BusStop, error) {
 			return BusStop{}, errNotFound
 		}
 
-		return BusStop{}, err
+		return BusStop{}, errors.Wrap(err, "error getting bus stop information from datastore")
 	}
 
 	return busStop, nil

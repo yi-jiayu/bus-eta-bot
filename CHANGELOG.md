@@ -1,5 +1,11 @@
 # Bus Eta Bot Release Notes
 
+## v3.10.0-rc1 - 2017-07-07
+### Added
+- Reimplemented "Resend" functionality on eta messages sent directly on the bot: resending an eta message instead of 
+ refreshing causes the bot to send a new eta message instead of editing the previous one, bumping it to the bottom of 
+ the conversation.
+
 ## v3.9.0 - 2017-06-10
 ### Added
 - Bus stop information is now updated automatically every month

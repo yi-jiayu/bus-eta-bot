@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall"
+	"github.com/yi-jiayu/telegram-bot-api"
 	"golang.org/x/net/context"
 )
 
@@ -244,8 +246,8 @@ func EtaTable(etas [][4]string) string {
 	return output[:len(output)-1]
 }
 
-// EtaMessage generates and returns the text for an eta message
-func EtaMessage(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
+// EtaMessageText generates and returns the text for an eta message
+func EtaMessageText(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
 	busArrival, err := bot.Datamall.GetBusArrival(busStopID, nil)
 	if err != nil {
 		return "", errors.Wrap(err, "error getting etas from datamall")
@@ -253,7 +255,7 @@ func EtaMessage(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNo
 
 	etas, err := CalculateEtas(bot.NowFunc(), busArrival)
 	if err != nil {
-		return "", err
+		return "", errors.WithStack(err)
 	}
 
 	busStop, err := GetBusStop(ctx, busStopID)
@@ -271,4 +273,52 @@ func EtaMessage(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNo
 
 	msg := FormatEtas(etas, &busStop, serviceNos)
 	return msg, nil
+}
+
+// EtaMessageReplyMarkup generates the reply markup for an eta message, including a resend callback button only when
+// the message is not an inline message.
+func EtaMessageReplyMarkup(busStopID string, serviceNos []string, inline bool) (*tgbotapi.InlineKeyboardMarkup, error) {
+	refreshCallbackData := CallbackData{
+		Type:       "refresh",
+		BusStopID:  busStopID,
+		ServiceNos: serviceNos,
+	}
+
+	refreshCallbackDataJSON, err := json.Marshal(refreshCallbackData)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", refreshCallbackData))
+	}
+	refreshCallbackDataJSONStr := string(refreshCallbackDataJSON)
+
+	replyMarkup := tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+			{
+				tgbotapi.InlineKeyboardButton{
+					Text:         "Refresh",
+					CallbackData: &refreshCallbackDataJSONStr,
+				},
+			},
+		},
+	}
+
+	if !inline {
+		resendCallbackData := CallbackData{
+			Type:       "resend",
+			BusStopID:  busStopID,
+			ServiceNos: serviceNos,
+		}
+
+		resendCallbackDataJSON, err := json.Marshal(resendCallbackData)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", refreshCallbackData))
+		}
+		resendCallbackDataJSONStr := string(resendCallbackDataJSON)
+
+		replyMarkup.InlineKeyboard[0] = append(replyMarkup.InlineKeyboard[0], tgbotapi.InlineKeyboardButton{
+			Text:         "Resend",
+			CallbackData: &resendCallbackDataJSONStr,
+		})
+	}
+
+	return &replyMarkup, nil
 }

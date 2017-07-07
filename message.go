@@ -39,7 +39,7 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
 		}
 	} else {
-		text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
+		text, err := EtaMessageText(ctx, bot, busStopID, serviceNos)
 		if err != nil {
 			if err == errNotFound {
 				reply = tgbotapi.NewMessage(chatID, text)
@@ -47,30 +47,14 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 				return err
 			}
 		} else {
-			callbackData := CallbackData{
-				Type:       "refresh",
-				BusStopID:  busStopID,
-				ServiceNos: serviceNos,
-			}
+			reply = tgbotapi.NewMessage(chatID, text)
+			reply.ParseMode = "markdown"
 
-			callbackDataJSON, err := json.Marshal(callbackData)
+			replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
 			if err != nil {
 				return err
 			}
-			callbackDataJSONStr := string(callbackDataJSON)
-
-			reply = tgbotapi.NewMessage(chatID, text)
-			reply.ParseMode = "markdown"
-			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-					{
-						tgbotapi.InlineKeyboardButton{
-							Text:         "Refresh",
-							CallbackData: &callbackDataJSONStr,
-						},
-					},
-				},
-			}
+			reply.ReplyMarkup = replyMarkup
 		}
 	}
 

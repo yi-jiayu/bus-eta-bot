@@ -353,7 +353,7 @@ func TestEtaMessage(t *testing.T) {
 		},
 	}
 
-	actual, err := EtaMessage(ctx, bot, "invalid", nil)
+	actual, err := EtaMessageText(ctx, bot, "invalid", nil)
 	if err != nil && err != errNotFound {
 		t.Fatal(err)
 	}

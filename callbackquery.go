@@ -14,6 +14,7 @@ import (
 
 var callbackQueryHandlers = map[string]CallbackQueryHandler{
 	"refresh":                       RefreshCallbackHandler,
+	"resend":                        ResendCallbackHandler,
 	"eta":                           EtaCallbackHandler,
 	"eta_demo":                      EtaDemoCallbackHandler,
 	"new_eta":                       NewEtaHandler,
@@ -70,16 +71,19 @@ func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.C
 }
 
 func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, busStopID string, serviceNos []string) error {
-	text, err := EtaMessage(ctx, bot, busStopID, serviceNos)
+	text, err := EtaMessageText(ctx, bot, busStopID, serviceNos)
 	if err != nil {
 		return err
 	}
 
 	var reply tgbotapi.EditMessageTextConfig
+	var inline bool
 	if cbq.Message != nil {
 		chatID := cbq.Message.Chat.ID
 		messageID := cbq.Message.MessageID
 		reply = tgbotapi.NewEditMessageText(chatID, messageID, text)
+
+		inline = false
 	} else {
 		inlineMessageID := cbq.InlineMessageID
 		reply = tgbotapi.EditMessageTextConfig{
@@ -88,31 +92,17 @@ func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callbac
 			},
 			Text: text,
 		}
+
+		inline = true
 	}
 
-	callbackData := CallbackData{
-		Type:       "refresh",
-		BusStopID:  busStopID,
-		ServiceNos: serviceNos,
-	}
+	reply.ParseMode = "markdown"
 
-	callbackDataJSON, err := json.Marshal(callbackData)
+	replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, inline)
 	if err != nil {
 		return err
 	}
-	callbackDataJSONStr := string(callbackDataJSON)
-
-	reply.ParseMode = "markdown"
-	reply.ReplyMarkup = &tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
-				tgbotapi.InlineKeyboardButton{
-					Text:         "Refresh",
-					CallbackData: &callbackDataJSONStr,
-				},
-			},
-		},
-	}
+	reply.ReplyMarkup = replyMarkup
 
 	answer := tgbotapi.NewCallback(cbq.ID, "Etas updated!")
 
@@ -177,40 +167,25 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callb
 func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	chatID := cbq.Message.Chat.ID
 
-	text, err := EtaMessage(ctx, bot, "96049", nil)
+	text, err := EtaMessageText(ctx, bot, "96049", nil)
 	if err != nil {
 		return err
 	}
 
-	callbackData := CallbackData{
-		Type:      "refresh",
-		BusStopID: "96049",
-	}
-
-	callbackDataJSON, err := json.Marshal(callbackData)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", callbackData))
-	}
-	callbackDataJSONStr := string(callbackDataJSON)
-
 	reply := tgbotapi.NewMessage(chatID, text)
 	reply.ParseMode = "markdown"
-	reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
-				tgbotapi.InlineKeyboardButton{
-					Text:         "Refresh",
-					CallbackData: &callbackDataJSONStr,
-				},
-			},
-		},
+
+	replyMarkup, err := EtaMessageReplyMarkup("96049", nil, false)
+	if err != nil {
+		return err
 	}
+	reply.ReplyMarkup = replyMarkup
 
 	if !cbq.Message.Chat.IsPrivate() {
 		reply.ReplyToMessageID = cbq.Message.MessageID
 	}
 
-	answer := tgbotapi.NewCallback(cbq.ID, "")
+	answer := tgbotapi.NewCallback(cbq.ID, "Etas sent!")
 
 	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaDemoCallback, cbq.Message.Chat.Type)
 
@@ -231,41 +206,25 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 
 	bsID, sNos := data.BusStopID, data.ServiceNos
 
-	text, err := EtaMessage(ctx, bot, bsID, sNos)
+	text, err := EtaMessageText(ctx, bot, bsID, sNos)
 	if err != nil {
 		return err
 	}
 
-	callbackData := CallbackData{
-		Type:       "refresh",
-		BusStopID:  bsID,
-		ServiceNos: sNos,
-	}
-
-	callbackDataJSON, err := json.Marshal(callbackData)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", callbackData))
-	}
-	callbackDataJSONStr := string(callbackDataJSON)
-
 	reply := tgbotapi.NewMessage(chatID, text)
 	reply.ParseMode = "markdown"
-	reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
-				tgbotapi.InlineKeyboardButton{
-					Text:         "Refresh",
-					CallbackData: &callbackDataJSONStr,
-				},
-			},
-		},
+
+	replyMarkup, err := EtaMessageReplyMarkup(bsID, sNos, false)
+	if err != nil {
+		return err
 	}
+	reply.ReplyMarkup = replyMarkup
 
 	if !cbq.Message.Chat.IsPrivate() {
 		reply.ReplyToMessageID = cbq.Message.MessageID
 	}
 
-	answer := tgbotapi.NewCallback(cbq.ID, "")
+	answer := tgbotapi.NewCallback(cbq.ID, "Etas sent!")
 
 	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaFromLocationCallback, cbq.Message.Chat.Type)
 
@@ -301,6 +260,45 @@ func NoShowRedundantEtaCommandCallbackHandler(ctx context.Context, bot *BusEtaBo
 
 	err = answerCallbackQuery(bot, edit, answer)
 	return err
+}
+
+// ResendCallbackHandler handles the "Resend" button on eta results.
+// todo: combine with NewEtaHandler
+func ResendCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+	chatID := cbq.Message.Chat.ID
+
+	var data CallbackData
+	err := json.Unmarshal([]byte(cbq.Data), &data)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
+	}
+
+	busStopID, serviceNos := data.BusStopID, data.ServiceNos
+
+	text, err := EtaMessageText(ctx, bot, busStopID, serviceNos)
+	if err != nil {
+		return err
+	}
+
+	reply := tgbotapi.NewMessage(chatID, text)
+	reply.ParseMode = "markdown"
+
+	replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
+	if err != nil {
+		return err
+	}
+	reply.ReplyMarkup = replyMarkup
+
+	if !cbq.Message.Chat.IsPrivate() {
+		reply.ReplyToMessageID = cbq.Message.MessageID
+	}
+
+	answer := tgbotapi.NewCallback(cbq.ID, "Etas resent!")
+
+	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionResendCallback, cbq.Message.Chat.Type)
+
+	err = answerCallbackQuery(bot, reply, answer)
+	return errors.WithStack(err)
 }
 
 // callbackErrorHandler is for informing the user about an error while processing a callback query.

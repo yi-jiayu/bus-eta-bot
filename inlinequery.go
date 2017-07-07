@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -68,18 +67,6 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 			}
 		}
 
-		callbackData := CallbackData{
-			Type:      "refresh",
-			BusStopID: bs.BusStopID,
-		}
-
-		callbackDataJSON, err := json.Marshal(callbackData)
-		if err != nil {
-			log.Errorf(ctx, "%v", err)
-			continue
-		}
-		callbackDataJSONStr := string(callbackDataJSON)
-
 		var id, desc string
 		if showingNearby {
 			id = bs.BusStopID + " geo"
@@ -89,6 +76,11 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 		} else {
 			id = bs.BusStopID
 			desc = bs.Road
+		}
+
+		replyMarkup, err := EtaMessageReplyMarkup(bs.BusStopID, nil, true)
+		if err != nil {
+			log.Errorf(ctx, "%v", err)
 		}
 
 		result := tgbotapi.InlineQueryResultArticle{
@@ -101,16 +93,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 				Text:      text,
 				ParseMode: "markdown",
 			},
-			ReplyMarkup: &tgbotapi.InlineKeyboardMarkup{
-				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-					{
-						tgbotapi.InlineKeyboardButton{
-							Text:         "Refresh",
-							CallbackData: &callbackDataJSONStr,
-						},
-					},
-				},
-			},
+			ReplyMarkup: replyMarkup,
 		}
 		results = append(results, result)
 	}
@@ -154,35 +137,20 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 	tokens := strings.Split(cir.ResultID, " ")
 	busStopID := tokens[0]
 
-	text, err := EtaMessage(ctx, bot, busStopID, nil)
+	text, err := EtaMessageText(ctx, bot, busStopID, nil)
 	if err != nil {
 		return err
 	}
 
-	callbackData := CallbackData{
-		Type:      "refresh",
-		BusStopID: busStopID,
-	}
-
-	callbackDataJSON, err := json.Marshal(callbackData)
+	replyMarkup, err := EtaMessageReplyMarkup(busStopID, nil, true)
 	if err != nil {
 		return err
 	}
-	callbackDataJSONStr := string(callbackDataJSON)
 
 	reply := tgbotapi.EditMessageTextConfig{
 		BaseEdit: tgbotapi.BaseEdit{
 			InlineMessageID: cir.InlineMessageID,
-			ReplyMarkup: &tgbotapi.InlineKeyboardMarkup{
-				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-					{
-						tgbotapi.InlineKeyboardButton{
-							Text:         "Refresh",
-							CallbackData: &callbackDataJSONStr,
-						},
-					},
-				},
-			},
+			ReplyMarkup:     replyMarkup,
 		},
 		Text:      text,
 		ParseMode: "markdown",
