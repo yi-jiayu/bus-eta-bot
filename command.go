@@ -288,3 +288,46 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 	_, err := bot.Telegram.Send(reply)
 	return err
 }
+
+// StreetviewCmdHandler handlers the /streetview command.
+//func StreetviewCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+//	chatID := message.Chat.ID
+//
+//	var reply tgbotapi.Chattable
+//	if args := message.CommandArguments(); args != "" {
+//		busStopID, _, err := InferEtaQuery(args)
+//		if err != nil {
+//			if err == errBusStopIDTooLong {
+//				reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
+//			} else if err == errBusStopIDInvalid {
+//				reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
+//			} else {
+//				return errors.Wrap(err, "failed to infer eta query")
+//			}
+//		}
+//
+//		busStop, err := GetBusStop(ctx, busStopID)
+//		if err != nil {
+//			return err
+//		}
+//
+//		var imageURL string
+//		if bot.StreetView != nil {
+//			if lat, lon := busStop.Location.Lat, busStop.Location.Lng; lat != 0 && lon != 0 {
+//				URL, err := bot.StreetView.GetPhotoURLByLocation(lat, lon, 640, 480)
+//				if err != nil {
+//					log.Errorf(ctx, "%v", err)
+//				} else {
+//					imageURL = URL
+//					reply = tgbotapi.NewPhotoShare()
+//				}
+//			} else {
+//				reply = tgbotapi.NewMessage(chatID, "Oops, couldn't find any imagery for that bus stop.")
+//			}
+//		} else {
+//			reply = tgbotapi.NewMessage(chatID, "Oops, couldn't find any imagery for that bus stop.")
+//		}
+//
+//	}
+//
+//}
