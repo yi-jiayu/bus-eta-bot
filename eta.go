@@ -116,6 +116,57 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error)
 	}, nil
 }
 
+func FormatEtasSingle(etas BusEtas, busStop *BusStop) string {
+	var header string
+	if busStop.Description != "" {
+		header = fmt.Sprintf("*%s (%s)*\n", busStop.Description, busStop.BusStopID)
+	} else {
+		header = fmt.Sprintf("*%s*\n", busStop.BusStopID)
+	}
+
+	if busStop.Road != "" {
+		header += fmt.Sprintf("%s\n", busStop.Road)
+	}
+
+	incoming := etas.Services[0]
+	var body string
+	for i := 0; i < 3; i++  {
+		if incoming.Types[i] != "" {
+			var load, busType, feature string
+
+			switch incoming.Loads[i] {
+			case "SEA":
+				load = "Seats available"
+			case "SDA":
+				load = "Standing room"
+			case "LSD":
+				load = "Pretty full"
+			}
+
+			if incoming.Features[i] != "" {
+				feature = "Wheelchair accessible\n"
+			}
+
+			switch incoming.Types[i] {
+			case "SD":
+				busType = "Single deck"
+			case "DD":
+				busType = "Double deck"
+			case "BD":
+				busType = "Bendy"
+			}
+
+			body += fmt.Sprintf("*%s minutes*\n%s\n%s\n%s", incoming.Etas[i], busType, load, feature)
+		}
+	}
+
+	sgt := time.FixedZone("SGT", 8*3600)
+	updated := fmt.Sprintf("Last updated at %s", etas.UpdatedTime.In(sgt).Format(time.RFC822))
+
+	formatted := fmt.Sprintf("%s\n%s\n_%s_", header, body, updated)
+	return formatted
+}
+
 func contains(serviceNos []string, serviceNo string) bool {
 	for _, s := range serviceNos {
 		if s == serviceNo {
@@ -248,7 +299,12 @@ func EtaTable(etas [][4]string) string {
 
 // EtaMessageText generates and returns the text for an eta message
 func EtaMessageText(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
-	busArrival, err := bot.Datamall.GetBusArrivalV2(busStopID, "")
+	var serviceNo string
+	if len(serviceNos) == 1 {
+		serviceNo = serviceNos[0]
+	}
+
+	busArrival, err := bot.Datamall.GetBusArrivalV2(busStopID, serviceNo)
 	if err != nil {
 		return "", errors.Wrap(err, "error getting etas from datamall")
 	}
@@ -271,7 +327,13 @@ func EtaMessageText(ctx context.Context, bot *BusEtaBot, busStopID string, servi
 		}
 	}
 
-	msg := FormatEtasMultiple(etas, &busStop, serviceNos)
+	var msg string
+	if len(serviceNos) == 1 {
+		msg = FormatEtasSingle(etas, &busStop)
+	} else {
+		msg = FormatEtasMultiple(etas, &busStop, serviceNos)
+	}
+
 	return msg, nil
 }
 

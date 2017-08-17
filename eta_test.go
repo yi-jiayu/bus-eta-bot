@@ -92,8 +92,8 @@ func TestInferEtaQuery(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Name     string
-		Text     string
+		Name string
+		Text string
 		Expected struct {
 			BusStopID  string
 			ServiceNos []string
@@ -357,6 +357,29 @@ func TestEtaMessage(t *testing.T) {
 
 	expected := "Oh no! I couldn't find any information about bus stop invalid."
 	if actual != expected {
+		t.Fail()
+	}
+}
+
+func TestFormatEtasSingle(t *testing.T) {
+	t.Parallel()
+
+	now, _ := time.Parse(time.RFC3339, time.RFC3339)
+	busArrival := newArrival(now)
+	busArrival.Services = busArrival.Services[:1]
+
+	etas, err := CalculateEtas(now, busArrival)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	busStop := BusStop{BusStopID: "96049", Road: "Upp Changi Rd East", Description: "Opp Tropicana Condo"}
+
+	actual := FormatEtasSingle(etas, &busStop)
+	expected := "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n\n*-1 minutes*\nSingle deck\nSeats available\nWheelchair accessible\n*10 minutes*\nDouble deck\nStanding room\n*36 minutes*\nBendy\nPretty full\nWheelchair accessible\n\n_Last updated at 01 Jan 01 08:00 SGT_"
+
+	if actual != expected {
+		fmt.Printf("Expected:\n%q\nActual:\n%q\n", expected, actual)
 		t.Fail()
 	}
 }
