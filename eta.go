@@ -64,7 +64,12 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error)
 	for _, service := range busArrival.Services {
 		etas := [4]string{service.ServiceNo}
 
-		placeholder := "?"
+		var placeholder string
+		if service.Status == "Not In Operation" {
+			placeholder = "-"
+		} else {
+			placeholder = "?"
+		}
 
 		if next := service.NextBus.EstimatedArrival; next != "" {
 			eta, err := time.Parse(time.RFC3339, next)
@@ -78,7 +83,7 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error)
 			etas[1] = placeholder
 		}
 
-		if next2 := service.NextBus2.EstimatedArrival; next2 != "" {
+		if next2 := service.SubsequentBus.EstimatedArrival; next2 != "" {
 			eta, err := time.Parse(time.RFC3339, next2)
 			if err != nil {
 				return BusEtas{}, err
@@ -90,7 +95,7 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error)
 			etas[2] = placeholder
 		}
 
-		if next3 := service.NextBus3.EstimatedArrival; next3 != "" {
+		if next3 := service.SubsequentBus3.EstimatedArrival; next3 != "" {
 			eta, err := time.Parse(time.RFC3339, next3)
 			if err != nil {
 				return BusEtas{}, err
@@ -106,7 +111,7 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error)
 	}
 
 	return BusEtas{
-		BusStopID:   busArrival.BusStopCode,
+		BusStopID:   busArrival.BusStopID,
 		UpdatedTime: t,
 		Services:    services,
 	}, nil
@@ -128,8 +133,8 @@ func (s byServiceNo) Len() int           { return len(s) }
 func (s byServiceNo) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s byServiceNo) Less(i, j int) bool { return s[i][0] < s[j][0] }
 
-// FormatEtasMultiple formats multiple bus etas nicely to be sent in a message
-func FormatEtasMultiple(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
+// FormatEtas formats bus etas nicely to be sent in a message
+func FormatEtas(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
 	showing := 0
 	services := make([][4]string, 0)
 	for _, etas := range busEtas.Services {
@@ -243,7 +248,7 @@ func EtaTable(etas [][4]string) string {
 
 // EtaMessageText generates and returns the text for an eta message
 func EtaMessageText(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
-	busArrival, err := bot.Datamall.GetBusArrivalV2(busStopID, "")
+	busArrival, err := bot.Datamall.GetBusArrival(busStopID, nil)
 	if err != nil {
 		return "", errors.Wrap(err, "error getting etas from datamall")
 	}
@@ -266,7 +271,7 @@ func EtaMessageText(ctx context.Context, bot *BusEtaBot, busStopID string, servi
 		}
 	}
 
-	msg := FormatEtasMultiple(etas, &busStop, serviceNos)
+	msg := FormatEtas(etas, &busStop, serviceNos)
 	return msg, nil
 }
 
