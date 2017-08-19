@@ -26,16 +26,7 @@ var (
 type BusEtas struct {
 	BusStopID   string
 	UpdatedTime time.Time
-	Services    []IncomingBuses
-}
-
-// IncomingBuses contains information about incoming buses for a single service at a bus stop.
-type IncomingBuses struct {
-	ServiceNo string
-	Etas      [3]string
-	Loads     [3]string
-	Features  [3]string
-	Types     [3]string
+	Services    [][4]string
 }
 
 // CallbackData represents the data to be included with the Refresh inline keyboard button in eta messages.
@@ -69,44 +60,49 @@ func InferEtaQuery(text string) (string, []string, error) {
 
 // CalculateEtas calculates the time before buses arrive from the LTA DataMall bus arrival response
 func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error) {
-	services := make([]IncomingBuses, 0)
-
+	services := make([][4]string, 0)
 	for _, service := range busArrival.Services {
-		incomingBuses := IncomingBuses{
-			ServiceNo: service.ServiceNo,
-		}
+		etas := [4]string{service.ServiceNo}
 
 		placeholder := "?"
 
-		for i := 0; i < 3; i++ {
-			var incomingBus datamall.ArrivingBus
-			switch i {
-			case 0:
-				incomingBus = service.NextBus
-			case 1:
-				incomingBus = service.NextBus2
-			case 2:
-				incomingBus = service.NextBus3
+		if next := service.NextBus.EstimatedArrival; next != "" {
+			eta, err := time.Parse(time.RFC3339, next)
+			if err != nil {
+				return BusEtas{}, err
 			}
 
-			if estArrival := incomingBus.EstimatedArrival; estArrival != "" {
-				eta, err := time.Parse(time.RFC3339, estArrival)
-				if err != nil {
-					return BusEtas{}, errors.Wrap(err, "invalid timestamp in datmall response")
-				}
-
-				diff := (eta.Unix() - t.Unix()) / 60
-				incomingBuses.Etas[i] = fmt.Sprintf("%d", diff)
-			} else {
-				incomingBuses.Etas[i] = placeholder
-			}
-
-			incomingBuses.Loads[i] = incomingBus.Load
-			incomingBuses.Features[i] = incomingBus.Feature
-			incomingBuses.Types[i] = incomingBus.Type
+			diff := (eta.Unix() - t.Unix()) / 60
+			etas[1] = fmt.Sprintf("%d", diff)
+		} else {
+			etas[1] = placeholder
 		}
 
-		services = append(services, incomingBuses)
+		if next2 := service.NextBus2.EstimatedArrival; next2 != "" {
+			eta, err := time.Parse(time.RFC3339, next2)
+			if err != nil {
+				return BusEtas{}, err
+			}
+
+			diff := (eta.Unix() - t.Unix()) / 60
+			etas[2] = fmt.Sprintf("%d", diff)
+		} else {
+			etas[2] = placeholder
+		}
+
+		if next3 := service.NextBus3.EstimatedArrival; next3 != "" {
+			eta, err := time.Parse(time.RFC3339, next3)
+			if err != nil {
+				return BusEtas{}, err
+			}
+
+			diff := (eta.Unix() - t.Unix()) / 60
+			etas[3] = fmt.Sprintf("%d", diff)
+		} else {
+			etas[3] = placeholder
+		}
+
+		services = append(services, etas)
 	}
 
 	return BusEtas{
@@ -136,14 +132,13 @@ func (s byServiceNo) Less(i, j int) bool { return s[i][0] < s[j][0] }
 func FormatEtasMultiple(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
 	showing := 0
 	services := make([][4]string, 0)
-	for _, service := range busEtas.Services {
-		serviceNo := service.ServiceNo
+	for _, etas := range busEtas.Services {
+		serviceNo := etas[0]
 		if serviceNos != nil && len(serviceNos) != 0 && !contains(serviceNos, serviceNo) {
 			continue
 		}
 
-		arrivals := [4]string{serviceNo, service.Etas[0], service.Etas[1], service.Etas[2]}
-		services = append(services, arrivals)
+		services = append(services, etas)
 		showing++
 	}
 
