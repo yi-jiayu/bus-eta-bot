@@ -293,15 +293,8 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 	return err
 }
 
-// ShowFavouritesCmdHandler will display a reply keyboard for quick access to the user's favourites.
-func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+func showFavourites(bot *BusEtaBot, message *tgbotapi.Message, favourites []string) error {
 	chatID := message.Chat.ID
-	userID := message.From.ID
-
-	favourites, err := GetUserFavourites(ctx, userID)
-	if err != nil {
-		return err
-	}
 
 	var reply tgbotapi.MessageConfig
 	if len(favourites) == 0 {
@@ -327,8 +320,20 @@ func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbo
 		reply.ReplyToMessageID = message.MessageID
 	}
 
-	_, err = bot.Telegram.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	return err
+}
+
+// ShowFavouritesCmdHandler will display a reply keyboard for quick access to the user's favourites.
+func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+	userID := message.From.ID
+
+	favourites, err := GetUserFavourites(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	return showFavourites(bot, message, favourites)
 }
 
 // HideFavouritesCmdHandler hides the favourites keyboard.

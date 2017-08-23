@@ -735,5 +735,4 @@ func TestResendCallbackHandler(t *testing.T) {
 			}
 		})
 	}
-
 }
