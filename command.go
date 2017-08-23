@@ -23,7 +23,6 @@ var (
 
 var commandHandlers = map[string]MessageHandler{
 	"start":          StartHandler,
-	"start":          StartHandler,
 	"about":          AboutHandler,
 	"version":        VersionHandler,
 	"feedback":       FeedbackCmdHandler,
