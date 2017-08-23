@@ -54,6 +54,11 @@ type UserPreferences struct {
 	NoRedundantEtaCommandReminder bool
 }
 
+// Favourites contains a user's saved favourites.
+type Favourites struct {
+	Favourites []string
+}
+
 func getBotEnvironment() string {
 	switch os.Getenv("BOT_ENVIRONMENT") {
 	case stagingEnvironment:
@@ -213,16 +218,39 @@ func SetUserPreferences(ctx context.Context, userID int, prefs *UserPreferences)
 
 // GetUserFavourites retrieved a user's saved favourites.
 func GetUserFavourites(ctx context.Context, userID int) ([]string, error) {
-	favourites := []string{
-		"96049 2 24",
-		"83062 2 24",
-		"83121",
+	// set namespace
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return nil, err
 	}
 
-	return favourites, nil
+	var favourites Favourites
+	key := datastore.NewKey(ctx, favouritesKind, "", int64(userID), nil)
+	err = datastore.Get(ctx, key, &favourites)
+	if err != nil {
+		if err == datastore.ErrNoSuchEntity {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return favourites.Favourites, nil
 }
 
 // SetUserFavourites sets a user's saved favourites.
 func SetUserFavourites(ctx context.Context, userID int, favourites []string) error {
-	return nil
+	// set namespace
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return err
+	}
+
+	favs := Favourites{
+		Favourites: favourites,
+	}
+
+	key := datastore.NewKey(ctx, favouritesKind, "", int64(userID), nil)
+	_, err = datastore.Put(ctx, key, &favs)
+	return err
 }

@@ -19,6 +19,7 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 	"eta_demo":                      EtaDemoCallbackHandler,
 	"new_eta":                       NewEtaHandler,
 	"no_show_redundant_eta_command": NoShowRedundantEtaCommandCallbackHandler,
+	"addf": AddFavouriteCbHandler,
 }
 
 // CallbackQueryHandler is a handler for callback queries
@@ -298,6 +299,64 @@ func ResendCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Ca
 	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionResendCallback, cbq.Message.Chat.Type)
 
 	err = answerCallbackQuery(bot, reply, answer)
+	return err
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+// AddFavouriteCbHandler handles the "Add to favourites" callback button on eta
+func AddFavouriteCbHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+	userID := cbq.From.ID
+
+	var data CallbackData
+	err := json.Unmarshal([]byte(cbq.Data), &data)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
+	}
+
+	favourites, err := GetUserFavourites(ctx, userID)
+	if err != nil {
+		return errors.Wrap(err, "could not retrieve user favourites")
+	}
+
+	if stringInSlice(data.Argstr, favourites) {
+		answer := tgbotapi.NewCallback(cbq.ID, "Already in favourites!")
+		_, err := bot.Telegram.AnswerCallbackQuery(answer)
+		return errors.WithStack(err)
+	}
+
+	favourites = append(favourites, data.Argstr)
+	err = SetUserFavourites(ctx, userID, favourites)
+	if err != nil {
+		return errors.Wrap(err, "error updating user favourites")
+	}
+
+	var keyboard [][]tgbotapi.KeyboardButton
+	for _, fav := range favourites {
+		keyboard = append(keyboard, []tgbotapi.KeyboardButton{
+			{
+				Text: fav,
+			},
+		})
+	}
+
+	text := fmt.Sprintf("Eta query `%s` added to favourites!", data.Argstr)
+	msg := tgbotapi.NewMessage(int64(userID), text)
+	msg.ParseMode = "markdown"
+	msg.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
+		Keyboard:       keyboard,
+		ResizeKeyboard: true,
+	}
+
+	answer := tgbotapi.NewCallback(cbq.ID, "")
+	err = answerCallbackQuery(bot, msg, answer)
 	return errors.WithStack(err)
 }
 

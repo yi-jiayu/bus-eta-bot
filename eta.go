@@ -318,6 +318,27 @@ func EtaMessageReplyMarkup(busStopID string, serviceNos []string, inline bool) (
 			Text:         "Resend",
 			CallbackData: &resendCallbackDataJSONStr,
 		})
+
+		argstr := busStopID
+		if len(serviceNos) > 0 {
+			argstr += " " + strings.Join(serviceNos, " ")
+		}
+		addFavouriteCallbackData := CallbackData{
+			Type:   "addf",
+			Argstr: argstr,
+		}
+		addFavouriteCallbackDataJSON, err := json.Marshal(addFavouriteCallbackData)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", refreshCallbackData))
+		}
+		addFavouriteCallbackDataJSONStr := string(addFavouriteCallbackDataJSON)
+
+		replyMarkup.InlineKeyboard = append(replyMarkup.InlineKeyboard, []tgbotapi.InlineKeyboardButton{
+			{
+				Text:         "Add to favourites",
+				CallbackData: &addFavouriteCallbackDataJSONStr,
+			},
+		})
 	}
 
 	return &replyMarkup, nil
