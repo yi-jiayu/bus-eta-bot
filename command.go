@@ -22,13 +22,18 @@ var (
 )
 
 var commandHandlers = map[string]MessageHandler{
-	"start":    StartHandler,
-	"about":    AboutHandler,
-	"version":  VersionHandler,
-	"feedback": FeedbackCmdHandler,
-	"help":     HelpHandler,
-	"privacy":  PrivacyHandler,
-	"eta":      EtaHandler,
+	"start":          StartHandler,
+	"start":          StartHandler,
+	"about":          AboutHandler,
+	"version":        VersionHandler,
+	"feedback":       FeedbackCmdHandler,
+	"help":           HelpHandler,
+	"privacy":        PrivacyHandler,
+	"eta":            EtaHandler,
+	"favourites":     ShowFavouritesCmdHandler,
+	"favorites":      ShowFavouritesCmdHandler,
+	"hidefavourites": HideFavouritesCmdHandler,
+	"hidefavorites":  HideFavouritesCmdHandler,
 }
 
 // FallbackCommandHandler catches commands which don't match any other handler.
@@ -284,6 +289,57 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 	}
 
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
+
+	_, err := bot.Telegram.Send(reply)
+	return err
+}
+
+// ShowFavouritesCmdHandler will display a reply keyboard for quick access to the user's favourites.
+func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+	userID := message.From.ID
+
+	favourites, err := GetUserFavourites(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	var reply tgbotapi.MessageConfig
+	if len(favourites) == 0 {
+		reply = tgbotapi.NewMessage(chatID, "Oops, you haven't saved any favourites yet.")
+	} else {
+		var keyboard [][]tgbotapi.KeyboardButton
+		for _, fav := range favourites {
+			keyboard = append(keyboard, []tgbotapi.KeyboardButton{
+				{
+					Text: fav,
+				},
+			})
+		}
+
+		reply = tgbotapi.NewMessage(chatID, "Favourites keyboard enabled.")
+		reply.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
+			Keyboard:       keyboard,
+			ResizeKeyboard: true,
+		}
+	}
+
+	if !message.Chat.IsPrivate() {
+		reply.ReplyToMessageID = message.MessageID
+	}
+
+	_, err = bot.Telegram.Send(reply)
+	return err
+}
+
+// HideFavouritesCmdHandler hides the favourites keyboard.
+func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+
+	reply := tgbotapi.NewMessage(chatID, "Favourites keyboard disabled.")
+	reply.ReplyMarkup = tgbotapi.ReplyKeyboardRemove{
+		RemoveKeyboard: true,
+	}
 
 	_, err := bot.Telegram.Send(reply)
 	return err

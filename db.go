@@ -15,6 +15,7 @@ import (
 const (
 	busStopKind         = "BusStop"
 	userPreferencesKind = "UserPreferences"
+	favouritesKind      = "Favourites"
 )
 
 const (
@@ -208,4 +209,20 @@ func SetUserPreferences(ctx context.Context, userID int, prefs *UserPreferences)
 	key := datastore.NewKey(ctx, userPreferencesKind, "", int64(userID), nil)
 	_, err = datastore.Put(ctx, key, prefs)
 	return err
+}
+
+// GetUserFavourites retrieved a user's saved favourites.
+func GetUserFavourites(ctx context.Context, userID int) ([]string, error) {
+	favourites := []string{
+		"96049 2 24",
+		"83062 2 24",
+		"83121",
+	}
+
+	return favourites, nil
+}
+
+// SetUserFavourites sets a user's saved favourites.
+func SetUserFavourites(ctx context.Context, userID int, favourites []string) error {
+	return nil
 }
