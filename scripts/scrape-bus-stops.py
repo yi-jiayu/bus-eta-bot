@@ -40,7 +40,7 @@ def main():
 
             f.write('{:04d}: {}\n'.format(offset, json.dumps(bus_stops['value'])))
             sys.stdout.write('\rOffset: {}'.format(offset))
-            offset += 50
+            offset += len(bus_stops['value'])
     print('\rFetched {} bus stops.'.format(count))
     print('[END]   Fetch bus stops')
 

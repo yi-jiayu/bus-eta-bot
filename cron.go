@@ -37,7 +37,6 @@ func PopulateBusStops(ctx context.Context, env string, updateTime time.Time, acc
 	}
 
 	offset := 0
-	count := 0
 	for {
 		busStops, err := datamallAPI.GetBusStops(offset)
 		if err != nil {
@@ -119,11 +118,10 @@ func PopulateBusStops(ctx context.Context, env string, updateTime time.Time, acc
 			}
 		}
 
-		offset += 50
-		count += len(busStops.Value)
+		offset += len(busStops.Value)
 	}
 
-	log.Infof(ctx, "Successfully populated database with %d bus stops", count)
+	log.Infof(ctx, "Successfully populated database with %d bus stops", offset)
 
 	return nil
 }
