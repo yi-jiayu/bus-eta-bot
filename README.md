@@ -4,7 +4,6 @@
 [![Build Status](https://semaphoreci.com/api/v1/yi-jiayu/bus-eta-bot/branches/master/shields_badge.svg)](https://semaphoreci.com/yi-jiayu/bus-eta-bot)
 [![CircleCI](https://circleci.com/gh/yi-jiayu/bus-eta-bot.svg?style=shield)](https://circleci.com/gh/yi-jiayu/bus-eta-bot)
 [![codecov](https://codecov.io/gh/yi-jiayu/bus-eta-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/yi-jiayu/bus-eta-bot)
-[![Coverage Status](https://coveralls.io/repos/github/yi-jiayu/bus-eta-bot/badge.svg?branch=master)](https://coveralls.io/github/yi-jiayu/bus-eta-bot?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yi-jiayu/bus-eta-bot)](https://goreportcard.com/report/github.com/yi-jiayu/bus-eta-bot)
 
 A practical Telegram bot for getting bus etas in Singapore supporting refreshing, bus stop search and showing nearby bus stops.
