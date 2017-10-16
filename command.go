@@ -22,17 +22,18 @@ var (
 )
 
 var commandHandlers = map[string]MessageHandler{
-	"start":          StartHandler,
-	"about":          AboutHandler,
-	"version":        VersionHandler,
-	"feedback":       FeedbackCmdHandler,
-	"help":           HelpHandler,
-	"privacy":        PrivacyHandler,
-	"eta":            EtaHandler,
-	"favourites":     ShowFavouritesCmdHandler,
-	"favorites":      ShowFavouritesCmdHandler,
-	"hidefavourites": HideFavouritesCmdHandler,
-	"hidefavorites":  HideFavouritesCmdHandler,
+	"start":           StartHandler,
+	"about":           AboutHandler,
+	"version":         VersionHandler,
+	"feedback":        FeedbackCmdHandler,
+	"help":            HelpHandler,
+	"privacy":         PrivacyHandler,
+	"eta":             EtaHandler,
+	"favourites":      ShowFavouritesCmdHandler,
+	"favorites":       ShowFavouritesCmdHandler,
+	"hidefavourites":  HideFavouritesCmdHandler,
+	"hidefavorites":   HideFavouritesCmdHandler,
+	"deletefavourite": RemoveFavouriteCmdHandler,
 }
 
 // FallbackCommandHandler catches commands which don't match any other handler.
@@ -343,6 +344,19 @@ func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbo
 	reply := tgbotapi.NewMessage(chatID, "Favourites keyboard disabled.")
 	reply.ReplyMarkup = tgbotapi.ReplyKeyboardRemove{
 		RemoveKeyboard: true,
+	}
+
+	_, err := bot.Telegram.Send(reply)
+	return err
+}
+
+func RemoveFavouriteCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+
+	reply := tgbotapi.NewMessage(chatID, "Send me the favourites entry to be removed.")
+	reply.ReplyMarkup = tgbotapi.ForceReply{
+		ForceReply: true,
+		Selective:  true,
 	}
 
 	_, err := bot.Telegram.Send(reply)
