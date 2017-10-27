@@ -326,11 +326,11 @@ func EtaMessageReplyMarkup(busStopID string, serviceNos []string, inline bool) (
 		if len(serviceNos) > 0 {
 			argstr += " " + strings.Join(serviceNos, " ")
 		}
-		addFavouriteCallbackData := CallbackData{
-			Type:   "addf",
+		toggleFavouriteCallbackData := CallbackData{
+			Type:   "togf",
 			Argstr: argstr,
 		}
-		addFavouriteCallbackDataJSON, err := json.Marshal(addFavouriteCallbackData)
+		addFavouriteCallbackDataJSON, err := json.Marshal(toggleFavouriteCallbackData)
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", refreshCallbackData))
 		}

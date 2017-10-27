@@ -19,7 +19,8 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 	"eta_demo":                      EtaDemoCallbackHandler,
 	"new_eta":                       NewEtaHandler,
 	"no_show_redundant_eta_command": NoShowRedundantEtaCommandCallbackHandler,
-	"addf": AddFavouriteCbHandler,
+	"addf":                          ToggleFavouritesHandler,
+	"togf":                          ToggleFavouritesHandler,
 }
 
 // CallbackQueryHandler is a handler for callback queries
@@ -302,17 +303,17 @@ func ResendCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Ca
 	return err
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
+func stringInSlice(a string, list []string) (bool, int) {
+	for i, b := range list {
 		if b == a {
-			return true
+			return true, i
 		}
 	}
-	return false
+	return false, 0
 }
 
-// AddFavouriteCbHandler handles the "Add to favourites" callback button on eta
-func AddFavouriteCbHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+// ToggleFavouritesHandler handles the toggle favourite callback button on etas
+func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	userID := cbq.From.ID
 
 	var data CallbackData
@@ -326,13 +327,21 @@ func AddFavouriteCbHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Ca
 		return errors.Wrap(err, "could not retrieve user favourites")
 	}
 
-	if stringInSlice(data.Argstr, favourites) {
-		answer := tgbotapi.NewCallback(cbq.ID, "Already in favourites!")
-		_, err := bot.Telegram.AnswerCallbackQuery(answer)
-		return errors.WithStack(err)
+	var action string
+
+	// if the entry is already in the favourites, we remove it
+	if exists, pos := stringInSlice(data.Argstr, favourites); exists {
+		// remove item from slice
+		copy(favourites[pos:], favourites[pos+1:])
+		favourites[len(favourites)-1] = ""
+		favourites = favourites[:len(favourites)-1]
+
+		action = "removed from"
+	} else {
+		favourites = append(favourites, data.Argstr)
+		action = "added to"
 	}
 
-	favourites = append(favourites, data.Argstr)
 	err = SetUserFavourites(ctx, userID, favourites)
 	if err != nil {
 		return errors.Wrap(err, "error updating user favourites")
@@ -347,7 +356,7 @@ func AddFavouriteCbHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Ca
 		})
 	}
 
-	text := fmt.Sprintf("Eta query `%s` added to favourites!", data.Argstr)
+	text := fmt.Sprintf("Eta query `%s` %s favourites!", data.Argstr, action)
 	msg := tgbotapi.NewMessage(int64(userID), text)
 	msg.ParseMode = "markdown"
 	msg.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
