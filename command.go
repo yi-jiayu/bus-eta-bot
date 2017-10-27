@@ -31,6 +31,8 @@ var commandHandlers = map[string]MessageHandler{
 	"eta":             EtaHandler,
 	"favourites":      ShowFavouritesCmdHandler,
 	"favorites":       ShowFavouritesCmdHandler,
+	"showfavourites":      ShowFavouritesCmdHandler,
+	"showfavorites":       ShowFavouritesCmdHandler,
 	"hidefavourites":  HideFavouritesCmdHandler,
 	"hidefavorites":   HideFavouritesCmdHandler,
 }

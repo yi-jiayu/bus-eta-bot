@@ -401,7 +401,7 @@ func TestShowFavouritesCmdHandler(t *testing.T) {
 				"96049 2 24",
 				"83062 2 24",
 			},
-			Expected: Request{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22keyboard%22%3A%5B%5B%7B%22text%22%3A%2296049+2+24%22%2C%22request_contact%22%3Afalse%2C%22request_location%22%3Afalse%7D%5D%2C%5B%7B%22text%22%3A%2283062+2+24%22%2C%22request_contact%22%3Afalse%2C%22request_location%22%3Afalse%7D%5D%5D%2C%22resize_keyboard%22%3Atrue%2C%22one_time_keyboard%22%3Afalse%2C%22selective%22%3Afalse%7D&text=Favourites+keyboard+enabled."},
+			Expected: Request{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22keyboard%22%3A%5B%5B%7B%22text%22%3A%2296049+2+24%22%2C%22request_contact%22%3Afalse%2C%22request_location%22%3Afalse%7D%5D%2C%5B%7B%22text%22%3A%2283062+2+24%22%2C%22request_contact%22%3Afalse%2C%22request_location%22%3Afalse%7D%5D%5D%2C%22resize_keyboard%22%3Atrue%2C%22one_time_keyboard%22%3Afalse%2C%22selective%22%3Afalse%7D&text=Favourites+keyboard+activated."},
 		},
 	}
 
@@ -437,5 +437,45 @@ func TestShowFavouritesCmdHandler(t *testing.T) {
 				t.Fatalf("%v", err)
 			}
 		})
+	}
+}
+
+func TestHideFavouritesCmdHandler(t *testing.T) {
+	t.Parallel()
+
+	type TestCase struct {
+		Name       string
+		Favourites []string
+		Expected   Request
+	}
+
+	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
+	defer tgAPI.Close()
+
+	tg := &tgbotapi.BotAPI{
+		APIEndpoint: tgAPI.URL + "/bot%s/%s",
+		Client:      http.DefaultClient,
+	}
+
+	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+
+	message := MockMessage()
+
+	err := HideFavouritesCmdHandler(nil, &bot, &message)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	select {
+	case req := <-reqChan:
+		actual := req
+		expected := Request{Path:"/bot/sendMessage", Body:"chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22remove_keyboard%22%3Atrue%2C%22selective%22%3Afalse%7D&text=Favourites+keyboard+hidden."}
+
+		if actual != expected {
+			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
+			t.Fail()
+		}
+	case err := <-errChan:
+		t.Fatalf("%v", err)
 	}
 }
