@@ -120,7 +120,6 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrivalV2) (BusEtas, erro
 	}, nil
 }
 
-
 func contains(serviceNos []string, serviceNo string) bool {
 	for _, s := range serviceNos {
 		if s == serviceNo {
@@ -337,11 +336,9 @@ func EtaMessageReplyMarkup(busStopID string, serviceNos []string, inline bool) (
 		}
 		addFavouriteCallbackDataJSONStr := string(addFavouriteCallbackDataJSON)
 
-		replyMarkup.InlineKeyboard = append(replyMarkup.InlineKeyboard, []tgbotapi.InlineKeyboardButton{
-			{
-				Text:         "Add to favourites",
-				CallbackData: &addFavouriteCallbackDataJSONStr,
-			},
+		replyMarkup.InlineKeyboard[0] = append(replyMarkup.InlineKeyboard[0], tgbotapi.InlineKeyboardButton{
+			Text:         "⭐",
+			CallbackData: &addFavouriteCallbackDataJSONStr,
 		})
 	}
 
