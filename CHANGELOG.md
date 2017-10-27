@@ -1,5 +1,16 @@
 # Bus Eta Bot Release Notes
 
+## v3.11.0 - 2017-10-27
+### Added
+- Updated to use DataMall Bus Arrival v2 API
+  - Due to changes in the v2 API, bus services which are not in operation
+  will not appear in an eta request.
+- Favourites functionality added
+  - Use the star button on eta messages to add or remove an eta query
+  from your favourites
+  - Use the `/favourites` and `/hidefavourites` commands to show and hide
+  the favourites keyboard.
+
 ## v3.10.0-rc1 - 2017-07-07
 ### Added
 - Reimplemented "Resend" functionality on eta messages sent directly on the bot: resending an eta message instead of 
