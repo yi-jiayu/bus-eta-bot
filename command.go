@@ -309,7 +309,7 @@ func showFavourites(bot *BusEtaBot, message *tgbotapi.Message, favourites []stri
 			})
 		}
 
-		reply = tgbotapi.NewMessage(chatID, "Favourites keyboard enabled.")
+		reply = tgbotapi.NewMessage(chatID, "Favourites keyboard activated.")
 		reply.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
 			Keyboard:       keyboard,
 			ResizeKeyboard: true,
@@ -340,7 +340,7 @@ func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbo
 func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 
-	reply := tgbotapi.NewMessage(chatID, "Favourites keyboard disabled.")
+	reply := tgbotapi.NewMessage(chatID, "Favourites keyboard hidden.")
 	reply.ReplyMarkup = tgbotapi.ReplyKeyboardRemove{
 		RemoveKeyboard: true,
 	}
