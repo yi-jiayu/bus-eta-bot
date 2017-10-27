@@ -22,19 +22,19 @@ var (
 )
 
 var commandHandlers = map[string]MessageHandler{
-	"start":           StartHandler,
-	"about":           AboutHandler,
-	"version":         VersionHandler,
-	"feedback":        FeedbackCmdHandler,
-	"help":            HelpHandler,
-	"privacy":         PrivacyHandler,
-	"eta":             EtaHandler,
-	"favourites":      ShowFavouritesCmdHandler,
-	"favorites":       ShowFavouritesCmdHandler,
-	"showfavourites":      ShowFavouritesCmdHandler,
-	"showfavorites":       ShowFavouritesCmdHandler,
-	"hidefavourites":  HideFavouritesCmdHandler,
-	"hidefavorites":   HideFavouritesCmdHandler,
+	"start":          StartHandler,
+	"about":          AboutHandler,
+	"version":        VersionHandler,
+	"feedback":       FeedbackCmdHandler,
+	"help":           HelpHandler,
+	"privacy":        PrivacyHandler,
+	"eta":            EtaHandler,
+	"favourites":     ShowFavouritesCmdHandler,
+	"favorites":      ShowFavouritesCmdHandler,
+	"showfavourites": ShowFavouritesCmdHandler,
+	"showfavorites":  ShowFavouritesCmdHandler,
+	"hidefavourites": HideFavouritesCmdHandler,
+	"hidefavorites":  HideFavouritesCmdHandler,
 }
 
 // FallbackCommandHandler catches commands which don't match any other handler.

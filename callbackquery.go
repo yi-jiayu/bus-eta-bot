@@ -19,8 +19,8 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 	"eta_demo":                      EtaDemoCallbackHandler,
 	"new_eta":                       NewEtaHandler,
 	"no_show_redundant_eta_command": NoShowRedundantEtaCommandCallbackHandler,
-	"addf":                          ToggleFavouritesHandler,
-	"togf":                          ToggleFavouritesHandler,
+	"addf": ToggleFavouritesHandler,
+	"togf": ToggleFavouritesHandler,
 }
 
 // CallbackQueryHandler is a handler for callback queries

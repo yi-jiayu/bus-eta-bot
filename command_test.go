@@ -469,7 +469,7 @@ func TestHideFavouritesCmdHandler(t *testing.T) {
 	select {
 	case req := <-reqChan:
 		actual := req
-		expected := Request{Path:"/bot/sendMessage", Body:"chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22remove_keyboard%22%3Atrue%2C%22selective%22%3Afalse%7D&text=Favourites+keyboard+hidden."}
+		expected := Request{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22remove_keyboard%22%3Atrue%2C%22selective%22%3Afalse%7D&text=Favourites+keyboard+hidden."}
 
 		if actual != expected {
 			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
