@@ -365,6 +365,13 @@ func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.
 	}
 
 	answer := tgbotapi.NewCallback(cbq.ID, "")
+
+	if action == "removed_from" {
+		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRemoveFavouriteCalback, cbq.Message.Chat.Type)
+	} else {
+		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionAddFavouriteCalback, cbq.Message.Chat.Type)
+	}
+
 	err = answerCallbackQuery(bot, msg, answer)
 	return errors.WithStack(err)
 }

@@ -52,6 +52,8 @@ const (
 	ActionEtaCallback             = "eta_callback"
 	ActionEtaDemoCallback         = "eta_demo_callback"
 	ActionEtaFromLocationCallback = "eta_from_location_callback"
+	ActionAddFavouriteCalback     = "add_favourite_callback"
+	ActionRemoveFavouriteCalback  = "remove_favourite_callback"
 
 	ActionCommandError     = "command_error"
 	ActionMessageError     = "message_error"

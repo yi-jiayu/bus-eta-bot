@@ -1,5 +1,9 @@
 # Bus Eta Bot Release Notes
 
+## v3.11.2 - 2018-01-09
+### Miscellaneous
+- Record analytics on how often favourites are toggled
+
 ## v3.11.0 - 2017-10-27
 ### Added
 - Updated to use DataMall Bus Arrival v2 API
