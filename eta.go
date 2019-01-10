@@ -136,7 +136,7 @@ func (s byServiceNo) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s byServiceNo) Less(i, j int) bool { return s[i][0] < s[j][0] }
 
 // FormatEtasMultiple formats bus etas nicely to be sent in a message
-func FormatEtasMultiple(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
+func FormatEtasMultiple(busEtas BusEtas, busStop *BusStopJSON, serviceNos []string) string {
 	showing := 0
 	services := make([][4]string, 0)
 	for _, service := range busEtas.Services {
@@ -156,13 +156,13 @@ func FormatEtasMultiple(busEtas BusEtas, busStop *BusStop, serviceNos []string) 
 
 	var header string
 	if busStop.Description != "" {
-		header = fmt.Sprintf("*%s (%s)*\n", busStop.Description, busStop.BusStopID)
+		header = fmt.Sprintf("*%s (%s)*\n", busStop.Description, busStop.BusStopCode)
 	} else {
-		header = fmt.Sprintf("*%s*\n", busStop.BusStopID)
+		header = fmt.Sprintf("*%s*\n", busStop.BusStopCode)
 	}
 
-	if busStop.Road != "" {
-		header += fmt.Sprintf("%s\n", busStop.Road)
+	if busStop.RoadName != "" {
+		header += fmt.Sprintf("%s\n", busStop.RoadName)
 	}
 
 	shown := fmt.Sprintf("Showing %d out of %d services for this bus stop.", showing, len(busEtas.Services))
@@ -249,8 +249,8 @@ func EtaTable(etas [][4]string) string {
 }
 
 // EtaMessageText generates and returns the text for an eta message
-func EtaMessageText(bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
-	busArrival, err := bot.Datamall.GetBusArrivalV2(busStopID, "")
+func EtaMessageText(bot *BusEtaBot, busStopCode string, serviceNos []string) (string, error) {
+	busArrival, err := bot.Datamall.GetBusArrivalV2(busStopCode, "")
 	if err != nil {
 		return "", errors.Wrap(err, "error getting etas from datamall")
 	}
@@ -260,13 +260,13 @@ func EtaMessageText(bot *BusEtaBot, busStopID string, serviceNos []string) (stri
 		return "", errors.WithStack(err)
 	}
 
-	busStop := bot.BusStops.Get(busStopID)
+	busStop := bot.BusStops.Get(busStopCode)
 	if busStop == nil {
 		if len(etas.Services) == 0 {
-			return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopID), err
+			return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopCode), err
 		}
-		busStop = &BusStop{
-			BusStopID: busStopID,
+		busStop = &BusStopJSON{
+			BusStopCode: busStopCode,
 		}
 	}
 

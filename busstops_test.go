@@ -23,20 +23,21 @@ func TestInMemoryBusStopRepository(t *testing.T) {
 
 	testCases := []struct {
 		ID       string
-		Expected *BusStop
+		Expected *BusStopJSON
 	}{
 		{
 			ID: "00481",
-			Expected: &BusStop{
-				BusStopID:   "00481",
-				Road:        "Woodlands Rd",
-				Description: "BT PANJANG TEMP BUS PK"},
+			Expected: &BusStopJSON{
+				BusStopCode: "00481",
+				RoadName:    "Woodlands Rd",
+				Description: "BT PANJANG TEMP BUS PK",
+			},
 		},
 		{
 			ID: "01012",
-			Expected: &BusStop{
-				BusStopID:   "01012",
-				Road:        "Victoria St",
+			Expected: &BusStopJSON{
+				BusStopCode: "01012",
+				RoadName:    "Victoria St",
 				Description: "Hotel Grand Pacific",
 			},
 		},

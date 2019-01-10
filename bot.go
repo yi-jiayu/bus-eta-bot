@@ -25,7 +25,7 @@ var handlers = Handlers{
 
 // BusStopRepository provides bus stop information.
 type BusStopRepository interface {
-	Get(ID string) *BusStop
+	Get(ID string) *BusStopJSON
 }
 
 type BusETAs interface {

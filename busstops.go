@@ -8,10 +8,10 @@ import (
 )
 
 type InMemoryBusStopRepository struct {
-	busStops map[string]BusStop
+	busStops map[string]BusStopJSON
 }
 
-func (r *InMemoryBusStopRepository) Get(ID string) *BusStop {
+func (r *InMemoryBusStopRepository) Get(ID string) *BusStopJSON {
 	busStop, ok := r.busStops[ID]
 	if ok {
 		return &busStop
@@ -20,13 +20,9 @@ func (r *InMemoryBusStopRepository) Get(ID string) *BusStop {
 }
 
 func NewInMemoryBusStopRepository(busStops []BusStopJSON) *InMemoryBusStopRepository {
-	busStopsMap := make(map[string]BusStop)
+	busStopsMap := make(map[string]BusStopJSON)
 	for _, bs := range busStops {
-		busStopsMap[bs.BusStopCode] = BusStop{
-			BusStopID:   bs.BusStopCode,
-			Road:        bs.RoadName,
-			Description: bs.Description,
-		}
+		busStopsMap[bs.BusStopCode] = bs
 	}
 	return &InMemoryBusStopRepository{busStops: busStopsMap}
 }

@@ -166,9 +166,9 @@ func TestChosenInlineResultHandler(t *testing.T) {
 	}
 
 	busStops := MockBusStops{
-		BusStop: &BusStop{
-			BusStopID:   "96049",
-			Road:        "Upp Changi Rd East",
+		BusStop: &BusStopJSON{
+			BusStopCode: "96049",
+			RoadName:    "Upp Changi Rd East",
 			Description: "Opp Tropicana Condo",
 		},
 	}

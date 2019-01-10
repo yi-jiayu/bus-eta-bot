@@ -10,10 +10,10 @@ import (
 )
 
 type MockBusStops struct {
-	BusStop *BusStop
+	BusStop *BusStopJSON
 }
 
-func (b MockBusStops) Get(string) *BusStop {
+func (b MockBusStops) Get(ID string) *BusStopJSON {
 	return b.BusStop
 }
 
@@ -235,7 +235,7 @@ func TestFormatEtas(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	busStop := BusStop{BusStopID: "96049", Road: "Upp Changi Rd East", Description: "Opp Tropicana Condo"}
+	busStop := BusStopJSON{BusStopCode: "96049", RoadName: "Upp Changi Rd East", Description: "Opp Tropicana Condo"}
 
 	t.Run("Showing all bus stops", func(t *testing.T) {
 		actual := FormatEtasMultiple(etas, &busStop, nil)
