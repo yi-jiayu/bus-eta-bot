@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
-	"golang.org/x/net/context"
 )
 
 var collapseWhitespaceRegex = regexp.MustCompile(`\s+`)
@@ -250,7 +249,7 @@ func EtaTable(etas [][4]string) string {
 }
 
 // EtaMessageText generates and returns the text for an eta message
-func EtaMessageText(ctx context.Context, bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
+func EtaMessageText(bot *BusEtaBot, busStopID string, serviceNos []string) (string, error) {
 	busArrival, err := bot.Datamall.GetBusArrivalV2(busStopID, "")
 	if err != nil {
 		return "", errors.Wrap(err, "error getting etas from datamall")
@@ -261,20 +260,17 @@ func EtaMessageText(ctx context.Context, bot *BusEtaBot, busStopID string, servi
 		return "", errors.WithStack(err)
 	}
 
-	busStop, err := GetBusStop(ctx, busStopID)
-	if err != nil {
-		if err == errNotFound {
-			if len(etas.Services) == 0 {
-				return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopID), err
-			}
-
-			busStop.BusStopID = busStopID
-		} else {
-			return "", err
+	busStop := bot.BusStops.Get(busStopID)
+	if busStop == nil {
+		if len(etas.Services) == 0 {
+			return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopID), err
+		}
+		busStop = &BusStop{
+			BusStopID: busStopID,
 		}
 	}
 
-	msg := FormatEtasMultiple(etas, &busStop, serviceNos)
+	msg := FormatEtasMultiple(etas, busStop, serviceNos)
 	return msg, nil
 }
 

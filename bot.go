@@ -23,14 +23,24 @@ var handlers = Handlers{
 	CallbackErrorHandler:      callbackErrorHandler,
 }
 
+// BusStopRepository provides bus stop information.
+type BusStopRepository interface {
+	Get(ID string) *BusStop
+}
+
+type BusETAs interface {
+	GetBusArrivalV2(busStopCode string, serviceNo string) (datamall.BusArrivalV2, error)
+}
+
 // BusEtaBot contains all the bot's dependencies
 type BusEtaBot struct {
 	Handlers            Handlers
 	Telegram            *tgbotapi.BotAPI
-	Datamall            *datamall.APIClient
+	Datamall            BusETAs
 	StreetView          *StreetViewAPI
 	MeasurementProtocol *MeasurementProtocolClient
 	NowFunc             func() time.Time
+	BusStops            BusStopRepository
 }
 
 // Handlers contains all the handlers used by the bot.
@@ -47,7 +57,7 @@ type Handlers struct {
 }
 
 // NewBusEtaBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.
-func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm *datamall.APIClient, sv *StreetViewAPI, mp *MeasurementProtocolClient) BusEtaBot {
+func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm BusETAs, sv *StreetViewAPI, mp *MeasurementProtocolClient) BusEtaBot {
 	bot := BusEtaBot{
 		Handlers:            handlers,
 		Telegram:            tg,

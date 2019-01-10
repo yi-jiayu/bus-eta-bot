@@ -39,7 +39,7 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
 		}
 	} else {
-		text, err := EtaMessageText(ctx, bot, busStopID, serviceNos)
+		text, err := EtaMessageText(bot, busStopID, serviceNos)
 		if err != nil {
 			if err == errNotFound {
 				reply = tgbotapi.NewMessage(chatID, text)

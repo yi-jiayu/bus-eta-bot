@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,6 +16,8 @@ import (
 	"google.golang.org/appengine/taskqueue"
 	"google.golang.org/appengine/urlfetch"
 )
+
+var busStopRepository BusStopRepository
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World"))
@@ -69,6 +72,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	sv := NewStreetViewAPI(os.Getenv("GOOGLE_API_KEY"))
 
 	bot := NewBusEtaBot(handlers, tg, dm, &sv, &mp)
+	bot.BusStops = busStopRepository
 
 	bot.HandleUpdate(ctx, &update)
 }
@@ -119,6 +123,13 @@ func initialiseDb(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
+	var err error
+	busStopRepository, err = NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json")
+	if err != nil {
+		fmt.Printf("%+v\n", err)
+		os.Exit(1)
+	}
+
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/initialise-db", initialiseDb)
 	http.HandleFunc("/initialise-db-async", initialiseDbAsync)

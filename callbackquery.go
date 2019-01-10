@@ -19,8 +19,8 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 	"eta_demo":                      EtaDemoCallbackHandler,
 	"new_eta":                       NewEtaHandler,
 	"no_show_redundant_eta_command": NoShowRedundantEtaCommandCallbackHandler,
-	"addf": ToggleFavouritesHandler,
-	"togf": ToggleFavouritesHandler,
+	"addf":                          ToggleFavouritesHandler,
+	"togf":                          ToggleFavouritesHandler,
 }
 
 // CallbackQueryHandler is a handler for callback queries
@@ -73,7 +73,7 @@ func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.C
 }
 
 func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, busStopID string, serviceNos []string) error {
-	text, err := EtaMessageText(ctx, bot, busStopID, serviceNos)
+	text, err := EtaMessageText(bot, busStopID, serviceNos)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callb
 func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	chatID := cbq.Message.Chat.ID
 
-	text, err := EtaMessageText(ctx, bot, "96049", nil)
+	text, err := EtaMessageText(bot, "96049", nil)
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 
 	bsID, sNos := data.BusStopID, data.ServiceNos
 
-	text, err := EtaMessageText(ctx, bot, bsID, sNos)
+	text, err := EtaMessageText(bot, bsID, sNos)
 	if err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ func ResendCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Ca
 
 	busStopID, serviceNos := data.BusStopID, data.ServiceNos
 
-	text, err := EtaMessageText(ctx, bot, busStopID, serviceNos)
+	text, err := EtaMessageText(bot, busStopID, serviceNos)
 	if err != nil {
 		return err
 	}

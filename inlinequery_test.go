@@ -1,15 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/search"
 )
 
@@ -153,47 +152,34 @@ func TestInlineQueryHandler(t *testing.T) {
 func TestChosenInlineResultHandler(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := NewDevContext()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer done()
-
-	busStop := BusStop{
-		BusStopID:   "96049",
-		Road:        "Upp Changi Rd East",
-		Description: "Opp Tropicana Condo",
-	}
-
-	key := datastore.NewKey(ctx, busStopKind, "96049", 0, nil)
-	_, err = datastore.Put(ctx, key, &busStop)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
 	defer tgAPI.Close()
-
-	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	dmAPI, err := NewMockBusArrivalAPI(now)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer dmAPI.Close()
 
 	tg := &tgbotapi.BotAPI{
 		APIEndpoint: tgAPI.URL + "/bot%s/%s",
 		Client:      http.DefaultClient,
 	}
 
-	dm := &datamall.APIClient{
-		Endpoint: dmAPI.URL,
-		Client:   http.DefaultClient,
+	datamall := MockDatamall{
+		BusArrival: newArrival(time.Time{}),
+		Error:      nil,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, dm, nil, nil)
-	bot.NowFunc = func() time.Time {
-		return now
+	busStops := MockBusStops{
+		BusStop: &BusStop{
+			BusStopID:   "96049",
+			Road:        "Upp Changi Rd East",
+			Description: "Opp Tropicana Condo",
+		},
+	}
+
+	bot := BusEtaBot{
+		Telegram: tg,
+		Datamall: datamall,
+		BusStops: busStops,
+		NowFunc: func() time.Time {
+			return time.Time{}
+		},
 	}
 
 	testCases := []struct {
@@ -229,7 +215,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 				},
 			}
 
-			err := ChosenInlineResultHandler(ctx, &bot, &cir)
+			err := ChosenInlineResultHandler(context.Background(), &bot, &cir)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -137,7 +137,7 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 	tokens := strings.Split(cir.ResultID, " ")
 	busStopID := tokens[0]
 
-	text, err := EtaMessageText(ctx, bot, busStopID, nil)
+	text, err := EtaMessageText(bot, busStopID, nil)
 	if err != nil {
 		return err
 	}

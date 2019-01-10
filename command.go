@@ -87,7 +87,7 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 			},
 			{
 				{
-					Text: "Try an inline query",
+					Text:                         "Try an inline query",
 					SwitchInlineQueryCurrentChat: &s2,
 				},
 			},
@@ -250,7 +250,7 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 		} else if err != nil {
 			return err
 		} else {
-			text, err := EtaMessageText(ctx, bot, busStopID, serviceNos)
+			text, err := EtaMessageText(bot, busStopID, serviceNos)
 			if err != nil {
 				if err == errNotFound {
 					reply = tgbotapi.NewMessage(chatID, text)

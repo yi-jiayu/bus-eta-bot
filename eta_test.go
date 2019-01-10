@@ -1,17 +1,30 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
-	"google.golang.org/appengine/aetest"
 )
+
+type MockBusStops struct {
+	BusStop *BusStop
+}
+
+func (b MockBusStops) Get(string) *BusStop {
+	return b.BusStop
+}
+
+type MockDatamall struct {
+	BusArrival datamall.BusArrivalV2
+	Error      error
+}
+
+func (d MockDatamall) GetBusArrivalV2(busStopCode string, serviceNo string) (datamall.BusArrivalV2, error) {
+	return d.BusArrival, d.Error
+}
 
 func newArrival(t time.Time) datamall.BusArrivalV2 {
 	return datamall.BusArrivalV2{
@@ -57,37 +70,7 @@ func newArrival(t time.Time) datamall.BusArrivalV2 {
 	}
 }
 
-func NewMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {
-	busArrival, err := json.Marshal(newArrival(t))
-	if err != nil {
-		return nil, err
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(busArrival)
-	}))
-
-	return ts, nil
-}
-
-func NewEmptyMockBusArrivalAPI(t time.Time) (*httptest.Server, error) {
-	busArrival, err := json.Marshal(datamall.BusArrival{
-		Services: []datamall.Service{},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(busArrival)
-	}))
-
-	return ts, nil
-}
-
 func TestInferEtaQuery(t *testing.T) {
-	t.Parallel()
-
 	testCases := []struct {
 		Name     string
 		Text     string
@@ -173,8 +156,6 @@ func TestInferEtaQuery(t *testing.T) {
 }
 
 func TestCalculateEtas(t *testing.T) {
-	t.Parallel()
-
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
 
 	t.Run("In operation, all etas", func(t *testing.T) {
@@ -231,8 +212,6 @@ func TestCalculateEtas(t *testing.T) {
 }
 
 func TestEtaTable(t *testing.T) {
-	t.Parallel()
-
 	services := [][4]string{
 		{"2", "-2", "12", "20"},
 		{"24", "2", "9", "18"},
@@ -248,8 +227,6 @@ func TestEtaTable(t *testing.T) {
 }
 
 func TestFormatEtas(t *testing.T) {
-	t.Parallel()
-
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
 	busArrival := newArrival(now)
 
@@ -281,32 +258,20 @@ func TestFormatEtas(t *testing.T) {
 }
 
 func TestEtaMessage(t *testing.T) {
-	t.Parallel()
-
-	ctx, done, err := aetest.NewContext()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer done()
-
-	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	dmAPI, err := NewEmptyMockBusArrivalAPI(now)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer dmAPI.Close()
-
 	bot := &BusEtaBot{
-		Datamall: &datamall.APIClient{
-			Endpoint: dmAPI.URL,
-			Client:   http.DefaultClient,
+		Datamall: MockDatamall{
+			BusArrival: datamall.BusArrivalV2{},
+			Error:      nil,
 		},
 		NowFunc: func() time.Time {
-			return now
+			return time.Time{}
+		},
+		BusStops: MockBusStops{
+			BusStop: nil,
 		},
 	}
 
-	actual, err := EtaMessageText(ctx, bot, "invalid", nil)
+	actual, err := EtaMessageText(bot, "invalid", nil)
 	if err != nil && err != errNotFound {
 		t.Fatal(err)
 	}
