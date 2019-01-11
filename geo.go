@@ -2,10 +2,10 @@ package main
 
 import "math"
 
-// Location is an interface for things which can have their distance from a given coordinate calculated.
-type Location interface {
-	DistanceFrom(float64, float64) float64
-}
+const (
+	EquatorialLatitude  = 110574.0
+	EquatorialLongitude = 111320.0
+)
 
 // hsin and Distance implementation from https://gist.github.com/cdipaolo/d3f8db3848278b49db68
 
@@ -38,4 +38,11 @@ func Distance(lat1, lon1, lat2, lon2 float64) float64 {
 	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
 
 	return 2 * r * math.Asin(math.Sqrt(h))
+}
+
+// EuclideanDistanceAtEquator returns the approximate distance between two points near the equator.
+func EuclideanDistanceAtEquator(lat0, lon0, lat1, lon1 float64) float64 {
+	dLat := EquatorialLatitude * (lat0 - lat1)
+	dLon := EquatorialLongitude * (lon0 - lon1)
+	return math.Sqrt(dLat*dLat + dLon*dLon)
 }

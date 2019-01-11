@@ -41,8 +41,9 @@ const (
 	ActionIgnoredTextMessage   = "ignored_text_message"
 	ActionLocationMessage      = "location_message"
 
-	ActionNewInlineQuery    = "new_inline_query"
-	ActionOffsetInlineQuery = "offset_inline_query"
+	ActionNewInlineQuery       = "new_inline_query"
+	ActionNewNearbyInlineQuery = "new_nearby_inline_query"
+	ActionOffsetInlineQuery    = "offset_inline_query"
 
 	ActionChosenInlineResult       = "chosen_inline_result"
 	ActionChosenNearbyInlineResult = "chosen_nearby_inline_result"

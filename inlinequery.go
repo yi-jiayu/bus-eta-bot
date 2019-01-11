@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/yi-jiayu/telegram-bot-api"
@@ -10,126 +9,115 @@ import (
 	"google.golang.org/appengine/log"
 )
 
-// InlineQueryHandler handles inline queries
-func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.InlineQuery) error {
-	query := ilq.Query
+// NearbyBusStopsRadius is the search range in metres for inline queries for nearby bus stops.
+const NearbyBusStopsRadius = 1000.0
 
-	offset := 0
-	if ilq.Offset != "" {
-		var err error
-		offset, err = strconv.Atoi(ilq.Offset)
+type StreetViewProvider interface {
+	GetPhotoURLByLocation(lat, lon float64, width, height int) (string, error)
+}
+
+func GetNearbyInlineQueryResults(streetView StreetViewProvider, busStops BusStopRepository, lat, lon float64) (results []interface{}, err error) {
+	nearbyBusStops := busStops.Nearby(lat, lon, NearbyBusStopsRadius, 50)
+	for _, nearby := range nearbyBusStops {
+		var result tgbotapi.InlineQueryResultArticle
+		result, err = buildInlineQueryResultGeo(streetView, nearby)
 		if err != nil {
-			return err
-		}
-	}
-
-	var busStops []BusStop
-	var err error
-	var showingNearby bool
-	if query == "" && ilq.Location != nil {
-		showingNearby = true
-
-		lat, lon := ilq.Location.Latitude, ilq.Location.Longitude
-		busStops, err = GetNearbyBusStops(ctx, lat, lon, 1000, 50)
-		if err != nil {
-			return err
-		}
-
-		if len(busStops) == 0 {
-			showingNearby = false
-			busStops, err = SearchBusStops(ctx, query, offset)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		showingNearby = false
-
-		busStops, err = SearchBusStops(ctx, query, offset)
-		if err != nil {
-			return err
-		}
-	}
-
-	results := make([]interface{}, 0)
-	for _, bs := range busStops {
-		text := fmt.Sprintf("*%s (%s)*\n%s\n`Fetching etas...`", bs.Description, bs.BusStopID, bs.Road)
-
-		var thumbnail string
-		if bot.StreetView != nil {
-			if lat, lon := bs.Location.Lat, bs.Location.Lng; lat != 0 && lon != 0 {
-				tn, err := bot.StreetView.GetPhotoURLByLocation(lat, lon, 100, 100)
-				if err != nil {
-					log.Errorf(ctx, "%v", err)
-				} else {
-					thumbnail = tn
-				}
-			}
-		}
-
-		var id, desc string
-		if showingNearby {
-			id = bs.BusStopID + " geo"
-
-			lat, lon := ilq.Location.Latitude, ilq.Location.Longitude
-			desc = fmt.Sprintf("%.2f m away", bs.DistanceFrom(lat, lon))
-		} else {
-			id = bs.BusStopID
-			desc = bs.Road
-		}
-
-		replyMarkup, err := EtaMessageReplyMarkup(bs.BusStopID, nil, true)
-		if err != nil {
-			log.Errorf(ctx, "%v", err)
-		}
-
-		result := tgbotapi.InlineQueryResultArticle{
-			Type:        "article",
-			ID:          id,
-			Title:       fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopID),
-			Description: desc,
-			ThumbURL:    thumbnail,
-			InputMessageContent: tgbotapi.InputTextMessageContent{
-				Text:      text,
-				ParseMode: "markdown",
-			},
-			ReplyMarkup: replyMarkup,
+			return
 		}
 		results = append(results, result)
 	}
+	return
+}
 
+// InlineQueryHandler handles inline queries
+func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.InlineQuery) error {
+	query := ilq.Query
+	var err error
+	var showingNearby bool
+	results := make([]interface{}, 0)
+	if query == "" && ilq.Location != nil {
+		showingNearby = true
+		lat, lon := ilq.Location.Latitude, ilq.Location.Longitude
+		results, err = GetNearbyInlineQueryResults(bot.StreetView, bot.BusStops, lat, lon)
+		if err != nil {
+			return err
+		}
+	} else {
+		showingNearby = false
+		busStops, err := SearchBusStops(ctx, query, 0)
+		if err != nil {
+			return err
+		}
+		for _, bs := range busStops {
+			result, err := buildInlineQueryResult(bot.StreetView, bs)
+			if err != nil {
+				return err
+			}
+			results = append(results, result)
+		}
+	}
 	var cacheTime int
 	if ilq.Query == "" {
 		cacheTime = 0
 	} else {
 		cacheTime = 24 * 3600
 	}
-
-	var nextOffset string
-	if len(busStops) == 50 {
-		nextOffset = fmt.Sprintf("%d", offset+50)
-	}
-
 	config := tgbotapi.InlineConfig{
 		InlineQueryID: ilq.ID,
 		Results:       results,
 		CacheTime:     cacheTime,
-		NextOffset:    nextOffset,
 	}
-
-	if ilq.Offset == "" {
-		go bot.LogEvent(ctx, ilq.From, CategoryInlineQuery, ActionNewInlineQuery, "")
+	if showingNearby {
+		go bot.LogEvent(ctx, ilq.From, CategoryInlineQuery, ActionNewNearbyInlineQuery, "")
 	} else {
-		go bot.LogEvent(ctx, ilq.From, CategoryInlineQuery, ActionOffsetInlineQuery, "")
+		go bot.LogEvent(ctx, ilq.From, CategoryInlineQuery, ActionNewInlineQuery, "")
 	}
-
 	resp, err := bot.Telegram.AnswerInlineQuery(config)
 	if err != nil {
 		log.Errorf(ctx, "%v", resp)
 		return err
 	}
-
 	return nil
+}
+
+func buildInlineQueryResult(streetView StreetViewProvider, bs BusStopJSON) (result tgbotapi.InlineQueryResultArticle, err error) {
+	text := fmt.Sprintf("*%s (%s)*\n%s\n`Fetching etas...`", bs.Description, bs.BusStopCode, bs.RoadName)
+	var thumbnail string
+	if streetView != nil {
+		if lat, lon := bs.Latitude, bs.Longitude; lat != 0 && lon != 0 {
+			thumbnail, err = streetView.GetPhotoURLByLocation(lat, lon, 100, 100)
+			if err != nil {
+				return
+			}
+		}
+	}
+	replyMarkup, err := EtaMessageReplyMarkup(bs.BusStopCode, nil, true)
+	if err != nil {
+		return
+	}
+	result = tgbotapi.InlineQueryResultArticle{
+		Type:        "article",
+		ID:          bs.BusStopCode,
+		Title:       fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopCode),
+		Description: bs.RoadName,
+		ThumbURL:    thumbnail,
+		InputMessageContent: tgbotapi.InputTextMessageContent{
+			Text:      text,
+			ParseMode: "markdown",
+		},
+		ReplyMarkup: replyMarkup,
+	}
+	return
+}
+
+func buildInlineQueryResultGeo(streetView StreetViewProvider, stop NearbyBusStop) (result tgbotapi.InlineQueryResultArticle, err error) {
+	result, err = buildInlineQueryResult(streetView, stop.BusStopJSON)
+	if err != nil {
+		return
+	}
+	result.ID = stop.BusStopCode + " geo"
+	result.Description = fmt.Sprintf("%.2f m away", stop.Distance)
+	return
 }
 
 // ChosenInlineResultHandler handles a chosen inline result

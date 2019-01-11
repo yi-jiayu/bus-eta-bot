@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -83,72 +82,8 @@ func (b BusStop) Equal(bs BusStop) bool {
 		b.Location == bs.Location
 }
 
-// GetBusStop looks up a bus stop by id from the datastore
-func GetBusStop(ctx context.Context, id string) (BusStop, error) {
-	// set namespace
-	ctx, err := appengine.Namespace(ctx, namespace)
-	if err != nil {
-		return BusStop{}, errors.Wrap(err, "error setting namespace on context")
-	}
-
-	var busStop BusStop
-	key := datastore.NewKey(ctx, busStopKind, id, 0, nil)
-	err = datastore.Get(ctx, key, &busStop)
-	if err != nil {
-		if err == datastore.ErrNoSuchEntity {
-			return BusStop{}, errNotFound
-		}
-
-		return BusStop{}, errors.Wrap(err, "error getting bus stop information from datastore")
-	}
-
-	return busStop, nil
-}
-
-// GetNearbyBusStops returns nearby bus stops to a specified location.
-func GetNearbyBusStops(ctx context.Context, lat, lng float64, radius, limit int) ([]BusStop, error) {
-	// set namespace
-	ctx, err := appengine.Namespace(ctx, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	index, err := search.Open("BusStops")
-	if err != nil {
-		return nil, err
-	}
-
-	var busStops []BusStop
-
-	opts := &search.SearchOptions{
-		Limit: limit,
-		Sort: &search.SortOptions{
-			Expressions: []search.SortExpression{
-				{
-					Expr:    fmt.Sprintf("distance(Location, geopoint(%f, %f))", lat, lng),
-					Reverse: true,
-				},
-			},
-		},
-	}
-
-	for t := index.Search(ctx, fmt.Sprintf("distance(Location, geopoint(%f, %f)) < %d", lat, lng, radius), opts); ; {
-		var busStop BusStop
-		_, err := t.Next(&busStop)
-		if err != nil {
-			if err == search.Done {
-				return busStops, nil
-			}
-
-			return busStops, err
-		}
-
-		busStops = append(busStops, busStop)
-	}
-}
-
 // SearchBusStops returns bus stops containing query.
-func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, error) {
+func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStopJSON, error) {
 	// set namespace
 	ctx, err := appengine.Namespace(ctx, namespace)
 	if err != nil {
@@ -160,7 +95,7 @@ func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, e
 		return nil, err
 	}
 
-	var busStops []BusStop
+	var busStops []BusStopJSON
 	options := search.SearchOptions{
 		Limit:  50,
 		Offset: offset,
@@ -176,7 +111,14 @@ func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStop, e
 			return busStops, err
 		}
 
-		busStops = append(busStops, bs)
+		busStopJSON := BusStopJSON{
+			BusStopCode: bs.BusStopID,
+			RoadName:    bs.Road,
+			Description: bs.Description,
+			Latitude:    bs.Location.Lat,
+			Longitude:   bs.Location.Lng,
+		}
+		busStops = append(busStops, busStopJSON)
 	}
 }
 

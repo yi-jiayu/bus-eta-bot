@@ -6,11 +6,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/datamall"
+	"github.com/yi-jiayu/telegram-bot-api"
 )
 
 type MockBusStops struct {
-	BusStop *BusStopJSON
+	BusStop        *BusStopJSON
+	NearbyBusStops []BusStopJSON
+}
+
+func (b MockBusStops) Nearby(lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
+	for _, bs := range b.NearbyBusStops {
+		nearby = append(nearby, NearbyBusStop{
+			BusStopJSON: bs,
+			Distance:    EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude),
+		})
+	}
+	return
 }
 
 func (b MockBusStops) Get(ID string) *BusStopJSON {
@@ -64,6 +77,20 @@ func newArrival(t time.Time) datamall.BusArrivalV2 {
 					EstimatedArrival: t.Add(400 * time.Second).Format(time.RFC3339),
 					Load:             "LSD",
 					Type:             "BD",
+				},
+			},
+		},
+	}
+}
+
+func newEtaMessageReplyMarkupInline(busStopCode string) *tgbotapi.InlineKeyboardMarkup {
+	callbackData := fmt.Sprintf(`{"t":"refresh","b":"%s"}`, busStopCode)
+	return &tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+			{
+				{
+					Text:         "Refresh",
+					CallbackData: &callbackData,
 				},
 			},
 		},
@@ -280,4 +307,15 @@ func TestEtaMessage(t *testing.T) {
 	if actual != expected {
 		t.Fail()
 	}
+}
+
+func TestEtaMessageReplyMarkup(t *testing.T) {
+	t.Run("for inline message", func(t *testing.T) {
+		expected := newEtaMessageReplyMarkupInline("96049")
+		actual, err := EtaMessageReplyMarkup("96049", nil, true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, expected, actual)
+	})
 }

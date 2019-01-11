@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/yi-jiayu/telegram-bot-api"
@@ -77,11 +76,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 	chatID := message.Chat.ID
 	location := message.Location
 
-	nearby, err := GetNearbyBusStops(ctx, location.Latitude, location.Longitude, 500, 5)
-	if err != nil {
-		return err
-	}
-
+	nearby := bot.BusStops.Nearby(location.Latitude, location.Longitude, 500, 5)
 	if len(nearby) > 0 {
 		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionLocationMessage, message.Chat.Type)
 
@@ -93,16 +88,15 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 		if err != nil {
 			return err
 		}
-
-		var wg sync.WaitGroup
-		wg.Add(len(nearby))
+		// sleep a while so that this message is received before the others
+		time.Sleep(250 * time.Millisecond)
 
 		for _, bs := range nearby {
-			distance := bs.DistanceFrom(location.Latitude, location.Longitude)
+			distance := bs.Distance
 
 			callbackData := CallbackData{
 				Type:      "new_eta",
-				BusStopID: bs.BusStopID,
+				BusStopID: bs.BusStopCode,
 			}
 
 			callbackDataJSON, err := json.Marshal(callbackData)
@@ -111,7 +105,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 			}
 			callbackDataJSONStr := string(callbackDataJSON)
 
-			reply := tgbotapi.NewVenue(chatID, fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopID), fmt.Sprintf("%.2f m away", distance), bs.Location.Lat, bs.Location.Lng)
+			reply := tgbotapi.NewVenue(chatID, fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopCode), fmt.Sprintf("%.2f m away", distance), bs.Latitude, bs.Longitude)
 			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 					{
@@ -123,26 +117,19 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 				},
 			}
 
-			time.Sleep(250 * time.Millisecond)
-
-			go func() {
-				defer wg.Done()
-
-				_, err := bot.Telegram.Send(reply)
-				if err != nil {
-					log.Errorf(ctx, "%v", err)
-				}
-			}()
+			_, err = bot.Telegram.Send(reply)
+			if err != nil {
+				log.Errorf(ctx, "%v", err)
+			}
 		}
 
-		wg.Wait()
 		return nil
 	}
 
 	go bot.LogEvent(ctx, message.From, CategoryMessage, ActionLocationMessage, message.Chat.Type)
 
 	reply := tgbotapi.NewMessage(chatID, "Oops, I couldn't find any bus stops within 500 m of your location.")
-	_, err = bot.Telegram.Send(reply)
+	_, err := bot.Telegram.Send(reply)
 	return err
 }
 
