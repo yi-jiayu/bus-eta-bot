@@ -89,3 +89,7 @@ func init() {
 		http.HandleFunc("/"+token, webhookHandler)
 	}
 }
+
+func main() {
+	appengine.Main()
+}
