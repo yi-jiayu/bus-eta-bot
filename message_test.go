@@ -68,22 +68,14 @@ func TestLocationHandler(t *testing.T) {
 	actual := reqs
 	expected := []Request{
 		{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Here+are+some+bus+stops+near+your+location%3A"},
-		{Path: "/bot/sendVenue", Body: "address=0.00+m+away&chat_id=1&disable_notification=false&latitude=1.340415&longitude=103.961279&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Get+etas%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22new_eta%5C%22%2C%5C%22b%5C%22%3A%5C%2296041%5C%22%7D%22%7D%5D%5D%7D&title=Bef+Tropicana+Condo+%2896041%29"},
-		{Path: "/bot/sendVenue", Body: "address=73.93+m+away&chat_id=1&disable_notification=false&latitude=1.339954&longitude=103.960798&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Get+etas%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22new_eta%5C%22%2C%5C%22b%5C%22%3A%5C%2296049%5C%22%7D%22%7D%5D%5D%7D&title=Opp+Tropicana+Condo+%2896049%29"},
+		{Path: "/bot/sendVenue", Body: "address=0+m+away&chat_id=1&disable_notification=false&latitude=1.340415&longitude=103.961279&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Get+etas%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22new_eta%5C%22%2C%5C%22b%5C%22%3A%5C%2296041%5C%22%7D%22%7D%5D%5D%7D&title=Bef+Tropicana+Condo+%2896041%29"},
+		{Path: "/bot/sendVenue", Body: "address=74+m+away&chat_id=1&disable_notification=false&latitude=1.339954&longitude=103.960798&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Get+etas%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22new_eta%5C%22%2C%5C%22b%5C%22%3A%5C%2296049%5C%22%7D%22%7D%5D%5D%7D&title=Opp+Tropicana+Condo+%2896049%29"},
 	}
 
 	assert.Equal(t, expected, actual)
 }
 
 func TestLocationHandlerNothingNearby(t *testing.T) {
-	t.Parallel()
-
-	ctx, done, err := NewDevContext()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer done()
-
 	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
 	defer tgAPI.Close()
 
@@ -103,7 +95,7 @@ func TestLocationHandlerNothingNearby(t *testing.T) {
 		Longitude: 103.96127892061004,
 	}
 
-	err = LocationHandler(ctx, &bot, &message)
+	err := LocationHandler(context.Background(), &bot, &message)
 	if err != nil {
 		t.Fatal(err)
 	}

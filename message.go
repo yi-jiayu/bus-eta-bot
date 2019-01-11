@@ -105,7 +105,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 			}
 			callbackDataJSONStr := string(callbackDataJSON)
 
-			reply := tgbotapi.NewVenue(chatID, fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopCode), fmt.Sprintf("%.2f m away", distance), bs.Latitude, bs.Longitude)
+			reply := tgbotapi.NewVenue(chatID, fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopCode), fmt.Sprintf("%.0f m away", distance), bs.Latitude, bs.Longitude)
 			reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 					{

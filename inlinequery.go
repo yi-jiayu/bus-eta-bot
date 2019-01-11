@@ -116,7 +116,7 @@ func buildInlineQueryResultGeo(streetView StreetViewProvider, stop NearbyBusStop
 		return
 	}
 	result.ID = stop.BusStopCode + " geo"
-	result.Description = fmt.Sprintf("%.2f m away", stop.Distance)
+	result.Description = fmt.Sprintf("%.0f m away", stop.Distance)
 	return
 }
 
