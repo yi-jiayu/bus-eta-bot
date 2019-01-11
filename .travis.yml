@@ -1,29 +1,31 @@
 language: go
 go:
-- 1.8.1
+  - "1.8"
+  - "1.9"
+  - "1.11"
 cache:
   directories:
-  - "$HOME/google-cloud-sdk/"
+    - "$HOME/google-cloud-sdk/"
 before_install:
-- if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz
-  && tar -x -C $HOME -f google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz; fi
-- source $HOME/google-cloud-sdk/path.bash.inc
-- gcloud --quiet components install app-engine-go
-- gcloud --quiet components install app-engine-python
-- if [ -n "$TARGET_GCLOUD_VERSION" ]; then gcloud --quiet components update --version $TARGET_GCLOUD_VERSION; fi
+  - if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz
+    && tar -x -C $HOME -f google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz; fi
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud --quiet components install app-engine-go
+  - gcloud --quiet components install app-engine-python
+  - if [ -n "$TARGET_GCLOUD_VERSION" ]; then gcloud --quiet components update --version $TARGET_GCLOUD_VERSION; fi
 install:
-- go get -t -d -v ./...
+  - go get -t -d -v ./...
 script:
-- go test -coverprofile=coverage.txt -covermode=count
+  - go test -coverprofile=coverage.txt -covermode=count
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
 before_deploy:
-# embed current version into source
-- cat version.go | sed "s/VERSION/$(git describe --tags)/" > version.go
-- cat index.html | sed "s/VERSION/$(git describe --tags)/; s/DATE/$(date +%Y-%m-%d)/" > index.html
-- echo $TRAVIS_CI_SERVICE_ACCOUNT | base64 -d > travis-ci-service-account.json
-- echo $STAGING_APP_YAML | base64 -d > staging.app.yaml
-- echo $PROD_APP_YAML | base64 -d > prod.app.yaml
+  # embed current version into source
+  - cat version.go | sed "s/VERSION/$(git describe --tags)/" > version.go
+  - cat index.html | sed "s/VERSION/$(git describe --tags)/; s/DATE/$(date +%Y-%m-%d)/" > index.html
+  - echo $TRAVIS_CI_SERVICE_ACCOUNT | base64 -d > travis-ci-service-account.json
+  - echo $STAGING_APP_YAML | base64 -d > staging.app.yaml
+  - echo $PROD_APP_YAML | base64 -d > prod.app.yaml
 deploy:
   - provider: script
     script: ./deploy.sh staging
