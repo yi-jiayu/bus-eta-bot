@@ -3,26 +3,14 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"reflect"
-	"sort"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/telegram-bot-api"
+
 	"google.golang.org/appengine/aetest"
 )
-
-func sliceCompare(actual, expected []Request) bool {
-	sort.Slice(actual, func(i, j int) bool {
-		if actual[i].Path == actual[j].Path {
-			return actual[i].Body < actual[j].Body
-		}
-
-		return actual[i].Path < actual[j].Path
-	})
-
-	return reflect.DeepEqual(actual, expected)
-}
 
 func TestNoShowRedundantEtaCommandCallbackHandler(t *testing.T) {
 	ctx, done, err := aetest.NewContext()
@@ -72,18 +60,7 @@ func TestNoShowRedundantEtaCommandCallbackHandler(t *testing.T) {
 		{Path: "/bot/editMessageReplyMarkup", Body: "chat_id=1&message_id=1&reply_markup=%7B%22inline_keyboard%22%3A%5B%5D%7D"},
 	}
 
-	if !sliceCompare(actual, expected) {
-		fmt.Println("Expected:")
-		for _, e := range expected {
-			fmt.Printf("%#v\n", e)
-		}
-		fmt.Println("Actual:")
-		for _, a := range actual {
-			fmt.Printf("%#v\n", a)
-		}
-		t.Fail()
-		return
-	}
+	assert.ElementsMatch(t, expected, actual)
 
 	prefs, err := GetUserPreferences(ctx, 1)
 	if err != nil {
