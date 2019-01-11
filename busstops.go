@@ -14,13 +14,14 @@ type NearbyBusStop struct {
 }
 
 type InMemoryBusStopRepository struct {
-	busStops map[string]BusStopJSON
+	busStops    []BusStopJSON
+	busStopsMap map[string]*BusStopJSON
 }
 
 func (r *InMemoryBusStopRepository) Get(ID string) *BusStopJSON {
-	busStop, ok := r.busStops[ID]
+	busStop, ok := r.busStopsMap[ID]
 	if ok {
-		return &busStop
+		return busStop
 	}
 	return nil
 }
@@ -48,11 +49,15 @@ func (r *InMemoryBusStopRepository) Nearby(lat, lon, radius float64, limit int) 
 }
 
 func NewInMemoryBusStopRepository(busStops []BusStopJSON) *InMemoryBusStopRepository {
-	busStopsMap := make(map[string]BusStopJSON)
-	for _, bs := range busStops {
-		busStopsMap[bs.BusStopCode] = bs
+	busStopsMap := make(map[string]*BusStopJSON)
+	for i := range busStops {
+		bs := busStops[i]
+		busStopsMap[bs.BusStopCode] = &bs
 	}
-	return &InMemoryBusStopRepository{busStops: busStopsMap}
+	return &InMemoryBusStopRepository{
+		busStops:    busStops,
+		busStopsMap: busStopsMap,
+	}
 }
 
 func NewInMemoryBusStopRepositoryFromFile(path string) (*InMemoryBusStopRepository, error) {
