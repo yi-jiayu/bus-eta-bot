@@ -7,13 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/taskqueue"
 	"google.golang.org/appengine/urlfetch"
 )
 
@@ -77,51 +75,6 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	bot.HandleUpdate(ctx, &update)
 }
 
-func initialiseDbAsync(w http.ResponseWriter, r *http.Request) {
-	var env string
-	if env = r.URL.Query().Get("environment"); env == "" {
-		env = "dev"
-	}
-
-	ctx := appengine.NewContext(r)
-
-	task := taskqueue.Task{
-		Path:   "/initialise-db?environment=" + env,
-		Method: http.MethodGet,
-	}
-
-	_, err := taskqueue.Add(ctx, &task, "")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.Write([]byte(http.StatusText(http.StatusOK)))
-}
-
-func initialiseDb(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-
-	accountKey := os.Getenv("DATAMALL_ACCOUNT_KEY")
-	if accountKey == "" {
-		log.Errorf(ctx, "DATAMALL_ACCOUNT_KEY not set")
-		return
-	}
-
-	var env string
-	if env = r.URL.Query().Get("environment"); env == "" {
-		env = "dev"
-	}
-
-	log.Infof(ctx, "Populating bus stops...")
-
-	err := PopulateBusStops(ctx, env, time.Now(), accountKey, datamall.DataMallEndpoint)
-	if err != nil {
-		log.Errorf(ctx, "error populating bus stops: %+v", err)
-	}
-}
-
 func init() {
 	var err error
 	busStopRepository, err = NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json", "")
@@ -131,8 +84,6 @@ func init() {
 	}
 
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/initialise-db", initialiseDb)
-	http.HandleFunc("/initialise-db-async", initialiseDbAsync)
 
 	if token := os.Getenv("TELEGRAM_BOT_TOKEN"); token != "" {
 		http.HandleFunc("/"+token, webhookHandler)
