@@ -16,6 +16,10 @@ type MockBusStops struct {
 	NearbyBusStops []BusStopJSON
 }
 
+func (b MockBusStops) Search(query string, limit int) []BusStopJSON {
+	panic("implement me")
+}
+
 func (b MockBusStops) Nearby(lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
 	for _, bs := range b.NearbyBusStops {
 		nearby = append(nearby, NearbyBusStop{

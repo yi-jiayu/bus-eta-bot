@@ -12,12 +12,14 @@ import (
 // NearbyBusStopsRadius is the search range in metres for inline queries for nearby bus stops.
 const NearbyBusStopsRadius = 1000.0
 
+const InlineQueryResultsLimit = 50
+
 type StreetViewProvider interface {
 	GetPhotoURLByLocation(lat, lon float64, width, height int) (string, error)
 }
 
 func GetNearbyInlineQueryResults(streetView StreetViewProvider, busStops BusStopRepository, lat, lon float64) (results []interface{}, err error) {
-	nearbyBusStops := busStops.Nearby(lat, lon, NearbyBusStopsRadius, 50)
+	nearbyBusStops := busStops.Nearby(lat, lon, NearbyBusStopsRadius, InlineQueryResultsLimit)
 	for _, nearby := range nearbyBusStops {
 		var result tgbotapi.InlineQueryResultArticle
 		result, err = buildInlineQueryResultGeo(streetView, nearby)
@@ -44,10 +46,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 		}
 	} else {
 		showingNearby = false
-		busStops, err := SearchBusStops(ctx, query, 0)
-		if err != nil {
-			return err
-		}
+		busStops := bot.BusStops.Search(query, InlineQueryResultsLimit)
 		for _, bs := range busStops {
 			result, err := buildInlineQueryResult(bot.StreetView, bs)
 			if err != nil {

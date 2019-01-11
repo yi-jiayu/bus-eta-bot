@@ -8,7 +8,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-	"google.golang.org/appengine/search"
 )
 
 const (
@@ -80,46 +79,6 @@ func (b BusStop) Equal(bs BusStop) bool {
 		b.Description == bs.Description &&
 		b.Road == bs.Road &&
 		b.Location == bs.Location
-}
-
-// SearchBusStops returns bus stops containing query.
-func SearchBusStops(ctx context.Context, query string, offset int) ([]BusStopJSON, error) {
-	// set namespace
-	ctx, err := appengine.Namespace(ctx, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	index, err := search.Open("BusStops")
-	if err != nil {
-		return nil, err
-	}
-
-	var busStops []BusStopJSON
-	options := search.SearchOptions{
-		Limit:  50,
-		Offset: offset,
-	}
-	for t := index.Search(ctx, query, &options); ; {
-		var bs BusStop
-		_, err := t.Next(&bs)
-		if err != nil {
-			if err == search.Done {
-				return busStops, nil
-			}
-
-			return busStops, err
-		}
-
-		busStopJSON := BusStopJSON{
-			BusStopCode: bs.BusStopID,
-			RoadName:    bs.Road,
-			Description: bs.Description,
-			Latitude:    bs.Location.Lat,
-			Longitude:   bs.Location.Lng,
-		}
-		busStops = append(busStops, busStopJSON)
-	}
 }
 
 // GetUserPreferences retrieves a user's preferences.

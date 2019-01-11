@@ -27,6 +27,7 @@ var handlers = Handlers{
 type BusStopRepository interface {
 	Get(ID string) *BusStopJSON
 	Nearby(lat, lon, radius float64, limit int) (nearby []NearbyBusStop)
+	Search(query string, limit int) []BusStopJSON
 }
 
 type BusETAs interface {

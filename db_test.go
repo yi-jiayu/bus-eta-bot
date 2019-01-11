@@ -25,17 +25,3 @@ func NewStronglyConsistentContext() (context.Context, func(), error) {
 		inst.Close()
 	}, nil
 }
-
-func NewDevContext() (context.Context, func(), error) {
-	ctx, done, err := aetest.NewContext()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ctx, err = appengine.Namespace(ctx, "dev")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return ctx, done, nil
-}

@@ -124,7 +124,7 @@ func initialiseDb(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	var err error
-	busStopRepository, err = NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json")
+	busStopRepository, err = NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json", "")
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 		os.Exit(1)
