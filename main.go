@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	log2 "github.com/apex/log"
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
@@ -70,6 +71,7 @@ func newWebhookHandler() http.HandlerFunc {
 			log.Errorf(ctx, "%v", err)
 		}
 		log.Infof(ctx, "%s", pretty.String())
+		log2.Info(pretty.String())
 
 		var update tgbotapi.Update
 		err = json.Unmarshal(bs, &update)

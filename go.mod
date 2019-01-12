@@ -1,6 +1,7 @@
 module github.com/yi-jiayu/bus-eta-bot/v4
 
 require (
+	github.com/apex/log v1.1.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.3.0
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
