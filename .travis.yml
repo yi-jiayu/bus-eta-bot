@@ -1,7 +1,5 @@
 language: go
 go:
-  - "1.8"
-  - "1.9"
   - "1.11"
 cache:
   directories:
@@ -13,8 +11,6 @@ before_install:
   - gcloud --quiet components install app-engine-go
   - gcloud --quiet components install app-engine-python
   - if [ -n "$TARGET_GCLOUD_VERSION" ]; then gcloud --quiet components update --version $TARGET_GCLOUD_VERSION; fi
-install:
-  - go get -t -d -v ./...
 script:
   - go test -coverprofile=coverage.txt -covermode=count
 after_success:
@@ -41,4 +37,5 @@ deploy:
       tags: true
 env:
   global:
-    - GCLOUD_VERSION=159.0.0
+    - GCLOUD_VERSION=229.0.0
+    - GO111MODULE=on
