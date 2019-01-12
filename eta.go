@@ -255,13 +255,7 @@ func EtaMessageText(bot *BusEtaBot, busStopCode string, serviceNos []string) (st
 		return "", errors.Wrap(err, "error getting etas from datamall")
 	}
 
-	var now time.Time
-	if bot.NowFunc != nil {
-		now = bot.NowFunc()
-	} else {
-		now = time.Now()
-	}
-	etas, err := CalculateEtas(now, busArrival)
+	etas, err := CalculateEtas(bot.NowFunc(), busArrival)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}

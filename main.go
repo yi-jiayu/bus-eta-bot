@@ -5,32 +5,54 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 )
 
-func newWebhookHandler() http.HandlerFunc {
-	busStopRepository, err := NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json", "")
+var busStopRepository BusStopRepository
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Hello, World"))
+}
+
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Printf("%+v\n", err)
-		os.Exit(1)
+		log.Errorf(ctx, "%v", err)
+
+		// return a 200 status to all webhooks so that telegram does not redeliver them
+		// w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	client := &http.Client{
-		Transport: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout: 5 * time.Second,
-			}).DialContext,
-		},
-		Timeout: 60 * time.Second,
+	// log update
+	var pretty bytes.Buffer
+	err = json.Indent(&pretty, bs, "", "  ")
+	if err != nil {
+		log.Errorf(ctx, "%v", err)
 	}
+	log.Infof(ctx, "%s", pretty.String())
+
+	var update tgbotapi.Update
+	err = json.Unmarshal(bs, &update)
+	if err != nil {
+		log.Errorf(ctx, "%v", err)
+
+		// return a 200 status to all webhooks so that telegram does not redeliver them
+		// w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	client := urlfetch.Client(ctx)
+
 	tg := &tgbotapi.BotAPI{
 		APIEndpoint: tgbotapi.APIEndpoint,
 		Token:       os.Getenv("TELEGRAM_BOT_TOKEN"),
@@ -47,44 +69,24 @@ func newWebhookHandler() http.HandlerFunc {
 
 	sv := NewStreetViewAPI(os.Getenv("GOOGLE_API_KEY"))
 
-	bot := BusEtaBot{
-		Handlers:            handlers,
-		Telegram:            tg,
-		Datamall:            dm,
-		StreetView:          &sv,
-		MeasurementProtocol: &mp,
-		BusStops:            busStopRepository,
-	}
+	bot := NewBusEtaBot(handlers, tg, dm, &sv, &mp)
+	bot.BusStops = busStopRepository
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		bs, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			log.Errorf(ctx, "%v", err)
-			return
-		}
-
-		var pretty bytes.Buffer
-		err = json.Indent(&pretty, bs, "", "  ")
-		if err != nil {
-			log.Errorf(ctx, "%v", err)
-		}
-		log.Infof(ctx, "%s", pretty.String())
-
-		var update tgbotapi.Update
-		err = json.Unmarshal(bs, &update)
-		if err != nil {
-			log.Errorf(ctx, "%v", err)
-			return
-		}
-		bot.HandleUpdate(ctx, &update)
-	}
+	bot.HandleUpdate(ctx, &update)
 }
 
 func init() {
-	token := os.Getenv("TELEGRAM_BOT_TOKEN")
-	if len(token) > 0 {
-		http.HandleFunc("/"+token, newWebhookHandler())
+	var err error
+	busStopRepository, err = NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json", "")
+	if err != nil {
+		fmt.Printf("%+v\n", err)
+		os.Exit(1)
+	}
+
+	http.HandleFunc("/", rootHandler)
+
+	if token := os.Getenv("TELEGRAM_BOT_TOKEN"); token != "" {
+		http.HandleFunc("/"+token, webhookHandler)
 	}
 }
 
