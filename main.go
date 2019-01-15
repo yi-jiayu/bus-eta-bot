@@ -99,6 +99,7 @@ func init() {
 			os.Exit(1)
 		}
 		trace.RegisterExporter(exporter)
+		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	}
 }
 
