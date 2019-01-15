@@ -26,7 +26,7 @@ type InMemoryBusStopRepository struct {
 	synonyms    map[string]string
 }
 
-func spanFromContext(ctx context.Context) (spanContext trace.SpanContext, ok bool) {
+func parentSpanFromContext(ctx context.Context) (spanContext trace.SpanContext, ok bool) {
 	var r *http.Request
 	r, ok = ctx.Value(requestKey{}).(*http.Request)
 	if !ok {
@@ -47,7 +47,7 @@ func (r *InMemoryBusStopRepository) Get(ID string) *BusStopJSON {
 // Nearby returns up to limit bus stops which are within a given radius from a point as well as their
 // distance from that point.
 func (r *InMemoryBusStopRepository) Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
-	if parent, ok := spanFromContext(ctx); ok {
+	if parent, ok := parentSpanFromContext(ctx); ok {
 		_, span := trace.StartSpanWithRemoteParent(ctx, "InMemoryBusStopRepository/Nearby", parent)
 		defer span.End()
 	}
@@ -94,8 +94,8 @@ func replaceSynonyms(synonyms map[string]string, tokens []string) []string {
 }
 
 func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, limit int) []BusStopJSON {
-	if parent, ok := spanFromContext(ctx); ok {
-		_, span := trace.StartSpanWithRemoteParent(ctx, "InMemoryBusStopRepository/Nearby", parent)
+	if parent, ok := parentSpanFromContext(ctx); ok {
+		_, span := trace.StartSpanWithRemoteParent(ctx, "InMemoryBusStopRepository/Search", parent)
 		defer span.End()
 	}
 
