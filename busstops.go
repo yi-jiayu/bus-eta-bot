@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.opencensus.io/exporter/stackdriver/propagation"
 	"go.opencensus.io/trace"
 )
+
+var HTTPFormat = propagation.HTTPFormat{}
 
 type NearbyBusStop struct {
 	BusStopJSON
@@ -20,6 +24,16 @@ type InMemoryBusStopRepository struct {
 	busStops    []BusStopJSON
 	busStopsMap map[string]*BusStopJSON
 	synonyms    map[string]string
+}
+
+func spanFromContext(ctx context.Context) (spanContext trace.SpanContext, ok bool) {
+	var r *http.Request
+	r, ok = ctx.Value(requestKey{}).(*http.Request)
+	if !ok {
+		return
+	}
+	spanContext, ok = HTTPFormat.SpanContextFromRequest(r)
+	return
 }
 
 func (r *InMemoryBusStopRepository) Get(ID string) *BusStopJSON {
@@ -33,8 +47,10 @@ func (r *InMemoryBusStopRepository) Get(ID string) *BusStopJSON {
 // Nearby returns up to limit bus stops which are within a given radius from a point as well as their
 // distance from that point.
 func (r *InMemoryBusStopRepository) Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
-	_, span := trace.StartSpan(ctx, "InMemoryBusStopRepository/Nearby")
-	defer span.End()
+	if parent, ok := spanFromContext(ctx); ok {
+		_, span := trace.StartSpanWithRemoteParent(ctx, "InMemoryBusStopRepository/Nearby", parent)
+		defer span.End()
+	}
 
 	for _, bs := range r.busStops {
 		distance := EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude)
@@ -78,8 +94,10 @@ func replaceSynonyms(synonyms map[string]string, tokens []string) []string {
 }
 
 func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, limit int) []BusStopJSON {
-	_, span := trace.StartSpan(ctx, "InMemoryBusStopRepository/Search")
-	defer span.End()
+	if parent, ok := spanFromContext(ctx); ok {
+		_, span := trace.StartSpanWithRemoteParent(ctx, "InMemoryBusStopRepository/Nearby", parent)
+		defer span.End()
+	}
 
 	if query == "" {
 		if limit <= 0 || limit > len(r.busStops) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -17,6 +18,8 @@ import (
 	"google.golang.org/appengine/urlfetch"
 )
 
+type requestKey struct{}
+
 var busStopRepository BusStopRepository
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,6 +28,9 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+
+	// Add the request onto the context too
+	ctx = context.WithValue(ctx, requestKey{}, r)
 
 	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
