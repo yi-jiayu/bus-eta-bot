@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/yi-jiayu/telegram-bot-api"
-	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 )
@@ -76,7 +76,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 	chatID := message.Chat.ID
 	location := message.Location
 
-	nearby := bot.BusStops.Nearby(location.Latitude, location.Longitude, 500, 5)
+	nearby := bot.BusStops.Nearby(ctx, location.Latitude, location.Longitude, 500, 5)
 	if len(nearby) > 0 {
 		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionLocationMessage, message.Chat.Type)
 

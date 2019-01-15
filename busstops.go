@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 type NearbyBusStop struct {
@@ -30,7 +32,10 @@ func (r *InMemoryBusStopRepository) Get(ID string) *BusStopJSON {
 
 // Nearby returns up to limit bus stops which are within a given radius from a point as well as their
 // distance from that point.
-func (r *InMemoryBusStopRepository) Nearby(lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
+func (r *InMemoryBusStopRepository) Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
+	_, span := trace.StartSpan(ctx, "InMemoryBusStopRepository/Nearby")
+	defer span.End()
+
 	for _, bs := range r.busStops {
 		distance := EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude)
 		if distance <= radius {
@@ -72,7 +77,10 @@ func replaceSynonyms(synonyms map[string]string, tokens []string) []string {
 	return results
 }
 
-func (r *InMemoryBusStopRepository) Search(query string, limit int) []BusStopJSON {
+func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, limit int) []BusStopJSON {
+	_, span := trace.StartSpan(ctx, "InMemoryBusStopRepository/Search")
+	defer span.End()
+
 	if query == "" {
 		if limit <= 0 || limit > len(r.busStops) {
 			limit = len(r.busStops)

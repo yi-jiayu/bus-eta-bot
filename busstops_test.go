@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -185,7 +186,7 @@ func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
-			actual := repo.Nearby(tc.Lat, tc.Lon, tc.Radius, tc.Limit)
+			actual := repo.Nearby(context.Background(), tc.Lat, tc.Lon, tc.Radius, tc.Limit)
 			assert.Equal(t, tc.Expected, actual)
 		})
 	}
@@ -355,7 +356,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			actual := repo.Search(tc.Query, tc.Limit)
+			actual := repo.Search(context.Background(), tc.Query, tc.Limit)
 			assert.Equal(t, tc.Expected, actual)
 		})
 	}

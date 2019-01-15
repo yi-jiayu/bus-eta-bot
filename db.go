@@ -1,11 +1,11 @@
 package main
 
 import (
+	"context"
 	"os"
 	"time"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 )

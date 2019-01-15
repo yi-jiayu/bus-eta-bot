@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"os"
 
+	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
+	"go.opencensus.io/trace"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
@@ -87,6 +89,16 @@ func init() {
 
 	if token := os.Getenv("TELEGRAM_BOT_TOKEN"); token != "" {
 		http.HandleFunc("/"+token, webhookHandler)
+	}
+
+	if getBotEnvironment() != devEnvironment {
+		// Create and register a OpenCensus Stackdriver Trace exporter.
+		exporter, err := stackdriver.NewExporter(stackdriver.Options{})
+		if err != nil {
+			fmt.Printf("%+v\n", err)
+			os.Exit(1)
+		}
+		trace.RegisterExporter(exporter)
 	}
 }
 

@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/yi-jiayu/telegram-bot-api"
-	"golang.org/x/net/context"
 )
 
 // Telegram chat types
