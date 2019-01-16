@@ -8,6 +8,13 @@ import (
 	"strings"
 )
 
+// Application details
+const (
+	ApplicationName    = "Bus Eta Bot"
+	ApplicationID      = "github.com/yi-jiayu/bus-eta-bot"
+	ApplicationVersion = Version
+)
+
 // Measurement Protocol constants
 const (
 	MeasurementProtocolVersion            = "1"
@@ -68,13 +75,6 @@ const (
 )
 
 var errStatusCode = errors.New("status code error")
-
-// Application details
-var (
-	ApplicationName    = "Bus Eta Bot"
-	ApplicationID      = "github.com/yi-jiayu/bus-eta-bot-3"
-	ApplicationVersion = Version
-)
 
 // MeasurementProtocolClient contains the endpoint, tracking id and http client to use to send hits to the Measurement Protocol
 type MeasurementProtocolClient struct {
