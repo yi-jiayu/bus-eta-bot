@@ -13,14 +13,13 @@ import (
 )
 
 var callbackQueryHandlers = map[string]CallbackQueryHandler{
-	"refresh":                       RefreshCallbackHandler,
-	"resend":                        ResendCallbackHandler,
-	"eta":                           EtaCallbackHandler,
-	"eta_demo":                      EtaDemoCallbackHandler,
-	"new_eta":                       NewEtaHandler,
-	"no_show_redundant_eta_command": NoShowRedundantEtaCommandCallbackHandler,
-	"addf":                          ToggleFavouritesHandler,
-	"togf":                          ToggleFavouritesHandler,
+	"refresh":  RefreshCallbackHandler,
+	"resend":   ResendCallbackHandler,
+	"eta":      EtaCallbackHandler,
+	"eta_demo": EtaDemoCallbackHandler,
+	"new_eta":  NewEtaHandler,
+	"addf":     ToggleFavouritesHandler,
+	"togf":     ToggleFavouritesHandler,
 }
 
 // CallbackQueryHandler is a handler for callback queries
@@ -231,36 +230,6 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaFromLocationCallback, cbq.Message.Chat.Type)
 
 	err = answerCallbackQuery(bot, reply, answer)
-	return err
-}
-
-// NoShowRedundantEtaCommandCallbackHandler handles the "Don't show again" callback button on the reminder sent to
-// users that the /eta command isn't necessary in a private chat.
-func NoShowRedundantEtaCommandCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
-	chatID := cbq.Message.Chat.ID
-	messageID := cbq.Message.MessageID
-	userID := cbq.From.ID
-
-	prefs, err := GetUserPreferences(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	prefs.NoRedundantEtaCommandReminder = true
-
-	err = SetUserPreferences(ctx, userID, &prefs)
-	if err != nil {
-		return err
-	}
-
-	markup := tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{},
-	}
-	edit := tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup)
-
-	answer := tgbotapi.NewCallback(cbq.ID, "Got it!")
-
-	err = answerCallbackQuery(bot, edit, answer)
 	return err
 }
 

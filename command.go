@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"regexp"
 
 	"github.com/yi-jiayu/telegram-bot-api"
-	"google.golang.org/appengine/log"
 )
 
 // Links to relevant documents
@@ -197,48 +195,6 @@ func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Messa
 // EtaHandler handles the /eta command.
 func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
-
-	if message.Chat.IsPrivate() {
-		go func() {
-			prefs, err := GetUserPreferences(ctx, message.From.ID)
-			if err != nil {
-				log.Errorf(ctx, "%v", err)
-				return
-			}
-
-			if prefs.NoRedundantEtaCommandReminder {
-				return
-			}
-
-			callbackData := CallbackData{
-				Type: "no_show_redundant_eta_command",
-			}
-			callbackDataJSON, err := json.Marshal(callbackData)
-			if err != nil {
-				log.Errorf(ctx, "%v", err)
-				return
-			}
-			callbackDataJSONStr := string(callbackDataJSON)
-
-			text := "Did you know that in a private chat, you can just send a bus stop code directly, without using the /eta command?"
-			info := tgbotapi.NewMessage(chatID, text)
-			info.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-				InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-					{
-						tgbotapi.InlineKeyboardButton{
-							Text:         "Don't show again",
-							CallbackData: &callbackDataJSONStr,
-						},
-					},
-				},
-			}
-
-			_, err = bot.Telegram.Send(info)
-			if err != nil {
-				log.Errorf(ctx, "%v", err)
-			}
-		}()
-	}
 
 	var reply tgbotapi.MessageConfig
 	if args := message.CommandArguments(); args != "" {
