@@ -1,3 +1,4 @@
+dist: xenial
 language: go
 go:
   - "1.11"
@@ -36,5 +37,5 @@ deploy:
       tags: true
 env:
   global:
-    - GCLOUD_VERSION=229.0.0
+    - GCLOUD_VERSION=230.0.0
     - GO111MODULE=on
