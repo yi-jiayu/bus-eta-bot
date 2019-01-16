@@ -13,25 +13,25 @@ import (
 )
 
 type MockBusStops struct {
-	BusStop        *BusStopJSON
-	NearbyBusStops []BusStopJSON
+	BusStop        *BusStop
+	NearbyBusStops []BusStop
 }
 
-func (b MockBusStops) Search(ctx context.Context, query string, limit int) []BusStopJSON {
+func (b MockBusStops) Search(ctx context.Context, query string, limit int) []BusStop {
 	panic("implement me")
 }
 
 func (b MockBusStops) Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
 	for _, bs := range b.NearbyBusStops {
 		nearby = append(nearby, NearbyBusStop{
-			BusStopJSON: bs,
-			Distance:    EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude),
+			BusStop:  bs,
+			Distance: EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude),
 		})
 	}
 	return
 }
 
-func (b MockBusStops) Get(ID string) *BusStopJSON {
+func (b MockBusStops) Get(ID string) *BusStop {
 	return b.BusStop
 }
 
@@ -267,7 +267,7 @@ func TestFormatEtas(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	busStop := BusStopJSON{BusStopCode: "96049", RoadName: "Upp Changi Rd East", Description: "Opp Tropicana Condo"}
+	busStop := BusStop{BusStopCode: "96049", RoadName: "Upp Changi Rd East", Description: "Opp Tropicana Condo"}
 
 	t.Run("Showing all bus stops", func(t *testing.T) {
 		actual := FormatEtasMultiple(etas, &busStop, nil)

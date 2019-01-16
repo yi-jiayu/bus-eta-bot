@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/appengine"
@@ -11,7 +10,6 @@ import (
 )
 
 const (
-	busStopKind         = "BusStop"
 	userPreferencesKind = "UserPreferences"
 	favouritesKind      = "Favourites"
 )
@@ -27,25 +25,6 @@ var (
 )
 
 var namespace = getBotEnvironment()
-
-// BusStop is a bus stop as represented inside app engine datastore and search.
-type BusStop struct {
-	BusStopID   string
-	ID          string
-	Road        string
-	Description string
-	Location    appengine.GeoPoint
-	UpdatedTime time.Time
-}
-
-// BusStopJSON is a bus stop deserialised from JSON.
-type BusStopJSON struct {
-	BusStopCode string
-	RoadName    string
-	Description string
-	Latitude    float64
-	Longitude   float64
-}
 
 // UserPreferences represents a bus eta bot user's preferences.
 type UserPreferences struct {
@@ -66,19 +45,6 @@ func getBotEnvironment() string {
 	default:
 		return devEnvironment
 	}
-}
-
-// DistanceFrom returns the distance between a bus stop and a reference coordinate.
-func (b BusStop) DistanceFrom(lat, lon float64) float64 {
-	return Distance(b.Location.Lat, b.Location.Lng, lat, lon)
-}
-
-// Equal checks if a bus stop's information is the same as another one.
-func (b BusStop) Equal(bs BusStop) bool {
-	return b.ID == bs.ID &&
-		b.Description == bs.Description &&
-		b.Road == bs.Road &&
-		b.Location == bs.Location
 }
 
 // GetUserPreferences retrieves a user's preferences.

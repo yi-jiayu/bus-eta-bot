@@ -25,9 +25,9 @@ var handlers = Handlers{
 
 // BusStopRepository provides bus stop information.
 type BusStopRepository interface {
-	Get(ID string) *BusStopJSON
+	Get(ID string) *BusStop
 	Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop)
-	Search(ctx context.Context, query string, limit int) []BusStopJSON
+	Search(ctx context.Context, query string, limit int) []BusStop
 }
 
 type BusETAs interface {

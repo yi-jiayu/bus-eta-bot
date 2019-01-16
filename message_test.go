@@ -22,7 +22,7 @@ func TestLocationHandler(t *testing.T) {
 
 	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
 	bot.BusStops = &MockBusStops{
-		NearbyBusStops: []BusStopJSON{
+		NearbyBusStops: []BusStop{
 			{
 				BusStopCode: "96041",
 				RoadName:    "Upp Changi Rd East",
@@ -86,7 +86,7 @@ func TestLocationHandlerNothingNearby(t *testing.T) {
 
 	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
 	bot.BusStops = &MockBusStops{
-		NearbyBusStops: make([]BusStopJSON, 0),
+		NearbyBusStops: make([]BusStop, 0),
 	}
 
 	message := MockMessage()

@@ -8,7 +8,7 @@ import (
 )
 
 func TestInMemoryBusStopRepository_Get(t *testing.T) {
-	busStops := []BusStopJSON{
+	busStops := []BusStop{
 		{
 			BusStopCode: "00481",
 			RoadName:    "Woodlands Rd",
@@ -28,11 +28,11 @@ func TestInMemoryBusStopRepository_Get(t *testing.T) {
 
 	testCases := []struct {
 		ID       string
-		Expected *BusStopJSON
+		Expected *BusStop
 	}{
 		{
 			ID: "00481",
-			Expected: &BusStopJSON{
+			Expected: &BusStop{
 				BusStopCode: "00481",
 				RoadName:    "Woodlands Rd",
 				Description: "BT PANJANG TEMP BUS PK",
@@ -42,7 +42,7 @@ func TestInMemoryBusStopRepository_Get(t *testing.T) {
 		},
 		{
 			ID: "01012",
-			Expected: &BusStopJSON{
+			Expected: &BusStop{
 				BusStopCode: "01012",
 				RoadName:    "Victoria St",
 				Description: "Hotel Grand Pacific",
@@ -64,7 +64,7 @@ func TestInMemoryBusStopRepository_Get(t *testing.T) {
 }
 
 func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
-	busStops := []BusStopJSON{
+	busStops := []BusStop{
 		{
 			BusStopCode: "01012",
 			RoadName:    "Victoria St",
@@ -98,7 +98,7 @@ func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
 			Limit:  0,
 			Expected: []NearbyBusStop{
 				{
-					BusStopJSON: BusStopJSON{
+					BusStop: BusStop{
 						BusStopCode: "00481",
 						RoadName:    "Woodlands Rd",
 						Description: "BT PANJANG TEMP BUS PK",
@@ -116,7 +116,7 @@ func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
 			Limit:  0,
 			Expected: []NearbyBusStop{
 				{
-					BusStopJSON: BusStopJSON{
+					BusStop: BusStop{
 						BusStopCode: "00481",
 						RoadName:    "Woodlands Rd",
 						Description: "BT PANJANG TEMP BUS PK",
@@ -126,7 +126,7 @@ func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
 					Distance: 6716.655692096068,
 				},
 				{
-					BusStopJSON: BusStopJSON{
+					BusStop: BusStop{
 						BusStopCode: "01012",
 						RoadName:    "Victoria St",
 						Description: "Hotel Grand Pacific",
@@ -144,7 +144,7 @@ func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
 			Limit:  1,
 			Expected: []NearbyBusStop{
 				{
-					BusStopJSON: BusStopJSON{
+					BusStop: BusStop{
 						BusStopCode: "00481",
 						RoadName:    "Woodlands Rd",
 						Description: "BT PANJANG TEMP BUS PK",
@@ -163,7 +163,7 @@ func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
 			Limit:  3,
 			Expected: []NearbyBusStop{
 				{
-					BusStopJSON: BusStopJSON{
+					BusStop: BusStop{
 						BusStopCode: "00481",
 						RoadName:    "Woodlands Rd",
 						Description: "BT PANJANG TEMP BUS PK",
@@ -173,7 +173,7 @@ func TestInMemoryBusStopRepository_Nearby(t *testing.T) {
 					Distance: 6716.655692096068,
 				},
 				{
-					BusStopJSON: BusStopJSON{
+					BusStop: BusStop{
 						BusStopCode: "01012",
 						RoadName:    "Victoria St",
 						Description: "Hotel Grand Pacific",
@@ -204,7 +204,7 @@ func Test_replaceSynonyms(t *testing.T) {
 }
 
 func TestInMemoryBusStopRepository_Search(t *testing.T) {
-	busStops := []BusStopJSON{
+	busStops := []BusStop{
 		{
 			BusStopCode: "01019",
 			RoadName:    "Victoria St",
@@ -252,7 +252,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 		Name     string
 		Query    string
 		Limit    int
-		Expected []BusStopJSON
+		Expected []BusStop
 	}{
 		{
 			Name:     "an empty string matches all bus stops",
@@ -263,7 +263,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 			Name:  "should respect limit when query is empty",
 			Query: "",
 			Limit: 1,
-			Expected: []BusStopJSON{
+			Expected: []BusStop{
 				{
 					BusStopCode: "01019",
 					RoadName:    "Victoria St",
@@ -276,7 +276,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 		{
 			Name:  "search by bus stop code",
 			Query: "01019",
-			Expected: []BusStopJSON{
+			Expected: []BusStop{
 				{
 					BusStopCode: "01019",
 					RoadName:    "Victoria St",
@@ -289,7 +289,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 		{
 			Name:  "search for word",
 			Query: "bridge",
-			Expected: []BusStopJSON{
+			Expected: []BusStop{
 				{
 					BusStopCode: "01029",
 					RoadName:    "Nth Bridge Rd",
@@ -302,7 +302,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 		{
 			Name:  "matches in description should rank higher than matches in road name",
 			Query: "victoria",
-			Expected: []BusStopJSON{
+			Expected: []BusStop{
 				{
 					BusStopCode: "93031",
 					RoadName:    "Marine Parade Rd",
@@ -330,7 +330,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 			Name:  "matches in description should rank higher than matches in road name and should respect limit",
 			Query: "victoria",
 			Limit: 1,
-			Expected: []BusStopJSON{
+			Expected: []BusStop{
 				{
 					BusStopCode: "93031",
 					RoadName:    "Marine Parade Rd",
@@ -343,7 +343,7 @@ func TestInMemoryBusStopRepository_Search(t *testing.T) {
 		{
 			Name:  "searches for words should match their abbreviations",
 			Query: "bukit park",
-			Expected: []BusStopJSON{
+			Expected: []BusStop{
 				{
 					BusStopCode: "00481",
 					RoadName:    "Woodlands Rd",

@@ -79,7 +79,7 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 	return nil
 }
 
-func buildInlineQueryResult(streetView StreetViewProvider, bs BusStopJSON) (result tgbotapi.InlineQueryResultArticle, err error) {
+func buildInlineQueryResult(streetView StreetViewProvider, bs BusStop) (result tgbotapi.InlineQueryResultArticle, err error) {
 	text := fmt.Sprintf("*%s (%s)*\n%s\n`Fetching etas...`", bs.Description, bs.BusStopCode, bs.RoadName)
 	var thumbnail string
 	if streetView != nil {
@@ -110,7 +110,7 @@ func buildInlineQueryResult(streetView StreetViewProvider, bs BusStopJSON) (resu
 }
 
 func buildInlineQueryResultGeo(streetView StreetViewProvider, stop NearbyBusStop) (result tgbotapi.InlineQueryResultArticle, err error) {
-	result, err = buildInlineQueryResult(streetView, stop.BusStopJSON)
+	result, err = buildInlineQueryResult(streetView, stop.BusStop)
 	if err != nil {
 		return
 	}

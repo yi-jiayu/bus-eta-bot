@@ -18,7 +18,7 @@ func (s *MockStreetView) GetPhotoURLByLocation(lat, lon float64, width, height i
 }
 
 func TestInlineQueryHandler(t *testing.T) {
-	busStops := []BusStopJSON{
+	busStops := []BusStop{
 		{
 			BusStopCode: "96041",
 			RoadName:    "Upp Changi Rd East",
@@ -132,7 +132,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 	}
 
 	busStops := MockBusStops{
-		BusStop: &BusStopJSON{
+		BusStop: &BusStop{
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
 			Description: "Opp Tropicana Condo",
@@ -204,7 +204,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 
 func TestGetNearbyInlineQueryResults(t *testing.T) {
 	streetView := &MockStreetView{}
-	busStops := NewInMemoryBusStopRepository([]BusStopJSON{
+	busStops := NewInMemoryBusStopRepository([]BusStop{
 		{
 			BusStopCode: "96041",
 			RoadName:    "Upp Changi Rd East",

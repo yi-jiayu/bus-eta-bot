@@ -15,14 +15,23 @@ import (
 
 var HTTPFormat = propagation.HTTPFormat{}
 
+// BusStop represents a bus stop.
+type BusStop struct {
+	BusStopCode string
+	RoadName    string
+	Description string
+	Latitude    float64
+	Longitude   float64
+}
+
 type NearbyBusStop struct {
-	BusStopJSON
+	BusStop
 	Distance float64
 }
 
 type InMemoryBusStopRepository struct {
-	busStops    []BusStopJSON
-	busStopsMap map[string]*BusStopJSON
+	busStops    []BusStop
+	busStopsMap map[string]*BusStop
 	synonyms    map[string]string
 }
 
@@ -36,7 +45,7 @@ func parentSpanFromContext(ctx context.Context) (spanContext trace.SpanContext, 
 	return
 }
 
-func (r *InMemoryBusStopRepository) Get(ID string) *BusStopJSON {
+func (r *InMemoryBusStopRepository) Get(ID string) *BusStop {
 	busStop, ok := r.busStopsMap[ID]
 	if ok {
 		return busStop
@@ -56,8 +65,8 @@ func (r *InMemoryBusStopRepository) Nearby(ctx context.Context, lat, lon, radius
 		distance := EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude)
 		if distance <= radius {
 			nearby = append(nearby, NearbyBusStop{
-				BusStopJSON: bs,
-				Distance:    distance,
+				BusStop:  bs,
+				Distance: distance,
 			})
 		}
 	}
@@ -93,7 +102,7 @@ func replaceSynonyms(synonyms map[string]string, tokens []string) []string {
 	return results
 }
 
-func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, limit int) []BusStopJSON {
+func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, limit int) []BusStop {
 	if parent, ok := parentSpanFromContext(ctx); ok {
 		_, span := trace.StartSpanWithRemoteParent(ctx, "InMemoryBusStopRepository/Search", parent)
 		defer span.End()
@@ -109,7 +118,7 @@ func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, li
 	if len(tokens) == 1 && len(tokens[0]) == 5 {
 		code := tokens[0]
 		if busStop, ok := r.busStopsMap[code]; ok {
-			return []BusStopJSON{
+			return []BusStop{
 				*busStop,
 			}
 		}
@@ -117,7 +126,7 @@ func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, li
 	tokens = replaceSynonyms(r.synonyms, lowercaseTokens(tokens))
 	var hits []struct {
 		Score int
-		BusStopJSON
+		BusStop
 	}
 	for _, busStop := range r.busStops {
 		descTokens := lowercaseTokens(strings.Fields(busStop.Description))
@@ -138,8 +147,8 @@ func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, li
 		if score > 0 {
 			hits = append(hits, struct {
 				Score int
-				BusStopJSON
-			}{Score: score, BusStopJSON: busStop})
+				BusStop
+			}{Score: score, BusStop: busStop})
 		}
 	}
 	sort.Slice(hits, func(i, j int) bool {
@@ -151,15 +160,15 @@ func (r *InMemoryBusStopRepository) Search(ctx context.Context, query string, li
 	if limit <= 0 || limit > len(hits) {
 		limit = len(hits)
 	}
-	results := make([]BusStopJSON, limit)
+	results := make([]BusStop, limit)
 	for i := 0; i < limit; i++ {
-		results[i] = hits[i].BusStopJSON
+		results[i] = hits[i].BusStop
 	}
 	return results
 }
 
-func NewInMemoryBusStopRepository(busStops []BusStopJSON, synonyms map[string]string) *InMemoryBusStopRepository {
-	busStopsMap := make(map[string]*BusStopJSON)
+func NewInMemoryBusStopRepository(busStops []BusStop, synonyms map[string]string) *InMemoryBusStopRepository {
+	busStopsMap := make(map[string]*BusStop)
 	for i := range busStops {
 		bs := busStops[i]
 		busStopsMap[bs.BusStopCode] = &bs
@@ -176,7 +185,7 @@ func NewInMemoryBusStopRepositoryFromFile(path, synonymsPath string) (*InMemoryB
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening bus stops JSON file")
 	}
-	var busStopsJSON []BusStopJSON
+	var busStopsJSON []BusStop
 	err = json.NewDecoder(busStopsJSONFile).Decode(&busStopsJSON)
 	if err != nil {
 		return nil, errors.Wrap(err, "error decoding bus stops JSON file")
