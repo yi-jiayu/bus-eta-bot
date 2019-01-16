@@ -22,7 +22,7 @@ fi
 tag=$(git describe --tags)
 date=$(date +%Y-%m-%d)
 sed "s/VERSION/$tag/" < version.go > version.go~ && mv version.go~ version.go
-sed "s/VERSION/$tag/; s/DATE/$date/" < web/index.html > web/index.html~ && mv web/index.html~ web/index.html
+sed "s/VERSION/$tag/; s/DATE/$date/" < index.html > index.html~ && mv index.html~ index.html
 
 # version cannot contain dots
 tag_escaped=$(sed "s/\./-/g" <<< ${tag})
