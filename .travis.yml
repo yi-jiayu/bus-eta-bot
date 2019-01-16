@@ -4,6 +4,7 @@ go:
 cache:
   directories:
     - "$HOME/google-cloud-sdk/"
+    - "$GOPATH/pkg/mod"
 before_install:
   - if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz
     && tar -x -C $HOME -f google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz; fi
