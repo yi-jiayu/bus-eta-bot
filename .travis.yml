@@ -10,7 +10,7 @@ before_install:
   - |
     if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then
         curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz |
-        tar -x -C $HOME -f -
+        tar -z -x -C $HOME -f -
     fi
   - source $HOME/google-cloud-sdk/path.bash.inc
   - gcloud --quiet components install app-engine-go
