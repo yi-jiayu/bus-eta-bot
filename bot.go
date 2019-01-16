@@ -1,4 +1,4 @@
-package main
+package busetabot
 
 import (
 	"context"
@@ -62,6 +62,11 @@ type Handlers struct {
 	ChosenInlineResultHandler func(ctx context.Context, bot *BusEtaBot, cir *tgbotapi.ChosenInlineResult) error
 	MessageErrorHandler       func(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error)
 	CallbackErrorHandler      func(ctx context.Context, bot *BusEtaBot, query *tgbotapi.CallbackQuery, err error)
+}
+
+// DefaultHandlers returns a default set of handlers.
+func DefaultHandlers() Handlers {
+	return handlers
 }
 
 // NewBusEtaBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.

@@ -1,4 +1,4 @@
-package main
+package busetabot
 
 import (
 	"testing"

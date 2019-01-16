@@ -1,4 +1,4 @@
-package main
+package busetabot
 
 import (
 	"context"
@@ -17,20 +17,24 @@ const (
 	devEnvironment        = "dev"
 	stagingEnvironment    = "staging"
 	productionEnvironment = "prod"
+
+	EnvironmentDev        = devEnvironment
+	EnvironmentStaging    = stagingEnvironment
+	EnvironmentProduction = productionEnvironment
 )
 
 var (
 	errNotFound = errors.New("not found")
 )
 
-var namespace = getBotEnvironment()
+var namespace = GetBotEnvironment()
 
 // Favourites contains a user's saved favourites.
 type Favourites struct {
 	Favourites []string
 }
 
-func getBotEnvironment() string {
+func GetBotEnvironment() string {
 	switch os.Getenv("BOT_ENVIRONMENT") {
 	case stagingEnvironment:
 		return stagingEnvironment

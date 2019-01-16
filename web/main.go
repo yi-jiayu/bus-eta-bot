@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -16,9 +15,9 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
-)
 
-type requestKey struct{}
+	. "github.com/yi-jiayu/bus-eta-bot/v4"
+)
 
 var (
 	busStopRepository BusStopRepository
@@ -30,10 +29,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-
-	// Add the request onto the context too
-	ctx = context.WithValue(ctx, requestKey{}, r)
+	ctx := NewContext(r)
 
 	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -80,7 +76,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	sv := NewStreetViewAPI(os.Getenv("GOOGLE_API_KEY"))
 
-	bot := NewBusEtaBot(handlers, tg, dm, &sv, &mp)
+	bot := NewBusEtaBot(DefaultHandlers(), tg, dm, &sv, &mp)
 	bot.BusStops = busStopRepository
 	bot.Users = userRepository
 
@@ -103,7 +99,7 @@ func init() {
 		http.HandleFunc("/"+token, webhookHandler)
 	}
 
-	if getBotEnvironment() != devEnvironment {
+	if GetBotEnvironment() != EnvironmentDev {
 		// Create and register a OpenCensus Stackdriver Trace exporter.
 		exporter, err := stackdriver.NewExporter(stackdriver.Options{})
 		if err != nil {
