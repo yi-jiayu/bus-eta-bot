@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
@@ -80,12 +81,19 @@ func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm BusETAs, sv *Street
 
 // HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type
 func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	if message := update.Message; message != nil {
 		if bot.Users != nil {
-			err := bot.Users.UpdateUserLastSeenTime(ctx, message.From.ID, time.Now())
-			if err != nil {
-				log.Warningf(ctx, "%+v", err)
-			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := bot.Users.UpdateUserLastSeenTime(ctx, message.From.ID, time.Now())
+				if err != nil {
+					log.Warningf(ctx, "%+v", err)
+				}
+			}()
 		}
 
 		if command := message.Command(); command != "" {
@@ -108,10 +116,14 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 
 	if cbq := update.CallbackQuery; cbq != nil {
 		if bot.Users != nil {
-			err := bot.Users.UpdateUserLastSeenTime(ctx, cbq.From.ID, time.Now())
-			if err != nil {
-				log.Warningf(ctx, "%+v", err)
-			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := bot.Users.UpdateUserLastSeenTime(ctx, cbq.From.ID, time.Now())
+				if err != nil {
+					log.Warningf(ctx, "%+v", err)
+				}
+			}()
 		}
 
 		if bot.Handlers.CallbackQueryHandlers != nil {
@@ -122,10 +134,14 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 
 	if ilq := update.InlineQuery; ilq != nil {
 		if bot.Users != nil {
-			err := bot.Users.UpdateUserLastSeenTime(ctx, ilq.From.ID, time.Now())
-			if err != nil {
-				log.Warningf(ctx, "%+v", err)
-			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := bot.Users.UpdateUserLastSeenTime(ctx, ilq.From.ID, time.Now())
+				if err != nil {
+					log.Warningf(ctx, "%+v", err)
+				}
+			}()
 		}
 
 		if bot.Handlers.InlineQueryHandler != nil {
