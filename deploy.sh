@@ -32,4 +32,4 @@ if [[ ${env} = "prod" && "$tag" == *"rc"* ]]; then
     deploy_flags="--no-promote"
 fi
 
-gcloud --quiet app --project bus-eta-bot deploy ${deploy_flags} ${env}.app.yaml --version ${tag_escaped}
+gcloud --quiet app --project bus-eta-bot deploy ${deploy_flags} web/${env}.app.yaml --version ${tag_escaped}
