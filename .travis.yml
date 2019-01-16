@@ -11,17 +11,15 @@ before_install:
   - gcloud --quiet components install app-engine-go
   - gcloud --quiet components install app-engine-python
   - if [ -n "$TARGET_GCLOUD_VERSION" ]; then gcloud --quiet components update --version $TARGET_GCLOUD_VERSION; fi
+install: true
 script:
   - go test -coverprofile=coverage.txt -covermode=count
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 before_deploy:
-  # embed current version into source
-  - cat version.go | sed "s/VERSION/$(git describe --tags)/" > version.go
-  - cat index.html | sed "s/VERSION/$(git describe --tags)/; s/DATE/$(date +%Y-%m-%d)/" > index.html
   - echo $TRAVIS_CI_SERVICE_ACCOUNT | base64 -d > travis-ci-service-account.json
   - echo $STAGING_APP_YAML | base64 -d > staging.app.yaml
-  - echo $PROD_APP_YAML | base64 -d > prod.app.yaml
+  - echo $PROD_APP_YAML_V4 | base64 -d > prod.app.yaml
 deploy:
   - provider: script
     script: ./deploy.sh staging
@@ -33,7 +31,7 @@ deploy:
     script: ./deploy.sh prod
     skip_cleanup: true
     on:
-      condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$PROD_APP_YAML"
+      condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$PROD_APP_YAML_V4"
       tags: true
 env:
   global:
