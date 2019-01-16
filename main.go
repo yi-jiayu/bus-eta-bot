@@ -20,7 +20,10 @@ import (
 
 type requestKey struct{}
 
-var busStopRepository BusStopRepository
+var (
+	busStopRepository BusStopRepository
+	userRepository    UserRepository
+)
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World"))
@@ -79,6 +82,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	bot := NewBusEtaBot(handlers, tg, dm, &sv, &mp)
 	bot.BusStops = busStopRepository
+	bot.Users = userRepository
 
 	bot.HandleUpdate(ctx, &update)
 }
@@ -90,6 +94,8 @@ func init() {
 		fmt.Printf("%+v\n", err)
 		os.Exit(1)
 	}
+
+	userRepository = new(DatastoreUserRepository)
 
 	http.HandleFunc("/", rootHandler)
 
