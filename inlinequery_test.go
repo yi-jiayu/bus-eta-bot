@@ -256,7 +256,7 @@ func TestGetNearbyInlineQueryResults(t *testing.T) {
 			ThumbHeight: 0,
 		},
 	}
-	actual, err := GetNearbyInlineQueryResults(streetView, busStops, 1.340, 103.961)
+	actual, err := GetNearbyInlineQueryResults(context.Background(), streetView, busStops, 1.340, 103.961)
 	if err != nil {
 		t.Fatal(err)
 	}

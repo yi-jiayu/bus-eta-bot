@@ -1,11 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/yi-jiayu/telegram-bot-api"
-	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
 )
 
@@ -18,8 +18,8 @@ type StreetViewProvider interface {
 	GetPhotoURLByLocation(lat, lon float64, width, height int) (string, error)
 }
 
-func GetNearbyInlineQueryResults(streetView StreetViewProvider, busStops BusStopRepository, lat, lon float64) (results []interface{}, err error) {
-	nearbyBusStops := busStops.Nearby(lat, lon, NearbyBusStopsRadius, InlineQueryResultsLimit)
+func GetNearbyInlineQueryResults(ctx context.Context, streetView StreetViewProvider, busStops BusStopRepository, lat, lon float64) (results []interface{}, err error) {
+	nearbyBusStops := busStops.Nearby(ctx, lat, lon, NearbyBusStopsRadius, InlineQueryResultsLimit)
 	for _, nearby := range nearbyBusStops {
 		var result tgbotapi.InlineQueryResultArticle
 		result, err = buildInlineQueryResultGeo(streetView, nearby)
@@ -40,13 +40,13 @@ func InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.Inlin
 	if query == "" && ilq.Location != nil {
 		showingNearby = true
 		lat, lon := ilq.Location.Latitude, ilq.Location.Longitude
-		results, err = GetNearbyInlineQueryResults(bot.StreetView, bot.BusStops, lat, lon)
+		results, err = GetNearbyInlineQueryResults(ctx, bot.StreetView, bot.BusStops, lat, lon)
 		if err != nil {
 			return err
 		}
 	} else {
 		showingNearby = false
-		busStops := bot.BusStops.Search(query, InlineQueryResultsLimit)
+		busStops := bot.BusStops.Search(ctx, query, InlineQueryResultsLimit)
 		for _, bs := range busStops {
 			result, err := buildInlineQueryResult(bot.StreetView, bs)
 			if err != nil {

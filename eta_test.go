@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -16,11 +17,11 @@ type MockBusStops struct {
 	NearbyBusStops []BusStopJSON
 }
 
-func (b MockBusStops) Search(query string, limit int) []BusStopJSON {
+func (b MockBusStops) Search(ctx context.Context, query string, limit int) []BusStopJSON {
 	panic("implement me")
 }
 
-func (b MockBusStops) Nearby(lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
+func (b MockBusStops) Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
 	for _, bs := range b.NearbyBusStops {
 		nearby = append(nearby, NearbyBusStop{
 			BusStopJSON: bs,

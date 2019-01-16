@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/yi-jiayu/datamall"
 	"github.com/yi-jiayu/telegram-bot-api"
-	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
 )
 
@@ -26,8 +26,8 @@ var handlers = Handlers{
 // BusStopRepository provides bus stop information.
 type BusStopRepository interface {
 	Get(ID string) *BusStopJSON
-	Nearby(lat, lon, radius float64, limit int) (nearby []NearbyBusStop)
-	Search(query string, limit int) []BusStopJSON
+	Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop)
+	Search(ctx context.Context, query string, limit int) []BusStopJSON
 }
 
 type BusETAs interface {

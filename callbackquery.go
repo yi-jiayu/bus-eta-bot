@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/telegram-bot-api"
-	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 )
