@@ -30,6 +30,10 @@ type BusStopRepository interface {
 	Search(ctx context.Context, query string, limit int) []BusStop
 }
 
+type UserRepository interface {
+	UpdateUserLastSeenTime(ctx context.Context, userID int, t time.Time) error
+}
+
 type BusETAs interface {
 	GetBusArrivalV2(busStopCode string, serviceNo string) (datamall.BusArrivalV2, error)
 }
@@ -43,6 +47,7 @@ type BusEtaBot struct {
 	MeasurementProtocol *MeasurementProtocolClient
 	NowFunc             func() time.Time
 	BusStops            BusStopRepository
+	Users               UserRepository
 }
 
 // Handlers contains all the handlers used by the bot.
@@ -76,6 +81,13 @@ func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm BusETAs, sv *Street
 // HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type
 func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	if message := update.Message; message != nil {
+		if bot.Users != nil {
+			err := bot.Users.UpdateUserLastSeenTime(ctx, message.From.ID, time.Now())
+			if err != nil {
+				log.Warningf(ctx, "%+v", err)
+			}
+		}
+
 		if command := message.Command(); command != "" {
 			bot.handleCommand(ctx, command, message)
 			return
@@ -95,12 +107,30 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 	}
 
 	if cbq := update.CallbackQuery; cbq != nil {
-		bot.handleCallbackQuery(ctx, cbq)
+		if bot.Users != nil {
+			err := bot.Users.UpdateUserLastSeenTime(ctx, cbq.From.ID, time.Now())
+			if err != nil {
+				log.Warningf(ctx, "%+v", err)
+			}
+		}
+
+		if bot.Handlers.CallbackQueryHandlers != nil {
+			bot.handleCallbackQuery(ctx, cbq)
+		}
 		return
 	}
 
 	if ilq := update.InlineQuery; ilq != nil {
-		bot.handleInlineQuery(ctx, ilq)
+		if bot.Users != nil {
+			err := bot.Users.UpdateUserLastSeenTime(ctx, ilq.From.ID, time.Now())
+			if err != nil {
+				log.Warningf(ctx, "%+v", err)
+			}
+		}
+
+		if bot.Handlers.InlineQueryHandler != nil {
+			bot.handleInlineQuery(ctx, ilq)
+		}
 		return
 	}
 

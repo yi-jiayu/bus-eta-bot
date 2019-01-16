@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/telegram-bot-api"
 )
 
@@ -263,6 +265,66 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 			if !tc.Spy.Called {
 				t.Fail()
 			}
+		})
+	}
+}
+
+type MockUserRepository struct {
+	Called bool
+}
+
+func (r *MockUserRepository) UpdateUserLastSeenTime(ctx context.Context, userID int, t time.Time) error {
+	r.Called = true
+	return nil
+}
+
+func TestBusEtaBot_HandleUpdate_UpdateUserLastSeenTime(t *testing.T) {
+	testCases := []struct {
+		Name   string
+		Update *tgbotapi.Update
+	}{
+		{
+			Name: "message",
+			Update: &tgbotapi.Update{
+				Message: &tgbotapi.Message{
+					From: &tgbotapi.User{
+						ID:        1,
+						FirstName: "Jiayu",
+					},
+				},
+			},
+		},
+		{
+			Name: "callback query",
+			Update: &tgbotapi.Update{
+				CallbackQuery: &tgbotapi.CallbackQuery{
+					From: &tgbotapi.User{
+						ID:        1,
+						FirstName: "Jiayu",
+					},
+				},
+			},
+		},
+		{
+			Name: "inline query",
+			Update: &tgbotapi.Update{
+				InlineQuery: &tgbotapi.InlineQuery{
+					From: &tgbotapi.User{
+						ID:        1,
+						FirstName: "Jiayu",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			bot := &BusEtaBot{
+				Users: &MockUserRepository{},
+			}
+			bot.HandleUpdate(context.Background(), tc.Update)
+			assert.True(t, bot.Users.(*MockUserRepository).Called, "Users.UpdateUserLastSeenTime not called")
 		})
 	}
 }
