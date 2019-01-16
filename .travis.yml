@@ -11,7 +11,7 @@ before_install:
   - source $HOME/google-cloud-sdk/path.bash.inc
   - gcloud --quiet components install app-engine-go
   - gcloud --quiet components install app-engine-python
-  - if [ -n "$TARGET_GCLOUD_VERSION" ]; then gcloud --quiet components update --version $TARGET_GCLOUD_VERSION; fi
+  - if [ -n "$GCLOUD_VERSION" ]; then gcloud --quiet components update --version $GCLOUD_VERSION; fi
 install: true
 script:
   - go test -coverprofile=coverage.txt -covermode=count

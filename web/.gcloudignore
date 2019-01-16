@@ -7,8 +7,7 @@
 #   $ gcloud topic gcloudignore
 #
 
-screenshots/
-scripts/
+*app.yaml
 
 .gcloudignore
 # If you would like to upload your .git directory, .gitignore file or files
