@@ -119,7 +119,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 
 			_, err = bot.Telegram.Send(reply)
 			if err != nil {
-				log.Errorf(ctx, "%v", err)
+				log.Errorf(ctx, "%+v", err)
 			}
 		}
 
@@ -134,7 +134,7 @@ func LocationHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Mess
 }
 
 func messageErrorHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error) {
-	log.Errorf(ctx, "%v", err)
+	log.Errorf(ctx, "%+v", err)
 
 	text := fmt.Sprintf("Oh no! Something went wrong. \n\nRequest ID: `%s`", appengine.RequestID(ctx))
 	reply := tgbotapi.NewMessage(message.Chat.ID, text)
@@ -142,6 +142,6 @@ func messageErrorHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.
 
 	_, err = bot.Telegram.Send(reply)
 	if err != nil {
-		log.Errorf(ctx, "%v", err)
+		log.Errorf(ctx, "%+v", err)
 	}
 }

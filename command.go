@@ -334,7 +334,7 @@ func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbo
 // 			if lat, lon := busStop.Location.Lat, busStop.Location.Lng; lat != 0 && lon != 0 {
 // 				URL, err := bot.StreetView.GetPhotoURLByLocation(lat, lon, 640, 480)
 // 				if err != nil {
-// 					log.Errorf(ctx, "%v", err)
+// 					log.Errorf(ctx, "%+v", err)
 // 				} else {
 // 					imageURL = URL
 // 					reply = tgbotapi.NewPhotoShare()

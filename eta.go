@@ -255,7 +255,6 @@ func EtaMessageText(bot *BusEtaBot, busStopCode string, serviceNos []string) (st
 		if err, ok := err.(datamall.Error); ok {
 			return fmt.Sprintf("Oh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code %d).", err.StatusCode), nil
 		}
-
 		return "", errors.Wrap(err, "error getting etas from datamall")
 	}
 

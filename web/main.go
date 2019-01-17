@@ -33,7 +33,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Errorf(ctx, "%v", err)
+		log.Errorf(ctx, "%+v", err)
 
 		// return a 200 status to all webhooks so that telegram does not redeliver them
 		// w.WriteHeader(http.StatusInternalServerError)
@@ -44,14 +44,14 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	var pretty bytes.Buffer
 	err = json.Indent(&pretty, bs, "", "  ")
 	if err != nil {
-		log.Errorf(ctx, "%v", err)
+		log.Errorf(ctx, "%+v", err)
 	}
 	log.Infof(ctx, "%s", pretty.String())
 
 	var update tgbotapi.Update
 	err = json.Unmarshal(bs, &update)
 	if err != nil {
-		log.Errorf(ctx, "%v", err)
+		log.Errorf(ctx, "%+v", err)
 
 		// return a 200 status to all webhooks so that telegram does not redeliver them
 		// w.WriteHeader(http.StatusInternalServerError)

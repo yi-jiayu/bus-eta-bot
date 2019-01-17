@@ -212,14 +212,14 @@ func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.Cal
 func (bot *BusEtaBot) handleInlineQuery(ctx context.Context, ilq *tgbotapi.InlineQuery) {
 	err := bot.Handlers.InlineQueryHandler(ctx, bot, ilq)
 	if err != nil {
-		log.Errorf(ctx, "%v", err)
+		log.Errorf(ctx, "%+v", err)
 	}
 }
 
 func (bot *BusEtaBot) handleChosenInlineResult(ctx context.Context, cir *tgbotapi.ChosenInlineResult) {
 	err := bot.Handlers.ChosenInlineResultHandler(ctx, bot, cir)
 	if err != nil {
-		log.Errorf(ctx, "%v", err)
+		log.Errorf(ctx, "%+v", err)
 	}
 }
 
