@@ -312,6 +312,29 @@ func TestEtaMessage(t *testing.T) {
 	if actual != expected {
 		t.Fail()
 	}
+
+	t.Run("when datamall returns an error", func(t *testing.T) {
+		bot := &BusEtaBot{
+			Datamall: MockDatamall{
+				BusArrival: datamall.BusArrival{},
+				Error:      datamall.Error{StatusCode: 503},
+			},
+			NowFunc: func() time.Time {
+				return time.Time{}
+			},
+			BusStops: MockBusStops{
+				BusStop: nil,
+			},
+		}
+
+		actual, err := EtaMessageText(bot, "81111", nil)
+		if err != nil && err != errNotFound {
+			t.Fatal(err)
+		}
+
+		expected := "Oh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code 503)."
+		assert.Equal(t, expected, actual)
+	})
 }
 
 func TestEtaMessageReplyMarkup(t *testing.T) {
