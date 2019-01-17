@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"contrib.go.opencensus.io/exporter/stackdriver"
-	"github.com/yi-jiayu/datamall"
+	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"go.opencensus.io/trace"
 	"google.golang.org/appengine"

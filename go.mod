@@ -11,7 +11,7 @@ require (
 	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
-	github.com/yi-jiayu/datamall v0.9.0
+	github.com/yi-jiayu/datamall/v2 v2.0.1-0.20190117043203-d964fe810255
 	github.com/yi-jiayu/telegram-bot-api v4.5.2-0.20170606073748-8713bbd63853+incompatible
 	go.opencensus.io v0.18.0
 	golang.org/x/net v0.0.0-20190110200230-915654e7eabc // indirect

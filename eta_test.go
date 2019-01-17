@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yi-jiayu/datamall"
+	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 )
 
@@ -36,29 +36,29 @@ func (b MockBusStops) Get(ID string) *BusStop {
 }
 
 type MockDatamall struct {
-	BusArrival datamall.BusArrivalV2
+	BusArrival datamall.BusArrival
 	Error      error
 }
 
-func (d MockDatamall) GetBusArrivalV2(busStopCode string, serviceNo string) (datamall.BusArrivalV2, error) {
+func (d MockDatamall) GetBusArrival(busStopCode string, serviceNo string) (datamall.BusArrival, error) {
 	return d.BusArrival, d.Error
 }
 
-func newArrival(t time.Time) datamall.BusArrivalV2 {
-	return datamall.BusArrivalV2{
+func newArrival(t time.Time) datamall.BusArrival {
+	return datamall.BusArrival{
 		BusStopID: "96049",
-		Services: []datamall.ServiceV2{
+		Services: []datamall.Service{
 			{
 				ServiceNo: "2",
-				NextBus: datamall.ArrivingBusV2{
+				NextBus: datamall.ArrivingBus{
 					EstimatedArrival: t.Add(-100 * time.Second).Format(time.RFC3339),
 				},
-				NextBus2: datamall.ArrivingBusV2{
+				NextBus2: datamall.ArrivingBus{
 					EstimatedArrival: t.Add(600 * time.Second).Format(time.RFC3339),
 					Load:             "SDA",
 					Type:             "DD",
 				},
-				NextBus3: datamall.ArrivingBusV2{
+				NextBus3: datamall.ArrivingBus{
 					EstimatedArrival: t.Add(2200 * time.Second).Format(time.RFC3339),
 					Load:             "LSD",
 					Feature:          "WAB",
@@ -67,18 +67,18 @@ func newArrival(t time.Time) datamall.BusArrivalV2 {
 			},
 			{
 				ServiceNo: "24",
-				NextBus: datamall.ArrivingBusV2{
+				NextBus: datamall.ArrivingBus{
 					EstimatedArrival: t.Add(100 * time.Second).Format(time.RFC3339),
 					Load:             "SEA",
 					Type:             "SD",
 				},
-				NextBus2: datamall.ArrivingBusV2{
+				NextBus2: datamall.ArrivingBus{
 					EstimatedArrival: t.Add(200 * time.Second).Format(time.RFC3339),
 					Load:             "SDA",
 					Type:             "DD",
 					Feature:          "WAB",
 				},
-				NextBus3: datamall.ArrivingBusV2{
+				NextBus3: datamall.ArrivingBus{
 					EstimatedArrival: t.Add(400 * time.Second).Format(time.RFC3339),
 					Load:             "LSD",
 					Type:             "BD",
@@ -292,7 +292,7 @@ func TestFormatEtas(t *testing.T) {
 func TestEtaMessage(t *testing.T) {
 	bot := &BusEtaBot{
 		Datamall: MockDatamall{
-			BusArrival: datamall.BusArrivalV2{},
+			BusArrival: datamall.BusArrival{},
 			Error:      nil,
 		},
 		NowFunc: func() time.Time {

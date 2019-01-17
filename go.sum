@@ -58,6 +58,8 @@ github.com/technoweenie/multipartstreamer v1.0.1 h1:XRztA5MXiR1TIRHxH2uNxXxaIkKQ
 github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6MDx5eUJoiEBsSvzDU9uzog=
 github.com/yi-jiayu/datamall v0.9.0 h1:iacwjeIEF9EjWHFE7cf9CEqOuBbp6G0LIEF9DzYNgIY=
 github.com/yi-jiayu/datamall v0.9.0/go.mod h1:cyGX7cDBKXpqGvcU8LTEIo+cCHsw90dqn80EW3CQoAs=
+github.com/yi-jiayu/datamall/v2 v2.0.1-0.20190117043203-d964fe810255 h1:cf221MHAhDYpF0IiuWlLjtIr8ogqY8blV4X8ovkIEQc=
+github.com/yi-jiayu/datamall/v2 v2.0.1-0.20190117043203-d964fe810255/go.mod h1:AQU5LTOw1k/dcXbSCfL9X2XvCigqqHRjo4c3FE5umKw=
 github.com/yi-jiayu/telegram-bot-api v4.5.2-0.20170606073748-8713bbd63853+incompatible h1:JU5MtS8LRG8rAYNfEKKAOOjclI08c8kG4Ds3honZOH0=
 github.com/yi-jiayu/telegram-bot-api v4.5.2-0.20170606073748-8713bbd63853+incompatible/go.mod h1:yJtJ36gpFN0ktXSgYLVlhdrp6vBJWsTEi+nc9RUaW5U=
 go.opencensus.io v0.15.0/go.mod h1:UffZAU+4sDEINUGP/B7UfBBkq4fqLu9zXAX7ke6CHW0=

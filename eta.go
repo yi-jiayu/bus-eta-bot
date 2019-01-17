@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/yi-jiayu/datamall"
+	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 )
 
@@ -71,7 +71,7 @@ func InferEtaQuery(text string) (string, []string, error) {
 }
 
 // CalculateEtas calculates the time before buses arrive from the LTA DataMall bus arrival response
-func CalculateEtas(t time.Time, busArrival datamall.BusArrivalV2) (BusEtas, error) {
+func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error) {
 	services := make([]IncomingBuses, 0)
 
 	for _, service := range busArrival.Services {
@@ -82,7 +82,7 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrivalV2) (BusEtas, erro
 		placeholder := "?"
 
 		for i := 0; i < 3; i++ {
-			var incomingBus datamall.ArrivingBusV2
+			var incomingBus datamall.ArrivingBus
 			switch i {
 			case 0:
 				incomingBus = service.NextBus
@@ -250,8 +250,12 @@ func EtaTable(etas [][4]string) string {
 
 // EtaMessageText generates and returns the text for an eta message
 func EtaMessageText(bot *BusEtaBot, busStopCode string, serviceNos []string) (string, error) {
-	busArrival, err := bot.Datamall.GetBusArrivalV2(busStopCode, "")
+	busArrival, err := bot.Datamall.GetBusArrival(busStopCode, "")
 	if err != nil {
+		if err, ok := err.(datamall.Error); ok {
+			return fmt.Sprintf("Oh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code %d).", err.StatusCode), nil
+		}
+
 		return "", errors.Wrap(err, "error getting etas from datamall")
 	}
 

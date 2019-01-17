@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yi-jiayu/datamall"
+	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine/log"
 )
@@ -36,7 +36,7 @@ type UserRepository interface {
 }
 
 type BusETAs interface {
-	GetBusArrivalV2(busStopCode string, serviceNo string) (datamall.BusArrivalV2, error)
+	GetBusArrival(busStopCode string, serviceNo string) (datamall.BusArrival, error)
 }
 
 // BusEtaBot contains all the bot's dependencies
