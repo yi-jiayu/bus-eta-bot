@@ -8,6 +8,7 @@
 #
 
 *app.yaml
+coverage.txt
 
 .gcloudignore
 # If you would like to upload your .git directory, .gitignore file or files
