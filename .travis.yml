@@ -18,7 +18,7 @@ before_install:
   - if [ -n "$GCLOUD_VERSION" ]; then gcloud --quiet components update --version $GCLOUD_VERSION; fi
 install: true
 script:
-  - go test -coverprofile=coverage.txt -covermode=count
+  - go test -coverprofile=coverage.txt -covermode=count ./...
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 before_deploy:
