@@ -1,14 +1,35 @@
 package busetabot
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
-	"strings"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/telegram-bot-api"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
+
+func CollectResponsesWithTimeout(responses <-chan Response, timeout time.Duration) (collected []Response, err error) {
+	for {
+		deadline := time.NewTimer(timeout)
+		select {
+		case r, ok := <-responses:
+			if !ok {
+				return
+			}
+			collected = append(collected, r)
+		case <-deadline.C:
+			err = errors.New("timed out")
+			return
+		}
+		deadline.Stop()
+	}
+}
 
 func TestFallbackCommandHandler(t *testing.T) {
 	t.Parallel()
@@ -91,293 +112,133 @@ func TestFallbackCommandHandler(t *testing.T) {
 }
 
 func TestAboutHandler(t *testing.T) {
-	t.Parallel()
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
+	bot := new(BusEtaBot)
+	message := MockMessage()
+	responses := make(chan Response, ResponseBufferSize)
+	go AboutHandler(context.Background(), bot, &message, responses)
+	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
-
-	testCases := []struct {
-		Name     string
-		ChatType string
-		Expected Request
-	}{
-		{
-			Name:     "Private chat",
-			ChatType: ChatTypePrivate,
-			Expected: Request{
-				Path: "/bot/sendMessage",
-				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
-			},
-		},
-		{
-			Name: "Group, supergroup or channel",
-			Expected: Request{
-				Path: "/bot/sendMessage",
-				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_to_message_id=1&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
-			},
-		},
+	expected := []Response{
+		ok(telegram.SendMessageRequest{
+			ChatID: 1,
+			Text:   "Bus Eta Bot VERSION\nhttps://github.com/yi-jiayu/bus-eta-bot",
+		}),
 	}
+	assert.Equal(t, expected, actual)
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			message := MockMessageWithType(tc.ChatType)
-
-			err := AboutHandler(nil, &bot, &message)
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-
-			select {
-			case req := <-reqChan:
-				actual := req
-				expected := tc.Expected
-
-				if actual != expected {
-					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-					t.Fail()
-				}
-			case err := <-errChan:
-				t.Fatalf("%v", err)
-			}
-		})
-	}
 }
 
 func TestVersionHandler(t *testing.T) {
-	t.Parallel()
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
+	bot := new(BusEtaBot)
+	message := MockMessage()
+	responses := make(chan Response, ResponseBufferSize)
+	go VersionHandler(context.Background(), bot, &message, responses)
+	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
-
-	testCases := []struct {
-		Name     string
-		ChatType string
-		Expected Request
-	}{
-		{
-			Name:     "Private chat",
-			ChatType: ChatTypePrivate,
-			Expected: Request{
-				Path: "/bot/sendMessage",
-				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
-			},
-		},
-		{
-			Name: "Group, supergroup or channel",
-			Expected: Request{
-				Path: "/bot/sendMessage",
-				Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_to_message_id=1&text=Bus+Eta+Bot+VERSION%0Ahttps%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot",
-			},
-		},
+	expected := []Response{
+		ok(telegram.SendMessageRequest{
+			ChatID: 1,
+			Text:   "Bus Eta Bot VERSION\nhttps://github.com/yi-jiayu/bus-eta-bot",
+		}),
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			message := MockMessageWithType(tc.ChatType)
-
-			err := VersionHandler(nil, &bot, &message)
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-
-			select {
-			case req := <-reqChan:
-				actual := req
-				expected := tc.Expected
-
-				if actual != expected {
-					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-					t.Fail()
-				}
-			case err := <-errChan:
-				t.Fatalf("%v", err)
-			}
-		})
-	}
+	assert.Equal(t, expected, actual)
 }
 
 func TestStartHandler(t *testing.T) {
-	t.Parallel()
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
-	}
-
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+	bot := new(BusEtaBot)
 	message := MockMessage()
-
-	err := StartHandler(nil, &bot, &message)
+	responses := make(chan Response, ResponseBufferSize)
+	go StartHandler(context.Background(), bot, &message, responses)
+	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatal(err)
 	}
-
-	select {
-	case req := <-reqChan:
-		actual := req
-		expected := Request{
-			Path: "/bot/sendMessage",
-			Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&reply_markup=%7B%22inline_keyboard%22%3A%5B%5B%7B%22text%22%3A%22Get+etas+for+bus+stop+96049%22%2C%22callback_data%22%3A%22%7B%5C%22t%5C%22%3A%5C%22eta_demo%5C%22%7D%22%7D%5D%2C%5B%7B%22text%22%3A%22Try+an+inline+query%22%2C%22switch_inline_query_current_chat%22%3A%22Tropicana%22%7D%5D%5D%7D&text=Hello+Jiayu%2C%0A%0ABus+Eta+Bot+is+a+Telegram+bot+which+can+tell+you+how+long+you+have+to+wait+for+your+bus+to+arrive.%0A%0ATo+get+started%2C+try+sending+me+a+bus+stop+code+such+as+%6096049%60+to+get+etas+for.%0A%0AAlternatively%2C+you+can+also+search+for+bus+stops+by+sending+me+an+inline+query.+To+try+this+out%2C+type+%40BusEtaBot+followed+by+a+bus+stop+code%2C+description+or+road+name+in+any+chat.%0A%0AThanks+for+trying+out+Bus+Eta+Bot%21+If+you+find+Bus+Eta+Bot+useful%2C+do+help+to+spread+the+word+or+send+%2Ffeedback+to+leave+some+feedback+about+how+to+help+make+Bus+Eta+Bot+even+better%21%0A%0AIf+you%27re+stuck%2C+you+can+send+%2Fhelp+to+view+help.",
-		}
-
-		if actual != expected {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	case err := <-errChan:
-		t.Fatalf("%v", err)
+	s := "SUTD"
+	expected := []Response{
+		ok(telegram.SendMessageRequest{
+			ChatID:    1,
+			Text:      "Hello Jiayu,\n\nBus Eta Bot is a Telegram bot which can tell you how long you have to wait for your bus to arrive.\n\nTo get started, try sending me a bus stop code such as `96049` to get etas for.\n\nAlternatively, you can also search for bus stops by sending me an inline query. To try this out, type @BusEtaBot followed by a bus stop code, description or road name in any chat.\n\nThanks for trying out Bus Eta Bot! If you find Bus Eta Bot useful, do help to spread the word or send /feedback to leave some feedback about how to help make Bus Eta Bot even better!\n\nIf you're stuck, you can send /help to view help.",
+			ParseMode: "markdown",
+			ReplyMarkup: &telegram.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegram.InlineKeyboardButton{
+					{
+						{
+							Text:         "Get etas for bus stop 96049",
+							CallbackData: "{\"t\":\"eta_demo\"}",
+						},
+						{
+							Text:                         "Try an inline query",
+							CallbackData:                 "",
+							SwitchInlineQueryCurrentChat: &s,
+						},
+					},
+				},
+			},
+		}),
 	}
+	assert.Equal(t, expected, actual)
 }
 
 func TestHelpHandler(t *testing.T) {
-	t.Parallel()
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
-	}
-
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+	bot := new(BusEtaBot)
 	message := MockMessage()
-
-	err := HelpHandler(nil, &bot, &message)
+	responses := make(chan Response, ResponseBufferSize)
+	go HelpHandler(context.Background(), bot, &message, responses)
+	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatal(err)
 	}
-
-	select {
-	case req := <-reqChan:
-		actual := req
-		expected := Request{
-			Path: "/bot/sendMessage",
-			Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&text=You+can+find+help+on+how+to+use+Bus+Eta+Bot+%5Bhere%5D%28$HELP_URL%29.", "$HELP_URL", url.QueryEscape(HelpURL), 1),
-		}
-
-		if actual != expected {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	case err := <-errChan:
-		t.Fatalf("%v", err)
+	expected := []Response{
+		ok(telegram.SendMessageRequest{
+			ChatID:    1,
+			Text:      "You can find help on how to use Bus Eta Bot [here](http://telegra.ph/Bus-Eta-Bot-Help-02-23).",
+			ParseMode: "markdown",
+		}),
 	}
+	assert.Equal(t, expected, actual)
 }
 
 func TestPrivacyHandler(t *testing.T) {
-	t.Parallel()
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
-	}
-
-	sv := NewStreetViewAPI("API_KEY")
-
-	bot := NewBusEtaBot(handlers, tg, nil, &sv, nil)
+	bot := new(BusEtaBot)
 	message := MockMessage()
-
-	err := PrivacyHandler(nil, &bot, &message)
+	responses := make(chan Response, ResponseBufferSize)
+	PrivacyHandler(context.Background(), bot, &message, responses)
+	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatal(err)
 	}
-
-	select {
-	case req := <-reqChan:
-		actual := req
-		expected := Request{
-			Path: "/bot/sendMessage",
-			Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&text=You+can+find+Bus+Eta+Bot%27s+privacy+policy+%5Bhere%5D%28$PRIVACY_POLICY_URL%29.", "$PRIVACY_POLICY_URL", url.QueryEscape(PrivacyPolicyURL), 1),
-		}
-
-		if actual != expected {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	case err := <-errChan:
-		t.Fatalf("%v", err)
+	expected := []Response{
+		ok(telegram.SendMessageRequest{
+			ChatID:    1,
+			Text:      "You can find Bus Eta Bot's privacy policy [here](https://t.me/iv?url=https%3A%2F%2Fgithub.com%2Fyi-jiayu%2Fbus-eta-bot%2Fblob%2Fmaster%2FPRIVACY.md&rhash=a44cb5372834ee).",
+			ParseMode: "markdown",
+		}),
 	}
+	assert.Equal(t, expected, actual)
 }
 
 func TestFeedbackCmdHandler(t *testing.T) {
-	t.Parallel()
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
+	bot := new(BusEtaBot)
+	message := MockMessage()
+	responses := make(chan Response, ResponseBufferSize)
+	FeedbackCmdHandler(context.Background(), bot, &message, responses)
+	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
-
-	testCases := []struct {
-		Name     string
-		ChatType string
-		Expected Request
-	}{
-		{
-			Name:     "Private chat",
-			ChatType: ChatTypePrivate,
-			Expected: Request{
-				Path: "/bot/sendMessage",
-				Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&text=Oops%2C+the+feedback+command+has+not+been+implemented+yet.+In+the+meantime%2C+you+can+raise+issues+or+show+your+support+for+Bus+Eta+Bot+at+its+GitHub+repository+%5Bhere%5D%28$REPO_URL%29.", "$REPO_URL", url.QueryEscape(RepoURL), 1),
-			},
-		},
-		{
-			Name: "Group, supergroup or channel",
-			Expected: Request{
-				Path: "/bot/sendMessage",
-				Body: strings.Replace("chat_id=1&disable_notification=false&disable_web_page_preview=false&parse_mode=markdown&reply_to_message_id=1&text=Oops%2C+the+feedback+command+has+not+been+implemented+yet.+In+the+meantime%2C+you+can+raise+issues+or+show+your+support+for+Bus+Eta+Bot+at+its+GitHub+repository+%5Bhere%5D%28$REPO_URL%29.", "$REPO_URL", url.QueryEscape(RepoURL), 1),
-			},
-		},
+	expected := []Response{
+		ok(telegram.SendMessageRequest{
+			ChatID:      1,
+			Text:        "Oops, the feedback command has not been implemented yet. In the meantime, you can raise issues or show your support for Bus Eta Bot at its GitHub repository [here](https://github.com/yi-jiayu/bus-eta-bot).",
+			ParseMode:   "markdown",
+			ReplyMarkup: (*telegram.InlineKeyboardMarkup)(nil),
+		}),
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			message := MockMessageWithType(tc.ChatType)
-
-			err := FeedbackCmdHandler(nil, &bot, &message)
-			if err != nil {
-				t.Fatalf("%v", err)
-			}
-
-			select {
-			case req := <-reqChan:
-				actual := req
-				expected := tc.Expected
-
-				if actual != expected {
-					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-					t.Fail()
-				}
-			case err := <-errChan:
-				t.Fatalf("%v", err)
-			}
-		})
-	}
+	assert.Equal(t, expected, actual)
 }
 
 func TestShowFavouritesCmdHandler(t *testing.T) {
@@ -443,12 +304,6 @@ func TestShowFavouritesCmdHandler(t *testing.T) {
 func TestHideFavouritesCmdHandler(t *testing.T) {
 	t.Parallel()
 
-	type TestCase struct {
-		Name       string
-		Favourites []string
-		Expected   Request
-	}
-
 	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
 	defer tgAPI.Close()
 
@@ -461,10 +316,8 @@ func TestHideFavouritesCmdHandler(t *testing.T) {
 
 	message := MockMessage()
 
-	err := HideFavouritesCmdHandler(nil, &bot, &message)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	responses := make(chan Response)
+	go HideFavouritesCmdHandler(nil, &bot, &message, responses)
 
 	select {
 	case req := <-reqChan:
@@ -477,5 +330,9 @@ func TestHideFavouritesCmdHandler(t *testing.T) {
 		}
 	case err := <-errChan:
 		t.Fatalf("%v", err)
+	case r := <-responses:
+		if err := r.Error; err != nil {
+			t.Fatalf("%+v", err)
+		}
 	}
 }

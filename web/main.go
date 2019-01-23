@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"go.opencensus.io/trace"
@@ -17,7 +18,10 @@ import (
 	"google.golang.org/appengine/urlfetch"
 
 	. "github.com/yi-jiayu/bus-eta-bot/v4"
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
+
+var BotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
 
 var (
 	busStopRepository BusStopRepository
@@ -62,7 +66,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	tg := &tgbotapi.BotAPI{
 		APIEndpoint: tgbotapi.APIEndpoint,
-		Token:       os.Getenv("TELEGRAM_BOT_TOKEN"),
+		Token:       BotToken,
 		Client:      client,
 	}
 
@@ -79,6 +83,14 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	bot := NewBusEtaBot(DefaultHandlers(), tg, dm, &sv, &mp)
 	bot.BusStops = busStopRepository
 	bot.Users = userRepository
+
+	telegramService, err := telegram.NewClient(BotToken, client)
+	if err != nil {
+		err = errors.Wrap(err, "error creating telegram service")
+		log.Errorf(ctx, "%+v", err)
+		return
+	}
+	bot.TelegramService = telegramService
 
 	bot.HandleUpdate(ctx, &update)
 }

@@ -39,6 +39,14 @@ func (s *Spy) MessageHandler(context.Context, *BusEtaBot, *tgbotapi.Message) err
 	return nil
 }
 
+func (s *Spy) CommandHandler(context.Context, *BusEtaBot, *tgbotapi.Message, chan<- Response) {
+	if s.SpyFunc != nil {
+		s.SpyFunc()
+	}
+
+	s.Called = true
+}
+
 func (s *Spy) CallbackQueryHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	if s.SpyFunc != nil {
 		s.SpyFunc()
@@ -155,13 +163,13 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 
 	busEtaBot := BusEtaBot{
 		Handlers: Handlers{
-			CommandHandlers: map[string]MessageHandler{
-				"start":   startCmdSpy.MessageHandler,
-				"about":   aboutCmdSpy.MessageHandler,
-				"version": versionCmdSpy.MessageHandler,
-				"help":    helpCmdSpy.MessageHandler,
-				"privacy": privacyCmdSpy.MessageHandler,
-				"eta":     etaCmdSpy.MessageHandler,
+			CommandHandlers: map[string]CommandHandler{
+				"start":   startCmdSpy.CommandHandler,
+				"about":   aboutCmdSpy.CommandHandler,
+				"version": versionCmdSpy.CommandHandler,
+				"help":    helpCmdSpy.CommandHandler,
+				"privacy": privacyCmdSpy.CommandHandler,
+				"eta":     etaCmdSpy.CommandHandler,
 			},
 			FallbackCommandHandler: fallbackCmdSpy.MessageHandler,
 			TextHandler:            textHandlerSpy.MessageHandler,

@@ -10,7 +10,12 @@ import (
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine/log"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
+
+// ResponseBufferSize is the size of the channel used to queue responses to be sent via the Telegram Bot API.
+const ResponseBufferSize = 10
 
 var handlers = Handlers{
 	CommandHandlers:           commandHandlers,
@@ -39,6 +44,10 @@ type BusETAs interface {
 	GetBusArrival(busStopCode string, serviceNo string) (datamall.BusArrival, error)
 }
 
+type TelegramService interface {
+	Do(request telegram.Request) error
+}
+
 // BusEtaBot contains all the bot's dependencies
 type BusEtaBot struct {
 	Handlers            Handlers
@@ -49,11 +58,12 @@ type BusEtaBot struct {
 	NowFunc             func() time.Time
 	BusStops            BusStopRepository
 	Users               UserRepository
+	TelegramService     TelegramService
 }
 
 // Handlers contains all the handlers used by the bot.
 type Handlers struct {
-	CommandHandlers           map[string]MessageHandler
+	CommandHandlers           map[string]CommandHandler
 	FallbackCommandHandler    MessageHandler
 	TextHandler               MessageHandler
 	LocationHandler           MessageHandler
@@ -62,6 +72,23 @@ type Handlers struct {
 	ChosenInlineResultHandler func(ctx context.Context, bot *BusEtaBot, cir *tgbotapi.ChosenInlineResult) error
 	MessageErrorHandler       func(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, err error)
 	CallbackErrorHandler      func(ctx context.Context, bot *BusEtaBot, query *tgbotapi.CallbackQuery, err error)
+}
+
+type Response struct {
+	Request telegram.Request
+	Error   error
+}
+
+func ok(r telegram.Request) Response {
+	return Response{
+		Request: r,
+	}
+}
+
+func notOk(err error) Response {
+	return Response{
+		Error: err,
+	}
 }
 
 // DefaultHandlers returns a default set of handlers.
@@ -84,6 +111,20 @@ func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm BusETAs, sv *Street
 	return bot
 }
 
+// Dispatch makes requests to the Telegram Bot API for each response in responses.
+func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
+	for r := range responses {
+		err := r.Error
+		if err != nil {
+			log.Errorf(ctx, "%+v", err)
+		}
+		err = bot.TelegramService.Do(r.Request)
+		if err != nil {
+			log.Errorf(ctx, "%+v", err)
+		}
+	}
+}
+
 // HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type
 func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update) {
 	var wg sync.WaitGroup
@@ -100,22 +141,7 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 				}
 			}()
 		}
-
-		if command := message.Command(); command != "" {
-			bot.handleCommand(ctx, command, message)
-			return
-		}
-
-		if text := message.Text; text != "" {
-			bot.handleText(ctx, message)
-			return
-		}
-
-		if location := message.Location; location != nil {
-			bot.handleLocation(ctx, message)
-			return
-		}
-
+		bot.handleMessage(ctx, message)
 		return
 	}
 
@@ -161,12 +187,28 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 	}
 }
 
+func (bot *BusEtaBot) handleMessage(ctx context.Context, message *tgbotapi.Message) {
+	if command := message.Command(); command != "" {
+		bot.handleCommand(ctx, command, message)
+		return
+	}
+
+	if text := message.Text; text != "" {
+		bot.handleText(ctx, message)
+		return
+	}
+
+	if location := message.Location; location != nil {
+		bot.handleLocation(ctx, message)
+		return
+	}
+}
+
 func (bot *BusEtaBot) handleCommand(ctx context.Context, command string, message *tgbotapi.Message) {
 	if handler, exists := bot.Handlers.CommandHandlers[command]; exists {
-		err := handler(ctx, bot, message)
-		if err != nil {
-			messageErrorHandler(ctx, bot, message, err)
-		}
+		responses := make(chan Response, ResponseBufferSize)
+		go bot.Dispatch(ctx, responses)
+		handler(ctx, bot, message, responses)
 	} else {
 		err := bot.Handlers.FallbackCommandHandler(ctx, bot, message)
 		if err != nil {

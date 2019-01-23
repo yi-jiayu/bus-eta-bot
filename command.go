@@ -6,6 +6,9 @@ import (
 	"regexp"
 
 	"github.com/yi-jiayu/telegram-bot-api"
+	"google.golang.org/appengine/log"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
 // Links to relevant documents
@@ -19,7 +22,7 @@ var (
 	busStopRegex = regexp.MustCompile(`\d{5}`)
 )
 
-var commandHandlers = map[string]MessageHandler{
+var commandHandlers = map[string]CommandHandler{
 	"start":          StartHandler,
 	"about":          AboutHandler,
 	"version":        VersionHandler,
@@ -34,6 +37,9 @@ var commandHandlers = map[string]MessageHandler{
 	"hidefavourites": HideFavouritesCmdHandler,
 	"hidefavorites":  HideFavouritesCmdHandler,
 }
+
+// CommandHandler is a handler for incoming commands.
+type CommandHandler func(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response)
 
 // FallbackCommandHandler catches commands which don't match any other handler.
 func FallbackCommandHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
@@ -59,141 +65,105 @@ func FallbackCommandHandler(ctx context.Context, bot *BusEtaBot, message *tgbota
 }
 
 // StartHandler handles a /start command.
-func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
-	chatID := message.Chat.ID
-	firstName := message.From.FirstName
+func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionStartCommand, message.Chat.Type)
 
-	text := "Hello " + firstName + ",\n\nBus Eta Bot is a Telegram bot which can tell you how long you have to " +
+	text := "Hello " + message.From.FirstName + ",\n\nBus Eta Bot is a Telegram bot which can tell you how long you have to " +
 		"wait for your bus to arrive.\n\nTo get started, try sending me a bus stop code such as `96049` to " +
 		"get etas for.\n\nAlternatively, you can also search for bus stops by sending me an inline query. To " +
 		"try this out, type @BusEtaBot followed by a bus stop code, description or road name in any chat." +
 		"\n\nThanks for trying out Bus Eta Bot! If you find Bus Eta Bot useful, do help to spread the word or " +
 		"send /feedback to leave some feedback about how to help make Bus Eta Bot even better!\n\n" +
 		"If you're stuck, you can send /help to view help."
-
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-
-	s1, s2 := `{"t":"eta_demo"}`, "Tropicana"
-	reply.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
+	query := "SUTD"
+	request := telegram.SendMessageRequest{
+		ChatID:    message.Chat.ID,
+		Text:      text,
+		ParseMode: "markdown",
+		ReplyMarkup: &telegram.InlineKeyboardMarkup{
+			InlineKeyboard: [][]telegram.InlineKeyboardButton{
 				{
-					Text:         "Get etas for bus stop 96049",
-					CallbackData: &s1,
-				},
-			},
-			{
-				{
-					Text:                         "Try an inline query",
-					SwitchInlineQueryCurrentChat: &s2,
+					{
+						Text:         "Get etas for bus stop 96049",
+						CallbackData: `{"t":"eta_demo"}`,
+					},
+					{
+						Text:                         "Try an inline query",
+						SwitchInlineQueryCurrentChat: &query,
+					},
 				},
 			},
 		},
 	}
-
-	if !message.Chat.IsPrivate() {
-		messageID := message.MessageID
-		reply.ReplyToMessageID = messageID
-	}
-
-	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionStartCommand, message.Chat.Type)
-
-	_, err := bot.Telegram.Send(reply)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func aboutMessage(message *tgbotapi.Message) tgbotapi.MessageConfig {
-	chatID := message.Chat.ID
-
-	text := "Bus Eta Bot " + Version + "\n" + RepoURL
-	reply := tgbotapi.NewMessage(chatID, text)
-	if !message.Chat.IsPrivate() {
-		messageID := message.MessageID
-		reply.ReplyToMessageID = messageID
-	}
-
-	return reply
+	responses <- ok(request)
+	close(responses)
 }
 
 // VersionHandler handles the /version command
-func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
-	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionVersionCommand, message.Chat.Type)
+func VersionHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
+	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionAboutCommand, message.Chat.Type)
 
-	reply := aboutMessage(message)
-	_, err := bot.Telegram.Send(reply)
-	return err
+	request := telegram.SendMessageRequest{
+		ChatID: message.Chat.ID,
+		Text:   "Bus Eta Bot " + Version + "\n" + RepoURL,
+	}
+	responses <- ok(request)
+	close(responses)
 }
 
 // AboutHandler handles the /about command
-func AboutHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+func AboutHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionAboutCommand, message.Chat.Type)
 
-	reply := aboutMessage(message)
-	_, err := bot.Telegram.Send(reply)
-	return err
+	request := telegram.SendMessageRequest{
+		ChatID: message.Chat.ID,
+		Text:   "Bus Eta Bot " + Version + "\n" + RepoURL,
+	}
+	responses <- ok(request)
+	close(responses)
 }
 
 // FeedbackCmdHandler handles the /feedback command.
-func FeedbackCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
-	chatID := message.Chat.ID
-
-	text := fmt.Sprintf("Oops, the feedback command has not been implemented yet. In the meantime, you can raise issues or show your support for Bus Eta Bot at its GitHub repository [here](%s).", RepoURL)
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-	if !message.Chat.IsPrivate() {
-		messageID := message.MessageID
-		reply.ReplyToMessageID = messageID
-	}
-
+func FeedbackCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionFeedbackCommand, message.Chat.Type)
 
-	_, err := bot.Telegram.Send(reply)
-	return err
+	request := telegram.SendMessageRequest{
+		ChatID:    message.Chat.ID,
+		Text:      fmt.Sprintf("Oops, the feedback command has not been implemented yet. In the meantime, you can raise issues or show your support for Bus Eta Bot at its GitHub repository [here](%s).", RepoURL),
+		ParseMode: "markdown",
+	}
+	responses <- ok(request)
+	close(responses)
 }
 
 // HelpHandler handles the /help command
-func HelpHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
-	chatID := message.Chat.ID
-
-	text := fmt.Sprintf("You can find help on how to use Bus Eta Bot [here](%s).", HelpURL)
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-	if !message.Chat.IsPrivate() {
-		messageID := message.MessageID
-		reply.ReplyToMessageID = messageID
-	}
-
+func HelpHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionHelpCommand, message.Chat.Type)
 
-	_, err := bot.Telegram.Send(reply)
-	return err
+	request := telegram.SendMessageRequest{
+		ChatID:    message.Chat.ID,
+		Text:      fmt.Sprintf("You can find help on how to use Bus Eta Bot [here](%s).", HelpURL),
+		ParseMode: "markdown",
+	}
+	responses <- ok(request)
+	close(responses)
 }
 
 // PrivacyHandler handles the /privacy command.
-func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
-	chatID := message.Chat.ID
-
-	text := fmt.Sprintf("You can find Bus Eta Bot's privacy policy [here](%s).", PrivacyPolicyURL)
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-	if !message.Chat.IsPrivate() {
-		messageID := message.MessageID
-		reply.ReplyToMessageID = messageID
-	}
-
+func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionPrivacyCommand, message.Chat.Type)
 
-	_, err := bot.Telegram.Send(reply)
-	return err
+	request := telegram.SendMessageRequest{
+		ChatID:    message.Chat.ID,
+		Text:      fmt.Sprintf("You can find Bus Eta Bot's privacy policy [here](%s).", PrivacyPolicyURL),
+		ParseMode: "markdown",
+	}
+	responses <- ok(request)
+	close(responses)
 }
 
 // EtaHandler handles the /eta command.
-func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	chatID := message.Chat.ID
 
 	var reply tgbotapi.MessageConfig
@@ -204,14 +174,14 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 		} else if err == errBusStopIDInvalid {
 			reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
 		} else if err != nil {
-			return err
+			log.Errorf(ctx, "%+v", err)
 		} else {
 			text, err := EtaMessageText(bot, busStopID, serviceNos)
 			if err != nil {
 				if err == errNotFound {
 					reply = tgbotapi.NewMessage(chatID, text)
 				} else {
-					return err
+					log.Errorf(ctx, "%+v", err)
 				}
 			} else {
 				reply = tgbotapi.NewMessage(chatID, text)
@@ -219,7 +189,7 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 
 				replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
 				if err != nil {
-					return err
+					log.Errorf(ctx, "%+v", err)
 				}
 				reply.ReplyMarkup = replyMarkup
 			}
@@ -232,7 +202,9 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 		go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithArgs, message.Chat.Type)
 
 		_, err = bot.Telegram.Send(reply)
-		return err
+		if err != nil {
+			log.Errorf(ctx, "%+v", err)
+		}
 	}
 
 	text := "Alright, send me a bus stop code to get etas for."
@@ -248,7 +220,9 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) 
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
 
 	_, err := bot.Telegram.Send(reply)
-	return err
+	if err != nil {
+		log.Errorf(ctx, "%+v", err)
+	}
 }
 
 func showFavourites(bot *BusEtaBot, message *tgbotapi.Message, favourites []string) error {
@@ -283,19 +257,23 @@ func showFavourites(bot *BusEtaBot, message *tgbotapi.Message, favourites []stri
 }
 
 // ShowFavouritesCmdHandler will display a reply keyboard for quick access to the user's favourites.
-func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	userID := message.From.ID
 
 	favourites, err := GetUserFavourites(ctx, userID)
 	if err != nil {
-		return err
+		log.Errorf(ctx, "%+v", err)
 	}
 
-	return showFavourites(bot, message, favourites)
+	err = showFavourites(bot, message, favourites)
+	if err != nil {
+		responses <- notOk(err)
+	}
+	close(responses)
 }
 
 // HideFavouritesCmdHandler hides the favourites keyboard.
-func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message) error {
+func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	chatID := message.Chat.ID
 
 	reply := tgbotapi.NewMessage(chatID, "Favourites keyboard hidden.")
@@ -304,7 +282,10 @@ func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbo
 	}
 
 	_, err := bot.Telegram.Send(reply)
-	return err
+	if err != nil {
+		responses <- notOk(err)
+	}
+	close(responses)
 }
 
 // StreetviewCmdHandler handlers the /streetview command.
