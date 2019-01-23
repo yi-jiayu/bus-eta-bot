@@ -316,21 +316,25 @@ func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.
 		return errors.Wrap(err, "error updating user favourites")
 	}
 
-	var keyboard [][]tgbotapi.KeyboardButton
-	for _, fav := range favourites {
-		keyboard = append(keyboard, []tgbotapi.KeyboardButton{
-			{
-				Text: fav,
-			},
-		})
-	}
-
 	text := fmt.Sprintf("Eta query `%s` %s favourites!", data.Argstr, action)
 	msg := tgbotapi.NewMessage(int64(userID), text)
 	msg.ParseMode = "markdown"
-	msg.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-		Keyboard:       keyboard,
-		ResizeKeyboard: true,
+
+	if len(favourites) > 0 {
+		var keyboard [][]tgbotapi.KeyboardButton
+		for _, fav := range favourites {
+			keyboard = append(keyboard, []tgbotapi.KeyboardButton{
+				{
+					Text: fav,
+				},
+			})
+		}
+		msg.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
+			Keyboard:       keyboard,
+			ResizeKeyboard: true,
+		}
+	} else {
+		msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
 	}
 
 	answer := tgbotapi.NewCallback(cbq.ID, "")
