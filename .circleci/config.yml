@@ -18,9 +18,11 @@ jobs:
             mkdir -p $ARTIFACTS
             mkdir -p $TEST_RESULTS/go-test
       - restore_cache:
+          name: Restore Go module cache
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - restore_cache:
+          name: Restore cached gcloud installation
           keys:
             - google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
       - run:
@@ -51,10 +53,12 @@ jobs:
             trap store_test_output EXIT
             go test -v -coverprofile=coverage.txt -covermode=count ./... 2>&1 | tee go-test.out
       - save_cache:
+          name: Save Go module cache
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
       - save_cache:
+          name: Cache gcloud installation
           key: google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
           paths:
             - "/tmp/google-cloud-sdk"
