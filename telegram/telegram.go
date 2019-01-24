@@ -18,21 +18,12 @@ func (err Error) Error() string {
 	return err.Description
 }
 
-type InlineKeyboardButton struct {
-	Text                         string
-	CallbackData                 string
-	SwitchInlineQueryCurrentChat *string
-}
-
-type InlineKeyboardMarkup struct {
-	InlineKeyboard [][]InlineKeyboardButton
-}
-
 type SendMessageRequest struct {
-	ChatID      int64
-	Text        string
-	ParseMode   string
-	ReplyMarkup *InlineKeyboardMarkup
+	ChatID           int64
+	Text             string
+	ParseMode        string
+	ReplyToMessageID int
+	ReplyMarkup      ReplyMarkup
 }
 
 func (r SendMessageRequest) config() tgbotapi.MessageConfig {
@@ -40,27 +31,11 @@ func (r SendMessageRequest) config() tgbotapi.MessageConfig {
 	if r.ParseMode != "" {
 		message.ParseMode = r.ParseMode
 	}
+	if r.ReplyToMessageID != 0 {
+		message.ReplyToMessageID = r.ReplyToMessageID
+	}
 	if r.ReplyMarkup != nil {
-		var buttons [][]tgbotapi.InlineKeyboardButton
-		for _, row := range r.ReplyMarkup.InlineKeyboard {
-			var r []tgbotapi.InlineKeyboardButton
-			for _, button := range row {
-				b := tgbotapi.InlineKeyboardButton{
-					Text: button.Text,
-				}
-				if d := button.CallbackData; d != "" {
-					b.CallbackData = &d
-				}
-				if p := button.SwitchInlineQueryCurrentChat; p != nil {
-					b.SwitchInlineQueryCurrentChat = p
-				}
-				r = append(r, b)
-			}
-			buttons = append(buttons, r)
-		}
-		message.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-			InlineKeyboard: buttons,
-		}
+		message.ReplyMarkup = r.ReplyMarkup.markup()
 	}
 	return message
 }
