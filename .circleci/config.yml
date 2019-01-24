@@ -9,6 +9,7 @@ jobs:
       GO111MODULE: "on"
       GCLOUD_VERSION: "230.0.0"
     steps:
+      - run: GO111MODULE=off go get github.com/jstemmer/go-junit-report
       - checkout
       - run: mkdir -p $TEST_RESULTS
       - restore_cache:
@@ -31,7 +32,6 @@ jobs:
             if [ -n "$GCLOUD_VERSION" ]; then
               gcloud --quiet components update --version $GCLOUD_VERSION
             fi
-      - run: go get github.com/jstemmer/go-junit-report
       - run:
           name: Run unit tests
           command: |
