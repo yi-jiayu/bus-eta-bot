@@ -1,0 +1,48 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.11
+    working_directory: /go/src/github.com/yi-jiayu/bus-eta-bot
+    environment:
+      TEST_RESULTS: /tmp/test-results
+      GO111MODULE: "on"
+      GCLOUD_VERSION: "230.0.0"
+    steps:
+      - checkout
+      - run: mkdir -p $TEST_RESULTS
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+            - google-cloud-sdk-v1-{{ .Environment.GCLOUD_VERSION }}
+      - run:
+          name: Install gcloud
+          command: |
+            if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then
+              curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz |
+              tar -z -x -C $HOME -f -
+            fi
+            source $HOME/google-cloud-sdk/path.bash.inc
+            gcloud --quiet components install app-engine-go
+            gcloud --quiet components install app-engine-python
+            if [ -n "$GCLOUD_VERSION" ]; then
+              gcloud --quiet components update --version $GCLOUD_VERSION
+            fi
+      - run:
+          name: Run unit tests
+          command: |
+            trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+            go test -coverprofile=coverage.txt -covermode=count ./... | tee ${TEST_RESULTS}/go-test.out
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - save_cache:
+          key: google-cloud-sdk-v1-{{ .Environment.GCLOUD_VERSION }}
+          paths:
+            - "$HOME/google-cloud-sdk"
+      - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: /tmp/test-results
+          destination: raw-test-output
+      - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+          path: /tmp/test-results
