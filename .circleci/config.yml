@@ -35,7 +35,12 @@ jobs:
       - run:
           name: Run unit tests
           command: |
-            trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+            store_test_output()
+            {
+              go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml
+              cp coverage.txt ${TEST_RESULTS}/
+            }
+            trap store_test_output EXIT
             go test -coverprofile=coverage.txt -covermode=count ./... | tee ${TEST_RESULTS}/go-test.out
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
