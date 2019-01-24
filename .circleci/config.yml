@@ -20,6 +20,8 @@ jobs:
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
+      - restore_cache:
+          keys:
             - google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
       - run:
           name: Install gcloud
