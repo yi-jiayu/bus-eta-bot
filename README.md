@@ -1,8 +1,8 @@
 # Bus Eta Bot
 [![Weekly Users](https://us-central1-bus-eta-bot.cloudfunctions.net/bus-eta-bot-weekly-users)](https://us-central1-bus-eta-bot.cloudfunctions.net/bus-eta-bot-weekly-users)
 [![Build Status](https://travis-ci.org/yi-jiayu/bus-eta-bot.svg?branch=master)](https://travis-ci.org/yi-jiayu/bus-eta-bot)
-[![Build Status](https://semaphoreci.com/api/v1/yi-jiayu/bus-eta-bot/branches/master/shields_badge.svg)](https://semaphoreci.com/yi-jiayu/bus-eta-bot)
-[![CircleCI](https://circleci.com/gh/yi-jiayu/bus-eta-bot.svg?style=shield)](https://circleci.com/gh/yi-jiayu/bus-eta-bot)
+[![Build Status](https://semaphoreci.com/api/v1/yi-jiayu/bus-eta-bot/branches/master/badge.svg)](https://semaphoreci.com/yi-jiayu/bus-eta-bot)
+[![CircleCI](https://circleci.com/gh/yi-jiayu/bus-eta-bot.svg?style=svg)](https://circleci.com/gh/yi-jiayu/bus-eta-bot)
 [![codecov](https://codecov.io/gh/yi-jiayu/bus-eta-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/yi-jiayu/bus-eta-bot)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yi-jiayu/bus-eta-bot)](https://goreportcard.com/report/github.com/yi-jiayu/bus-eta-bot)
 
