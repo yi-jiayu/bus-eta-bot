@@ -11,19 +11,19 @@ jobs:
     steps:
       - run: GO111MODULE=off go get github.com/jstemmer/go-junit-report
       - checkout
-      - run: mkdir -p $TEST_RESULTS
+      - run: mkdir -p $TEST_RESULTS/go
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
-            - google-cloud-sdk-v1-{{ .Environment.GCLOUD_VERSION }}
+            - google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
       - run:
           name: Install gcloud
           command: |
-            if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then
+            if [ ! -f "/tmp/google-cloud-sdk/bin/gcloud" ]; then
               curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz |
-              tar -z -x -C $HOME -f -
+              tar -z -x -C /tmp -f -
             fi
-            echo 'source $HOME/google-cloud-sdk/path.bash.inc' >> $BASH_ENV
+            echo 'source /tmp/google-cloud-sdk/path.bash.inc' >> $BASH_ENV
       - run:
           name: Update gcloud
           command: |
@@ -37,7 +37,7 @@ jobs:
           command: |
             store_test_output()
             {
-              go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml
+              go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go/results.xml
               cp coverage.txt ${TEST_RESULTS}/
             }
             trap store_test_output EXIT
@@ -47,12 +47,11 @@ jobs:
           paths:
             - "/go/pkg/mod"
       - save_cache:
-          key: google-cloud-sdk-v1-{{ .Environment.GCLOUD_VERSION }}
+          key: google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
           paths:
-            - "$HOME/google-cloud-sdk"
+            - "/tmp/google-cloud-sdk"
       - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: /tmp/test-results
-          destination: raw-test-output
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
           path: /tmp/test-results
       - run:
