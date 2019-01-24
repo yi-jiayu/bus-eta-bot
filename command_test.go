@@ -113,6 +113,57 @@ func TestFallbackCommandHandler(t *testing.T) {
 	}
 }
 
+func TestEtaHandler(t *testing.T) {
+	type testCase struct {
+		Name     string
+		ChatType string
+		Text     string
+		Expected []Response
+	}
+	testCases := []testCase{
+		{
+			Name:     "without arguments, in private chat",
+			ChatType: "private",
+			Text:     "/eta",
+			Expected: []Response{
+				ok(telegram.SendMessageRequest{
+					ChatID:      1,
+					Text:        "Alright, send me a bus stop code to get etas for.",
+					ReplyMarkup: telegram.NewForceReply(true),
+				}),
+			},
+		},
+		{
+			Name:     "without arguments, in group chat",
+			ChatType: "group",
+			Text:     "/eta",
+			Expected: []Response{
+				ok(telegram.SendMessageRequest{
+					ChatID:           1,
+					Text:             "Alright, send me a bus stop code to get etas for.",
+					ReplyToMessageID: 1,
+					ReplyMarkup:      telegram.NewForceReply(true),
+				}),
+			},
+		},
+	}
+	bot := new(BusEtaBot)
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			message := MockMessageWithType(tc.ChatType)
+			message.Text = tc.Text
+			responses := make(chan Response, ResponseBufferSize)
+			go EtaHandler(context.Background(), bot, &message, responses)
+			actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			expected := tc.Expected
+			assert.Equal(t, expected, actual)
+		})
+	}
+}
+
 func TestAboutHandler(t *testing.T) {
 	bot := new(BusEtaBot)
 	message := MockMessage()
@@ -129,7 +180,6 @@ func TestAboutHandler(t *testing.T) {
 		}),
 	}
 	assert.Equal(t, expected, actual)
-
 }
 
 func TestVersionHandler(t *testing.T) {
@@ -237,7 +287,7 @@ func TestFeedbackCmdHandler(t *testing.T) {
 			ChatID:      1,
 			Text:        "Oops, the feedback command has not been implemented yet. In the meantime, you can raise issues or show your support for Bus Eta Bot at its GitHub repository [here](https://github.com/yi-jiayu/bus-eta-bot).",
 			ParseMode:   "markdown",
-			ReplyMarkup: (*telegram.InlineKeyboardMarkup)(nil),
+			ReplyMarkup: nil,
 		}),
 	}
 	assert.Equal(t, expected, actual)

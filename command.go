@@ -207,21 +207,17 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 	}
 
 	text := "Alright, send me a bus stop code to get etas for."
-	reply = tgbotapi.NewMessage(chatID, text)
+	resp := telegram.SendMessageRequest{
+		ChatID:      chatID,
+		Text:        text,
+		ReplyMarkup: telegram.NewForceReply(true),
+	}
 	if !message.Chat.IsPrivate() {
-		reply.ReplyToMessageID = message.MessageID
+		resp.ReplyToMessageID = message.MessageID
 	}
-	reply.ReplyMarkup = tgbotapi.ForceReply{
-		ForceReply: true,
-		Selective:  true,
-	}
-
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
-
-	_, err := bot.Telegram.Send(reply)
-	if err != nil {
-		log.Errorf(ctx, "%+v", err)
-	}
+	responses <- ok(resp)
+	close(responses)
 }
 
 func showFavourites(bot *BusEtaBot, message *tgbotapi.Message, favourites []string) error {
