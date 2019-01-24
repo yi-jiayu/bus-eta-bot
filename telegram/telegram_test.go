@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var s = "SUTD"
-
 func Test_sendMessage(t *testing.T) {
 	type testCase struct {
 		Name     string
@@ -58,7 +56,7 @@ func Test_sendMessage(t *testing.T) {
 							},
 							{
 								Text:                         "Resend",
-								SwitchInlineQueryCurrentChat: &s,
+								SwitchInlineQueryCurrentChat: NewSwitchInlineQueryCurrentChat("SUTD"),
 							},
 						},
 					},
@@ -73,7 +71,7 @@ func Test_sendMessage(t *testing.T) {
 								tgbotapi.NewInlineKeyboardButtonData("Refresh", `{"t":"refresh","b":"96049"}`),
 								tgbotapi.InlineKeyboardButton{
 									Text:                         "Resend",
-									SwitchInlineQueryCurrentChat: &s,
+									SwitchInlineQueryCurrentChat: NewSwitchInlineQueryCurrentChat("SUTD"),
 								},
 							},
 						},

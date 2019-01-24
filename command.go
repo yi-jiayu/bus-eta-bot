@@ -75,7 +75,6 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 		"\n\nThanks for trying out Bus Eta Bot! If you find Bus Eta Bot useful, do help to spread the word or " +
 		"send /feedback to leave some feedback about how to help make Bus Eta Bot even better!\n\n" +
 		"If you're stuck, you can send /help to view help."
-	query := "SUTD"
 	request := telegram.SendMessageRequest{
 		ChatID:    message.Chat.ID,
 		Text:      text,
@@ -89,7 +88,7 @@ func StartHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message
 					},
 					{
 						Text:                         "Try an inline query",
-						SwitchInlineQueryCurrentChat: &query,
+						SwitchInlineQueryCurrentChat: telegram.NewSwitchInlineQueryCurrentChat("SUTD"),
 					},
 				},
 			},
