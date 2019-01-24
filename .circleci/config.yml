@@ -9,6 +9,7 @@ jobs:
       GO111MODULE: "on"
       GCLOUD_VERSION: "230.0.0"
     steps:
+      - run: go get github.com/jstemmer/go-junit-report
       - checkout
       - run: mkdir -p $TEST_RESULTS
       - restore_cache:
@@ -22,7 +23,10 @@ jobs:
               curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz |
               tar -z -x -C $HOME -f -
             fi
-            source $HOME/google-cloud-sdk/path.bash.inc
+            echo 'source $HOME/google-cloud-sdk/path.bash.inc' >> $BASH_ENV
+      - run:
+          name: Update gcloud
+          command: |
             gcloud --quiet components install app-engine-go
             gcloud --quiet components install app-engine-python
             if [ -n "$GCLOUD_VERSION" ]; then
