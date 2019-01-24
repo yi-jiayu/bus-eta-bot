@@ -5,13 +5,18 @@ jobs:
       - image: circleci/golang:1.11
     working_directory: /go/src/github.com/yi-jiayu/bus-eta-bot
     environment:
+      ARTIFACTS: /tmp/artifacts
       TEST_RESULTS: /tmp/test-results
       GO111MODULE: "on"
       GCLOUD_VERSION: "230.0.0"
     steps:
       - run: GO111MODULE=off go get github.com/jstemmer/go-junit-report
       - checkout
-      - run: mkdir -p $TEST_RESULTS/go
+      - run:
+          name: Set up artifact and test result directories
+          command: |
+            mkdir -p $ARTIFACTS
+            mkdir -p $TEST_RESULTS/go-test
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -37,11 +42,11 @@ jobs:
           command: |
             store_test_output()
             {
-              go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go/results.xml
-              cp coverage.txt ${TEST_RESULTS}/
+              cp go-test.out coverage.txt ${ARTIFACTS}/
+              go-junit-report < go-test.out > ${TEST_RESULTS}/go-test/results.xml
             }
             trap store_test_output EXIT
-            go test -coverprofile=coverage.txt -covermode=count ./... | tee ${TEST_RESULTS}/go-test.out
+            go test -coverprofile=coverage.txt -covermode=count ./... | tee go-test.out
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
@@ -51,9 +56,11 @@ jobs:
           paths:
             - "/tmp/google-cloud-sdk"
       - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
-          path: /tmp/test-results
+          path: /tmp/artifacts
+          destination: artifacts
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
           path: /tmp/test-results
+          destination: test-results
       - run:
           name: Upload coverage
           command: bash <(curl -s https://codecov.io/bash)
