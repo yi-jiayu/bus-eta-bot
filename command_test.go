@@ -14,7 +14,9 @@ import (
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
-func CollectResponsesWithTimeout(responses <-chan Response, timeout time.Duration) (collected []Response, err error) {
+// collectResponsesWithTimeout returns a slice of responses received from the provided channel. If nothing is received
+// within timeout, it returns the responses received up until that point.
+func collectResponsesWithTimeout(responses <-chan Response, timeout time.Duration) (collected []Response, err error) {
 	for {
 		deadline := time.NewTimer(timeout)
 		select {
@@ -116,7 +118,7 @@ func TestAboutHandler(t *testing.T) {
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
 	go AboutHandler(context.Background(), bot, &message, responses)
-	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,7 +137,7 @@ func TestVersionHandler(t *testing.T) {
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
 	go VersionHandler(context.Background(), bot, &message, responses)
-	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +155,7 @@ func TestStartHandler(t *testing.T) {
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
 	go StartHandler(context.Background(), bot, &message, responses)
-	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +190,7 @@ func TestHelpHandler(t *testing.T) {
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
 	go HelpHandler(context.Background(), bot, &message, responses)
-	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +209,7 @@ func TestPrivacyHandler(t *testing.T) {
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
 	PrivacyHandler(context.Background(), bot, &message, responses)
-	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +228,7 @@ func TestFeedbackCmdHandler(t *testing.T) {
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
 	FeedbackCmdHandler(context.Background(), bot, &message, responses)
-	actual, err := CollectResponsesWithTimeout(responses, 5*time.Second)
+	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
