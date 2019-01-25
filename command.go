@@ -166,9 +166,8 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 	defer close(responses)
 
 	chatID := message.Chat.ID
-	var reply tgbotapi.MessageConfig
 	if args := message.CommandArguments(); args != "" {
-		busStopID, serviceNos, err := InferEtaQuery(args)
+		busStopCode, serviceNos, err := InferEtaQuery(args)
 		if err != nil {
 			resp := telegram.SendMessageRequest{
 				ChatID: chatID,
@@ -181,34 +180,23 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 			responses <- ok(resp)
 			return
 		}
-		text, err := EtaMessageText(bot, busStopID, serviceNos)
+		text, err := EtaMessageText(bot, busStopCode, serviceNos)
 		if err != nil {
-			if err == errNotFound {
-				reply = tgbotapi.NewMessage(chatID, text)
-			} else {
-				log.Errorf(ctx, "%+v", err)
-			}
-		} else {
-			reply = tgbotapi.NewMessage(chatID, text)
-			reply.ParseMode = "markdown"
-
-			replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
-			if err != nil {
-				log.Errorf(ctx, "%+v", err)
-			}
-			reply.ReplyMarkup = replyMarkup
+			responses <- notOk(err)
+			return
 		}
-
+		resp := telegram.SendMessageRequest{
+			ChatID:      chatID,
+			Text:        text,
+			ParseMode:   "markdown",
+			ReplyMarkup: NewETAMessageReplyMarkup(busStopCode, serviceNos, false),
+		}
 		if !message.Chat.IsPrivate() {
-			reply.ReplyToMessageID = message.MessageID
+			resp.ReplyToMessageID = message.MessageID
 		}
-
+		responses <- ok(resp)
 		go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithArgs, message.Chat.Type)
-
-		_, err = bot.Telegram.Send(reply)
-		if err != nil {
-			log.Errorf(ctx, "%+v", err)
-		}
+		return
 	}
 
 	text := "Alright, send me a bus stop code to get etas for."

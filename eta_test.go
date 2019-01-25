@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
 type MockBusStops struct {
@@ -346,4 +348,175 @@ func TestEtaMessageReplyMarkup(t *testing.T) {
 		}
 		assert.Equal(t, expected, actual)
 	})
+}
+
+func TestNewRefreshButton(t *testing.T) {
+	type testCase struct {
+		Name        string
+		BusStopCode string
+		ServiceNos  []string
+		Expected    telegram.InlineKeyboardButton
+	}
+	testCases := []testCase{
+		{
+			Name:        "with bus stop code only",
+			BusStopCode: "96049",
+			ServiceNos:  nil,
+			Expected: telegram.InlineKeyboardButton{
+				Text:         "Refresh",
+				CallbackData: `{"t":"refresh","b":"96049"}`,
+			},
+		},
+		{
+			Name:        "with bus stop code and service nos",
+			BusStopCode: "96049",
+			ServiceNos:  []string{"2", "24"},
+			Expected: telegram.InlineKeyboardButton{
+				Text:                         "Refresh",
+				CallbackData:                 `{"t":"refresh","b":"96049","s":["2","24"]}`,
+				SwitchInlineQueryCurrentChat: (*string)(nil),
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			actual := NewRefreshButton(tc.BusStopCode, tc.ServiceNos)
+			assert.Equal(t, tc.Expected, actual)
+		})
+	}
+}
+
+func TestNewResendButton(t *testing.T) {
+	type testCase struct {
+		Name        string
+		BusStopCode string
+		ServiceNos  []string
+		Expected    telegram.InlineKeyboardButton
+	}
+	testCases := []testCase{
+		{
+			Name:        "with bus stop code only",
+			BusStopCode: "96049",
+			ServiceNos:  nil,
+			Expected: telegram.InlineKeyboardButton{
+				Text:         "Resend",
+				CallbackData: `{"t":"resend","b":"96049"}`,
+			},
+		},
+		{
+			Name:        "with bus stop code and service nos",
+			BusStopCode: "96049",
+			ServiceNos:  []string{"2", "24"},
+			Expected: telegram.InlineKeyboardButton{
+				Text:                         "Resend",
+				CallbackData:                 `{"t":"resend","b":"96049","s":["2","24"]}`,
+				SwitchInlineQueryCurrentChat: (*string)(nil),
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			actual := NewResendButton(tc.BusStopCode, tc.ServiceNos)
+			assert.Equal(t, tc.Expected, actual)
+		})
+	}
+}
+
+func TestNewToggleFavouriteButton(t *testing.T) {
+	type testCase struct {
+		Name        string
+		BusStopCode string
+		ServiceNos  []string
+		Expected    telegram.InlineKeyboardButton
+	}
+	testCases := []testCase{
+		{
+			Name:        "with bus stop code only",
+			BusStopCode: "96049",
+			ServiceNos:  nil,
+			Expected: telegram.InlineKeyboardButton{
+				Text:         "⭐",
+				CallbackData: `{"t":"togf","a":"96049"}`,
+			},
+		},
+		{
+			Name:        "with bus stop code and service nos",
+			BusStopCode: "96049",
+			ServiceNos:  []string{"2", "24"},
+			Expected: telegram.InlineKeyboardButton{
+				Text:                         "⭐",
+				CallbackData:                 `{"t":"togf","a":"96049 2 24"}`,
+				SwitchInlineQueryCurrentChat: (*string)(nil),
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			actual := NewToggleFavouriteButton(tc.BusStopCode, tc.ServiceNos)
+			assert.Equal(t, tc.Expected, actual)
+		})
+	}
+}
+
+func TestNewETAMessageReplyMarkup(t *testing.T) {
+	type args struct {
+		busStopCode string
+		serviceNos  []string
+		inline      bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want telegram.InlineKeyboardMarkup
+	}{
+		{
+			name: "when not inline",
+			args: args{
+				busStopCode: "96049",
+				inline:      false,
+			},
+			want: telegram.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegram.InlineKeyboardButton{
+					{
+						{
+							Text:         "Refresh",
+							CallbackData: `{"t":"refresh","b":"96049"}`,
+						},
+						{
+							Text:         "Resend",
+							CallbackData: `{"t":"resend","b":"96049"}`,
+						},
+						{
+							Text:         "⭐",
+							CallbackData: `{"t":"togf","a":"96049"}`,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "when inline",
+			args: args{
+				busStopCode: "96049",
+				inline:      true,
+			},
+			want: telegram.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegram.InlineKeyboardButton{
+					{
+						{
+							Text:         "Refresh",
+							CallbackData: `{"t":"refresh","b":"96049"}`,
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewETAMessageReplyMarkup(tt.args.busStopCode, tt.args.serviceNos, tt.args.inline); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewETAMessageReplyMarkup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
 var collapseWhitespaceRegex = regexp.MustCompile(`\s+`)
@@ -260,13 +262,13 @@ func EtaMessageText(bot *BusEtaBot, busStopCode string, serviceNos []string) (st
 
 	etas, err := CalculateEtas(bot.NowFunc(), busArrival)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 
 	busStop := bot.BusStops.Get(busStopCode)
 	if busStop == nil {
 		if len(etas.Services) == 0 {
-			return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopCode), err
+			return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopCode), nil
 		}
 		busStop = &BusStop{
 			BusStopCode: busStopCode,
@@ -342,4 +344,62 @@ func EtaMessageReplyMarkup(busStopID string, serviceNos []string, inline bool) (
 	}
 
 	return &replyMarkup, nil
+}
+
+func NewRefreshButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
+	data := CallbackData{
+		Type:       "refresh",
+		BusStopID:  busStopCode,
+		ServiceNos: serviceNos,
+	}
+	JSON, _ := json.Marshal(data)
+	return telegram.InlineKeyboardButton{
+		Text:         "Refresh",
+		CallbackData: string(JSON),
+	}
+}
+
+func NewResendButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
+	data := CallbackData{
+		Type:       "resend",
+		BusStopID:  busStopCode,
+		ServiceNos: serviceNos,
+	}
+	JSON, _ := json.Marshal(data)
+	return telegram.InlineKeyboardButton{
+		Text:         "Resend",
+		CallbackData: string(JSON),
+	}
+}
+
+func NewToggleFavouriteButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
+	argstr := busStopCode
+	if len(serviceNos) > 0 {
+		argstr += " " + strings.Join(serviceNos, " ")
+	}
+	data := CallbackData{
+		Type:   "togf",
+		Argstr: argstr,
+	}
+	JSON, _ := json.Marshal(data)
+	return telegram.InlineKeyboardButton{
+		Text:         "⭐",
+		CallbackData: string(JSON),
+	}
+}
+
+func NewETAMessageReplyMarkup(busStopCode string, serviceNos []string, inline bool) telegram.InlineKeyboardMarkup {
+	row := []telegram.InlineKeyboardButton{
+		NewRefreshButton(busStopCode, serviceNos),
+	}
+	if !inline {
+		row = append(row,
+			NewResendButton(busStopCode, serviceNos),
+			NewToggleFavouriteButton(busStopCode, serviceNos))
+	}
+	return telegram.InlineKeyboardMarkup{
+		InlineKeyboard: [][]telegram.InlineKeyboardButton{
+			row,
+		},
+	}
 }
