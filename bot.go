@@ -113,15 +113,20 @@ func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm BusETAs, sv *Street
 
 // Dispatch makes requests to the Telegram Bot API for each response in responses.
 func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
+	var wg sync.WaitGroup
 	for r := range responses {
 		err := r.Error
 		if err != nil {
 			log.Errorf(ctx, "%+v", err)
 		}
-		err = bot.TelegramService.Do(r.Request)
-		if err != nil {
-			log.Errorf(ctx, "%+v", err)
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := bot.TelegramService.Do(r.Request)
+			if err != nil {
+				log.Errorf(ctx, "%+v", err)
+			}
+		}()
 	}
 }
 
