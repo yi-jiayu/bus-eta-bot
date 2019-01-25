@@ -3,17 +3,13 @@ package busetabot
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.opencensus.io/exporter/stackdriver/propagation"
 	"go.opencensus.io/trace"
 )
-
-var HTTPFormat = propagation.HTTPFormat{}
 
 // BusStop represents a bus stop.
 type BusStop struct {
@@ -33,16 +29,6 @@ type InMemoryBusStopRepository struct {
 	busStops    []BusStop
 	busStopsMap map[string]*BusStop
 	synonyms    map[string]string
-}
-
-func parentSpanFromContext(ctx context.Context) (spanContext trace.SpanContext, ok bool) {
-	var r *http.Request
-	r, ok = ctx.Value(requestKey{}).(*http.Request)
-	if !ok {
-		return
-	}
-	spanContext, ok = HTTPFormat.SpanContextFromRequest(r)
-	return
 }
 
 func (r *InMemoryBusStopRepository) Get(ID string) *BusStop {
