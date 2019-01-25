@@ -163,35 +163,40 @@ func PrivacyHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Messa
 
 // EtaHandler handles the /eta command.
 func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
-	chatID := message.Chat.ID
+	defer close(responses)
 
+	chatID := message.Chat.ID
 	var reply tgbotapi.MessageConfig
 	if args := message.CommandArguments(); args != "" {
 		busStopID, serviceNos, err := InferEtaQuery(args)
-		if err == errBusStopIDTooLong {
-			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
-		} else if err == errBusStopIDInvalid {
-			reply = tgbotapi.NewMessage(chatID, "Oops, that did not seem to be a valid bus stop code.")
-		} else if err != nil {
-			log.Errorf(ctx, "%+v", err)
-		} else {
-			text, err := EtaMessageText(bot, busStopID, serviceNos)
-			if err != nil {
-				if err == errNotFound {
-					reply = tgbotapi.NewMessage(chatID, text)
-				} else {
-					log.Errorf(ctx, "%+v", err)
-				}
-			} else {
-				reply = tgbotapi.NewMessage(chatID, text)
-				reply.ParseMode = "markdown"
-
-				replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
-				if err != nil {
-					log.Errorf(ctx, "%+v", err)
-				}
-				reply.ReplyMarkup = replyMarkup
+		if err != nil {
+			resp := telegram.SendMessageRequest{
+				ChatID: chatID,
+				Text:   "Oops, a bus stop code should be a 5-digit number.",
 			}
+			if !message.Chat.IsPrivate() {
+				resp.ReplyMarkup = telegram.NewForceReply(true)
+				resp.ReplyToMessageID = message.MessageID
+			}
+			responses <- ok(resp)
+			return
+		}
+		text, err := EtaMessageText(bot, busStopID, serviceNos)
+		if err != nil {
+			if err == errNotFound {
+				reply = tgbotapi.NewMessage(chatID, text)
+			} else {
+				log.Errorf(ctx, "%+v", err)
+			}
+		} else {
+			reply = tgbotapi.NewMessage(chatID, text)
+			reply.ParseMode = "markdown"
+
+			replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
+			if err != nil {
+				log.Errorf(ctx, "%+v", err)
+			}
+			reply.ReplyMarkup = replyMarkup
 		}
 
 		if !message.Chat.IsPrivate() {
@@ -208,16 +213,15 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 
 	text := "Alright, send me a bus stop code to get etas for."
 	resp := telegram.SendMessageRequest{
-		ChatID:      chatID,
-		Text:        text,
-		ReplyMarkup: telegram.NewForceReply(true),
+		ChatID: chatID,
+		Text:   text,
 	}
 	if !message.Chat.IsPrivate() {
+		resp.ReplyMarkup = telegram.NewForceReply(true)
 		resp.ReplyToMessageID = message.MessageID
 	}
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
 	responses <- ok(resp)
-	close(responses)
 }
 
 func showFavourites(bot *BusEtaBot, message *tgbotapi.Message, favourites []string) error {

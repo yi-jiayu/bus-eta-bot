@@ -127,9 +127,8 @@ func TestEtaHandler(t *testing.T) {
 			Text:     "/eta",
 			Expected: []Response{
 				ok(telegram.SendMessageRequest{
-					ChatID:      1,
-					Text:        "Alright, send me a bus stop code to get etas for.",
-					ReplyMarkup: telegram.NewForceReply(true),
+					ChatID: 1,
+					Text:   "Alright, send me a bus stop code to get etas for.",
 				}),
 			},
 		},
@@ -141,6 +140,30 @@ func TestEtaHandler(t *testing.T) {
 				ok(telegram.SendMessageRequest{
 					ChatID:           1,
 					Text:             "Alright, send me a bus stop code to get etas for.",
+					ReplyToMessageID: 1,
+					ReplyMarkup:      telegram.NewForceReply(true),
+				}),
+			},
+		},
+		{
+			Name:     "with invalid bus stop code, in private chat",
+			ChatType: "private",
+			Text:     "/eta invalid",
+			Expected: []Response{
+				ok(telegram.SendMessageRequest{
+					ChatID: 1,
+					Text:   "Oops, a bus stop code should be a 5-digit number.",
+				}),
+			},
+		},
+		{
+			Name:     "with invalid bus stop code, in group chat",
+			ChatType: "group",
+			Text:     "/eta invalid",
+			Expected: []Response{
+				ok(telegram.SendMessageRequest{
+					ChatID:           1,
+					Text:             "Oops, a bus stop code should be a 5-digit number.",
 					ReplyToMessageID: 1,
 					ReplyMarkup:      telegram.NewForceReply(true),
 				}),
