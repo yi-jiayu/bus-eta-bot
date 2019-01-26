@@ -3,6 +3,7 @@ package busetabot
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"os"
 	"sort"
 	"strings"
@@ -47,12 +48,13 @@ func (r *InMemoryBusStopRepository) Nearby(ctx context.Context, lat, lon, radius
 		defer span.End()
 	}
 
+	r2 := radius * radius
 	for _, bs := range r.busStops {
-		distance := EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude)
-		if distance <= radius {
+		d2 := SquaredEuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude)
+		if d2 <= r2 {
 			nearby = append(nearby, NearbyBusStop{
 				BusStop:  bs,
-				Distance: distance,
+				Distance: d2,
 			})
 		}
 	}
@@ -62,7 +64,11 @@ func (r *InMemoryBusStopRepository) Nearby(ctx context.Context, lat, lon, radius
 	if limit <= 0 || limit > len(nearby) {
 		limit = len(nearby)
 	}
-	return nearby[:limit]
+	nearby = nearby[:limit]
+	for i := range nearby {
+		nearby[i].Distance = math.Sqrt(nearby[i].Distance)
+	}
+	return nearby
 }
 
 func lowercaseTokens(tokens []string) (lowercased []string) {

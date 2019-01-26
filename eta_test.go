@@ -3,6 +3,7 @@ package busetabot
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 	"time"
@@ -27,7 +28,7 @@ func (b MockBusStops) Nearby(ctx context.Context, lat, lon, radius float64, limi
 	for _, bs := range b.NearbyBusStops {
 		nearby = append(nearby, NearbyBusStop{
 			BusStop:  bs,
-			Distance: EuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude),
+			Distance: math.Sqrt(SquaredEuclideanDistanceAtEquator(lat, lon, bs.Latitude, bs.Longitude)),
 		})
 	}
 	return
