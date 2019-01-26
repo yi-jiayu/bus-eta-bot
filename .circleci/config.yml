@@ -44,17 +44,34 @@ jobs:
       - run:
           name: Upload coverage
           command: bash <(curl -s https://codecov.io/bash)
-  deploy-integration:
+  deploy-staging:
     docker:
       - image: google/cloud-sdk
     steps:
+      - run:
+          name: Authorize the Google Cloud SDK
+          command: |
+            echo $CIRCLECI_SERVICE_ACCOUNT_KEY | sudo gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project bus-eta-bot
       - checkout
-      - run: pwd && ls -l
+      - run:
+          name: Deploy to staging
+          command: |
+            # embed current version into source
+            tag=$(git describe --tags)
+            date=$(date +%Y-%m-%d)
+            sed "s/VERSION/$tag/" < version.go > version.go~ && mv version.go~ version.go
+            sed "s/VERSION/$tag/; s/DATE/$date/" < index.html > index.html~ && mv index.html~ index.html
+
+            # version cannot contain dots
+            tag_escaped=$(sed "s/\./-/g" <<< ${tag})
+
+            gcloud --quiet app deploy --verbosity=info web/staging.app.yaml --version ${tag_escaped}
 workflows:
   version: 2
-  build:
+  test_and_deploy:
     jobs:
       - test
-      - deploy-integration:
+      - deploy-staging:
           requires:
             - test
