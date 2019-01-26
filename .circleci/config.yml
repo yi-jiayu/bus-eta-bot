@@ -51,7 +51,7 @@ jobs:
       - run:
           name: Authorize the Google Cloud SDK
           command: |
-            echo $CIRCLECI_SERVICE_ACCOUNT_KEY | sudo gcloud auth activate-service-account --key-file=-
+            echo $CIRCLECI_SERVICE_ACCOUNT_KEY | gcloud auth activate-service-account --key-file=-
             gcloud --quiet config set project bus-eta-bot
       - checkout
       - run:
