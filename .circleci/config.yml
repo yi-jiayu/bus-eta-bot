@@ -66,6 +66,7 @@ jobs:
             # version cannot contain dots
             tag_escaped=$(sed "s/\./-/g" <<< ${tag})
 
+            base64 -d <<< $STAGING_APP_YAML_BASE64 > web/staging.app.yaml
             gcloud --quiet app deploy --verbosity=info web/staging.app.yaml --version ${tag_escaped}
 workflows:
   version: 2
