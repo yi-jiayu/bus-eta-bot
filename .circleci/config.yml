@@ -2,15 +2,13 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.11
+      - image: jiayuyi/circleci-go-gcloud:go1.11-gcloud231.0.0
     working_directory: /go/src/github.com/yi-jiayu/bus-eta-bot
     environment:
       ARTIFACTS: /tmp/artifacts
       TEST_RESULTS: /tmp/test-results
       GO111MODULE: "on"
-      GCLOUD_VERSION: "230.0.0"
     steps:
-      - run: GO111MODULE=off go get github.com/jstemmer/go-junit-report
       - checkout
       - run:
           name: Set up artifact and test result directories
@@ -21,26 +19,6 @@ jobs:
           name: Restore Go module cache
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
-      - restore_cache:
-          name: Restore cached gcloud installation
-          keys:
-            - google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
-      - run:
-          name: Install gcloud
-          command: |
-            if [ ! -f "/tmp/google-cloud-sdk/bin/gcloud" ]; then
-              curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz |
-              tar -z -x -C /tmp -f -
-            fi
-            echo 'source /tmp/google-cloud-sdk/path.bash.inc' >> $BASH_ENV
-      - run:
-          name: Update gcloud
-          command: |
-            gcloud --quiet components install app-engine-go
-            gcloud --quiet components install app-engine-python
-            if [ -n "$GCLOUD_VERSION" ]; then
-              gcloud --quiet components update --version $GCLOUD_VERSION
-            fi
       - run:
           name: Run unit tests
           command: |
@@ -57,15 +35,10 @@ jobs:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      - save_cache:
-          name: Cache gcloud installation
-          key: google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
-          paths:
-            - "/tmp/google-cloud-sdk"
-      - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+      - store_artifacts:
           path: /tmp/artifacts
           destination: artifacts
-      - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+      - store_test_results:
           path: /tmp/test-results
           destination: test-results
       - run:
