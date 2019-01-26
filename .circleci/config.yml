@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: jiayuyi/circleci-go-gcloud:go1.11-gcloud231.0.0
     working_directory: /go/src/github.com/yi-jiayu/bus-eta-bot
@@ -44,3 +44,17 @@ jobs:
       - run:
           name: Upload coverage
           command: bash <(curl -s https://codecov.io/bash)
+  deploy-integration:
+    docker:
+      - image: google/cloud-sdk
+    steps:
+      - checkout
+      - run: pwd && ls -l
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test
+      - deploy-integration:
+          requires:
+            - test
