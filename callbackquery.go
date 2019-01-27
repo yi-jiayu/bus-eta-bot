@@ -72,7 +72,7 @@ func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.C
 }
 
 func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, busStopID string, serviceNos []string) error {
-	text, err := EtaMessageText(bot, busStopID, serviceNos)
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, serviceNos)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callb
 func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
 	chatID := cbq.Message.Chat.ID
 
-	text, err := EtaMessageText(bot, "96049", nil)
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), "96049", nil)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQu
 
 	bsID, sNos := data.BusStopID, data.ServiceNos
 
-	text, err := EtaMessageText(bot, bsID, sNos)
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), bsID, sNos)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func ResendCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Ca
 
 	busStopID, serviceNos := data.BusStopID, data.ServiceNos
 
-	text, err := EtaMessageText(bot, busStopID, serviceNos)
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, serviceNos)
 	if err != nil {
 		return err
 	}

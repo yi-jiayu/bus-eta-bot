@@ -180,7 +180,7 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 			responses <- ok(resp)
 			return
 		}
-		text, err := EtaMessageText(bot, busStopCode, serviceNos)
+		text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopCode, serviceNos)
 		if err != nil {
 			responses <- notOk(err)
 			return

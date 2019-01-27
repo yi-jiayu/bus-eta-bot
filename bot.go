@@ -40,7 +40,7 @@ type UserRepository interface {
 	UpdateUserLastSeenTime(ctx context.Context, userID int, t time.Time) error
 }
 
-type BusETAs interface {
+type ETAService interface {
 	GetBusArrival(busStopCode string, serviceNo string) (datamall.BusArrival, error)
 }
 
@@ -52,7 +52,7 @@ type TelegramService interface {
 type BusEtaBot struct {
 	Handlers            Handlers
 	Telegram            *tgbotapi.BotAPI
-	Datamall            BusETAs
+	Datamall            ETAService
 	StreetView          *StreetViewAPI
 	MeasurementProtocol *MeasurementProtocolClient
 	NowFunc             func() time.Time
@@ -97,7 +97,7 @@ func DefaultHandlers() Handlers {
 }
 
 // NewBusEtaBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.
-func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm BusETAs, sv *StreetViewAPI, mp *MeasurementProtocolClient) BusEtaBot {
+func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm ETAService, sv *StreetViewAPI, mp *MeasurementProtocolClient) BusEtaBot {
 	bot := BusEtaBot{
 		Handlers:            handlers,
 		Telegram:            tg,

@@ -51,6 +51,72 @@ type CallbackData struct {
 	Argstr     string   `json:"a,omitempty"`
 }
 
+type ETAFormatter interface {
+	Format(etas BusEtas, services []string) string
+}
+
+// SummaryETAFormatter displays ETAs for up to the next 3 buses at a bus stop.
+type SummaryETAFormatter struct{}
+
+func (SummaryETAFormatter) Format(etas BusEtas, serviceNos []string) string {
+	showing := 0
+	services := make([][4]string, 0)
+	for _, service := range etas.Services {
+		serviceNo := service.ServiceNo
+		if serviceNos != nil && len(serviceNos) != 0 && !contains(serviceNos, serviceNo) {
+			continue
+		}
+
+		arrivals := [4]string{serviceNo, service.Etas[0], service.Etas[1], service.Etas[2]}
+		services = append(services, arrivals)
+		showing++
+	}
+
+	sort.Sort(byServiceNo(services))
+
+	table := EtaTable(services)
+
+	var servicesNoun string
+	if len(etas.Services) > 1 {
+		servicesNoun = "services"
+	} else {
+		servicesNoun = "service"
+	}
+	shown := fmt.Sprintf("Showing %d out of %d %s for this bus stop.", showing, len(etas.Services), servicesNoun)
+
+	// the first line break immediately after the opening triple backticks is needed
+	// otherwise the first pipe gets swallowed
+	formatted := fmt.Sprintf("```\n%s```\n%s", table, shown)
+
+	return formatted
+}
+
+func ETAMessageText(busStops BusStopRepository, etaService ETAService, formatter ETAFormatter, t time.Time, code string, services []string) (string, error) {
+	stop := busStops.Get(code)
+	header := "*" + code + "*"
+	if stop != nil {
+		header = fmt.Sprintf("*%s (%s)*\n%s", stop.Description, stop.BusStopCode, stop.RoadName)
+	}
+	var body string
+	arrival, err := etaService.GetBusArrival(code, "")
+	if err != nil {
+		if err, ok := err.(datamall.Error); ok {
+			body = fmt.Sprintf("\nOh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code %d).", err.StatusCode)
+		} else {
+			return "", errors.Wrap(err, "error getting etas from datamall")
+		}
+	} else {
+		if stop == nil && len(arrival.Services) == 0 {
+			body = "\nNo etas found for this bus stop."
+		} else {
+			etas := CalculateEtas(t, arrival)
+			body = formatter.Format(etas, services)
+		}
+	}
+	timestamp := fmt.Sprintf("Last updated at %s", t.In(sgt).Format(time.RFC822))
+	return fmt.Sprintf("%s\n%s\n\n_%s_", header, body, timestamp), nil
+}
+
 // InferEtaQuery extracts a bus stop ID and service numbers from a text message.
 func InferEtaQuery(text string) (string, []string, error) {
 	if len(text) > 30 {
@@ -73,7 +139,7 @@ func InferEtaQuery(text string) (string, []string, error) {
 }
 
 // CalculateEtas calculates the time before buses arrive from the LTA DataMall bus arrival response
-func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error) {
+func CalculateEtas(t time.Time, busArrival datamall.BusArrival) BusEtas {
 	services := make([]IncomingBuses, 0)
 
 	for _, service := range busArrival.Services {
@@ -97,7 +163,7 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error)
 			if estArrival := incomingBus.EstimatedArrival; estArrival != "" {
 				eta, err := time.Parse(time.RFC3339, estArrival)
 				if err != nil {
-					return BusEtas{}, errors.Wrap(err, "invalid timestamp in datmall response")
+					return BusEtas{}
 				}
 
 				diff := (eta.Unix() - t.Unix()) / 60
@@ -118,7 +184,7 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) (BusEtas, error)
 		BusStopID:   busArrival.BusStopCode,
 		UpdatedTime: t,
 		Services:    services,
-	}, nil
+	}
 }
 
 func contains(serviceNos []string, serviceNo string) bool {
@@ -136,45 +202,6 @@ type byServiceNo [][4]string
 func (s byServiceNo) Len() int           { return len(s) }
 func (s byServiceNo) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s byServiceNo) Less(i, j int) bool { return s[i][0] < s[j][0] }
-
-// FormatEtasMultiple formats bus etas nicely to be sent in a message
-func FormatEtasMultiple(busEtas BusEtas, busStop *BusStop, serviceNos []string) string {
-	showing := 0
-	services := make([][4]string, 0)
-	for _, service := range busEtas.Services {
-		serviceNo := service.ServiceNo
-		if serviceNos != nil && len(serviceNos) != 0 && !contains(serviceNos, serviceNo) {
-			continue
-		}
-
-		arrivals := [4]string{serviceNo, service.Etas[0], service.Etas[1], service.Etas[2]}
-		services = append(services, arrivals)
-		showing++
-	}
-
-	sort.Sort(byServiceNo(services))
-
-	table := EtaTable(services)
-
-	var header string
-	if busStop.Description != "" {
-		header = fmt.Sprintf("*%s (%s)*\n", busStop.Description, busStop.BusStopCode)
-	} else {
-		header = fmt.Sprintf("*%s*\n", busStop.BusStopCode)
-	}
-
-	if busStop.RoadName != "" {
-		header += fmt.Sprintf("%s\n", busStop.RoadName)
-	}
-
-	shown := fmt.Sprintf("Showing %d out of %d services for this bus stop.", showing, len(busEtas.Services))
-
-	updated := fmt.Sprintf("Last updated at %s", busEtas.UpdatedTime.In(sgt).Format(time.RFC822))
-
-	formatted := fmt.Sprintf("%s```\n%s```\n%s\n\n_%s_", header, table, shown, updated)
-
-	return formatted
-}
 
 func padLeft(s string, l int, c string) string {
 	for {
@@ -248,35 +275,6 @@ func EtaTable(etas [][4]string) string {
 
 	// remove final newline
 	return output[:len(output)-1]
-}
-
-// EtaMessageText generates and returns the text for an eta message
-func EtaMessageText(bot *BusEtaBot, busStopCode string, serviceNos []string) (string, error) {
-	busArrival, err := bot.Datamall.GetBusArrival(busStopCode, "")
-	if err != nil {
-		if err, ok := err.(datamall.Error); ok {
-			return fmt.Sprintf("Oh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code %d).", err.StatusCode), nil
-		}
-		return "", errors.Wrap(err, "error getting etas from datamall")
-	}
-
-	etas, err := CalculateEtas(bot.NowFunc(), busArrival)
-	if err != nil {
-		return "", err
-	}
-
-	busStop := bot.BusStops.Get(busStopCode)
-	if busStop == nil {
-		if len(etas.Services) == 0 {
-			return fmt.Sprintf("Oh no! I couldn't find any information about bus stop %s.", busStopCode), nil
-		}
-		busStop = &BusStop{
-			BusStopCode: busStopCode,
-		}
-	}
-
-	msg := FormatEtasMultiple(etas, busStop, serviceNos)
-	return msg, nil
 }
 
 // EtaMessageReplyMarkup generates the reply markup for an eta message, including a resend callback button only when

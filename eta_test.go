@@ -194,10 +194,7 @@ func TestCalculateEtas(t *testing.T) {
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
 
 	t.Run("In operation, all etas", func(t *testing.T) {
-		etas, err := CalculateEtas(now, newArrival(now))
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
+		etas := CalculateEtas(now, newArrival(now))
 
 		actual := etas.Services
 		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"-1", "10", "36"}, Loads: [3]string{"", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
@@ -212,10 +209,7 @@ func TestCalculateEtas(t *testing.T) {
 		arrival.Services[0].NextBus2.EstimatedArrival = ""
 		arrival.Services[0].NextBus3.EstimatedArrival = ""
 
-		etas, err := CalculateEtas(now, arrival)
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
+		etas := CalculateEtas(now, arrival)
 
 		actual := etas.Services
 		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"-1", "?", "?"}, Loads: [3]string{"", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
@@ -231,10 +225,7 @@ func TestCalculateEtas(t *testing.T) {
 		arrival.Services[0].NextBus2.EstimatedArrival = ""
 		arrival.Services[0].NextBus3.EstimatedArrival = ""
 
-		etas, err := CalculateEtas(now, arrival)
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
+		etas := CalculateEtas(now, arrival)
 
 		actual := etas.Services
 		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"?", "?", "?"}, Loads: [3]string{"", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
@@ -261,85 +252,6 @@ func TestEtaTable(t *testing.T) {
 	}
 }
 
-func TestFormatEtas(t *testing.T) {
-	now, _ := time.Parse(time.RFC3339, time.RFC3339)
-	busArrival := newArrival(now)
-
-	etas, err := CalculateEtas(now, busArrival)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	busStop := BusStop{BusStopCode: "96049", RoadName: "Upp Changi Rd East", Description: "Opp Tropicana Condo"}
-
-	t.Run("Showing all bus stops", func(t *testing.T) {
-		actual := FormatEtasMultiple(etas, &busStop, nil)
-		expected := "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_"
-
-		if actual != expected {
-			fmt.Printf("Expected:\n%q\nActual:\n%q\n", expected, actual)
-			t.Fail()
-		}
-	})
-	t.Run("Showing filtered bus stops", func(t *testing.T) {
-		actual := FormatEtasMultiple(etas, &busStop, []string{"2"})
-		expected := "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |```\nShowing 1 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_"
-
-		if actual != expected {
-			fmt.Printf("Expected:\n%q\nActual:\n%q\n", expected, actual)
-			t.Fail()
-		}
-	})
-}
-
-func TestEtaMessage(t *testing.T) {
-	bot := &BusEtaBot{
-		Datamall: MockDatamall{
-			BusArrival: datamall.BusArrival{},
-			Error:      nil,
-		},
-		NowFunc: func() time.Time {
-			return time.Time{}
-		},
-		BusStops: MockBusStops{
-			BusStop: nil,
-		},
-	}
-
-	actual, err := EtaMessageText(bot, "invalid", nil)
-	if err != nil && err != errNotFound {
-		t.Fatal(err)
-	}
-
-	expected := "Oh no! I couldn't find any information about bus stop invalid."
-	if actual != expected {
-		t.Fail()
-	}
-
-	t.Run("when datamall returns an error", func(t *testing.T) {
-		bot := &BusEtaBot{
-			Datamall: MockDatamall{
-				BusArrival: datamall.BusArrival{},
-				Error:      datamall.Error{StatusCode: 503},
-			},
-			NowFunc: func() time.Time {
-				return time.Time{}
-			},
-			BusStops: MockBusStops{
-				BusStop: nil,
-			},
-		}
-
-		actual, err := EtaMessageText(bot, "81111", nil)
-		if err != nil && err != errNotFound {
-			t.Fatal(err)
-		}
-
-		expected := "Oh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code 503)."
-		assert.Equal(t, expected, actual)
-	})
-}
-
 func TestEtaMessageReplyMarkup(t *testing.T) {
 	t.Run("for inline message", func(t *testing.T) {
 		expected := newEtaMessageReplyMarkupInline("96049")
@@ -349,6 +261,69 @@ func TestEtaMessageReplyMarkup(t *testing.T) {
 		}
 		assert.Equal(t, expected, actual)
 	})
+}
+
+func TestSummaryETAFormatter_Format(t *testing.T) {
+	svc2 := IncomingBuses{
+		ServiceNo: "2",
+		Etas:      [3]string{"-1", "10", "36"},
+		Loads:     [3]string{"", "SDA", "LSD"},
+		Features:  [3]string{"", "", "WAB"},
+		Types:     [3]string{"", "DD", "BD"},
+	}
+	svc24 := IncomingBuses{
+		ServiceNo: "24",
+		Etas:      [3]string{"1", "3", "6"},
+		Loads:     [3]string{"SEA", "SDA", "LSD"},
+		Features:  [3]string{"", "WAB", ""},
+		Types:     [3]string{"SD", "DD", "BD"},
+	}
+	type testCase struct {
+		Name       string
+		ETAs       BusEtas
+		ServiceNos []string
+		Expected   string
+	}
+	testCases := []testCase{
+		{
+			Name: "single eta",
+			ETAs: BusEtas{
+				Services: []IncomingBuses{
+					svc2,
+				},
+			},
+			Expected: "```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |```\nShowing 1 out of 1 service for this bus stop.",
+		},
+		{
+			Name: "multiple etas",
+			ETAs: BusEtas{
+				Services: []IncomingBuses{
+					svc2,
+					svc24,
+				},
+			},
+			Expected: "```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.",
+		},
+		{
+			Name: "filtered etas",
+			ETAs: BusEtas{
+				Services: []IncomingBuses{
+					svc2,
+					svc24,
+				},
+			},
+			ServiceNos: []string{"2"},
+			Expected:   "```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |```\nShowing 1 out of 2 services for this bus stop.",
+		},
+	}
+	for _, tc := range testCases {
+		formatter := SummaryETAFormatter{}
+		t.Run(tc.Name, func(t *testing.T) {
+			actual := formatter.Format(tc.ETAs, tc.ServiceNos)
+			assert.Equal(t, tc.Expected, actual)
+		})
+	}
+
 }
 
 func TestNewRefreshButton(t *testing.T) {
@@ -517,6 +492,156 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewETAMessageReplyMarkup(tt.args.busStopCode, tt.args.serviceNos, tt.args.inline); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewETAMessageReplyMarkup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type MockETAFormatter string
+
+func (s MockETAFormatter) Format(etas BusEtas, services []string) string {
+	return string(s)
+}
+
+func TestETAMessageText(t *testing.T) {
+	stop := BusStop{
+		BusStopCode: "96049",
+		RoadName:    "Upp Changi Rd East",
+		Description: "Opp Tropicana Condo",
+	}
+	type args struct {
+		busStopRepository BusStopRepository
+		etaService        ETAService
+		formatter         ETAFormatter
+		t                 time.Time
+		code              string
+		services          []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "when bus stop is found and has arriving buses",
+			args: args{
+				busStopRepository: MockBusStops{
+					BusStop: &stop,
+				},
+				etaService: MockDatamall{
+					BusArrival: datamall.BusArrival{
+						Services: make([]datamall.Service, 1),
+					},
+				},
+				formatter: MockETAFormatter("formatter output"),
+				t:         time.Time{},
+				code:      "",
+				services:  nil,
+			},
+			want: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n" +
+				"formatter output\n" +
+				"\n_Last updated at 01 Jan 01 08:00 SGT_",
+			wantErr: false,
+		},
+		{
+			name: "when bus stop is found but has no arriving buses",
+			args: args{
+				busStopRepository: MockBusStops{
+					BusStop: &stop,
+				},
+				etaService: MockDatamall{
+					BusArrival: datamall.BusArrival{},
+				},
+				formatter: MockETAFormatter("formatter output"),
+				t:         time.Time{},
+				code:      "",
+			},
+			want: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n" +
+				"formatter output\n" +
+				"\n_Last updated at 01 Jan 01 08:00 SGT_",
+			wantErr: false,
+		},
+		{
+			name: "when bus stop is found but datamall is down",
+			args: args{
+				busStopRepository: MockBusStops{
+					BusStop: &stop,
+				},
+				etaService: MockDatamall{
+					Error: datamall.Error{StatusCode: 501},
+				},
+				formatter: MockETAFormatter("body"),
+				t:         time.Time{},
+				code:      "",
+				services:  nil,
+			},
+			want: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n" +
+				"\nOh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code 501).\n" +
+				"\n_Last updated at 01 Jan 01 08:00 SGT_",
+			wantErr: false,
+		},
+		{
+			name: "when bus stop is not found but has arriving buses",
+			args: args{
+				busStopRepository: MockBusStops{},
+				etaService: MockDatamall{
+					BusArrival: datamall.BusArrival{
+						Services: make([]datamall.Service, 1),
+					},
+				},
+				formatter: MockETAFormatter("formatter output"),
+				t:         time.Time{},
+				code:      "96049",
+				services:  nil,
+			},
+			want: "*96049*\n" +
+				"formatter output\n" +
+				"\n_Last updated at 01 Jan 01 08:00 SGT_",
+			wantErr: false,
+		},
+		{
+			name: "when bus stop is not found and has no arriving buses",
+			args: args{
+				busStopRepository: MockBusStops{},
+				etaService: MockDatamall{
+					BusArrival: datamall.BusArrival{},
+				},
+				formatter: MockETAFormatter("formatter output"),
+				t:         time.Time{},
+				code:      "96049",
+				services:  nil,
+			},
+			want: "*96049*\n" +
+				"\nNo etas found for this bus stop.\n" +
+				"\n_Last updated at 01 Jan 01 08:00 SGT_",
+		},
+		{
+			name: "when bus stop is not found and datamall is down",
+			args: args{
+				busStopRepository: MockBusStops{},
+				etaService: MockDatamall{
+					Error: datamall.Error{StatusCode: 501},
+				},
+				formatter: MockETAFormatter("body"),
+				t:         time.Time{},
+				code:      "96049",
+				services:  nil,
+			},
+			want: "*96049*\n" +
+				"\nOh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code 501).\n" +
+				"\n_Last updated at 01 Jan 01 08:00 SGT_",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ETAMessageText(tt.args.busStopRepository, tt.args.etaService, tt.args.formatter, tt.args.t, tt.args.code, tt.args.services)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ETAMessageText() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}

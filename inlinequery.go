@@ -124,7 +124,7 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 	tokens := strings.Split(cir.ResultID, " ")
 	busStopID := tokens[0]
 
-	text, err := EtaMessageText(bot, busStopID, nil)
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, nil)
 	if err != nil {
 		return err
 	}
