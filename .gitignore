@@ -1,3 +1,10 @@
+# .telegramrc file containing bot token
+.telegramrc
+
+# symlinks to app root in web/
+web/data
+web/index.html
+
 # app.yaml files contain environment variables
 *app.yaml
 
