@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInlineKeyboardMarkup_markup(t *testing.T) {
+func TestInlineKeyboardMarkup_inlineKeyboardMarkup(t *testing.T) {
 	markup := InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
 			{
@@ -22,7 +22,7 @@ func TestInlineKeyboardMarkup_markup(t *testing.T) {
 			},
 		},
 	}
-	actual := markup.markup()
+	actual := markup.inlineKeyboardMarkup()
 	expected := tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 			{

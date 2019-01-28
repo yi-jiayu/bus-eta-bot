@@ -48,7 +48,42 @@ func (r SendMessageRequest) doWith(c *Client) (result interface{}, err error) {
 	return m, nil
 }
 
-type EditMessageRequest struct {
+type EditMessageTextRequest struct {
+	ChatID          int64
+	MessageID       int
+	InlineMessageID string
+	Text            string
+	ParseMode       string
+	ReplyMarkup     InlineKeyboardMarkup
+}
+
+func (r EditMessageTextRequest) config() (config tgbotapi.EditMessageTextConfig) {
+	if r.InlineMessageID != "" {
+		config = tgbotapi.EditMessageTextConfig{
+			BaseEdit: tgbotapi.BaseEdit{
+				InlineMessageID: r.InlineMessageID,
+			},
+			Text: r.Text,
+		}
+	} else {
+		config = tgbotapi.NewEditMessageText(r.ChatID, r.MessageID, r.Text)
+	}
+	if r.ParseMode != "" {
+		config.ParseMode = r.ParseMode
+	}
+	if len(r.ReplyMarkup.InlineKeyboard) > 0 {
+		markup := r.ReplyMarkup.inlineKeyboardMarkup()
+		config.ReplyMarkup = &markup
+	}
+	return
+}
+
+func (r EditMessageTextRequest) doWith(c *Client) (result interface{}, err error) {
+	m, err := c.client.Send(r.config())
+	if err != nil {
+		return nil, Error{Description: err.(tgbotapi.Error).Message}
+	}
+	return m, nil
 }
 
 type AnswerCallbackQueryRequest struct {

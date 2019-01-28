@@ -19,6 +19,10 @@ type InlineKeyboardMarkup struct {
 }
 
 func (m InlineKeyboardMarkup) markup() interface{} {
+	return m.inlineKeyboardMarkup()
+}
+
+func (m InlineKeyboardMarkup) inlineKeyboardMarkup() tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, r := range m.InlineKeyboard {
 		var row []tgbotapi.InlineKeyboardButton

@@ -13,7 +13,7 @@ func (m mockReplyMarkup) markup() interface{} {
 	return m
 }
 
-func Test_sendMessage(t *testing.T) {
+func TestSendMessageRequest_config(t *testing.T) {
 	type testCase struct {
 		Name     string
 		Request  SendMessageRequest
@@ -72,6 +72,142 @@ func Test_sendMessage(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			actual := tc.Request.config()
 			assert.Equal(t, tc.Expected, actual)
+		})
+	}
+}
+
+func TestEditMessageTextRequest_config(t *testing.T) {
+	type fields struct {
+		ChatID          int64
+		MessageID       int
+		InlineMessageID string
+		Text            string
+		ParseMode       string
+		ReplyMarkup     InlineKeyboardMarkup
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		wantConfig tgbotapi.EditMessageTextConfig
+	}{
+		{
+			name: "with ChatID and MessageID",
+			fields: fields{
+				ChatID:    1,
+				MessageID: 1,
+				Text:      "Edited message",
+			},
+			wantConfig: tgbotapi.NewEditMessageText(1, 1, "Edited message"),
+		},
+		{
+			name: "with ChatID, MessageID and ParseMode",
+			fields: fields{
+				ChatID:    1,
+				MessageID: 1,
+				Text:      "Edited message",
+				ParseMode: "markdown",
+			},
+			wantConfig: func() tgbotapi.EditMessageTextConfig {
+				config := tgbotapi.NewEditMessageText(1, 1, "Edited message")
+				config.ParseMode = "markdown"
+				return config
+			}(),
+		},
+		{
+			name: "with ChatID, MessageID and InlineKeyboardMarkup",
+			fields: fields{
+				ChatID:    1,
+				MessageID: 1,
+				Text:      "Edited message",
+				ReplyMarkup: InlineKeyboardMarkup{
+					InlineKeyboard: [][]InlineKeyboardButton{
+						{
+							{
+								Text:         "Button",
+								CallbackData: "data",
+							},
+						},
+					},
+				},
+			},
+			wantConfig: func() tgbotapi.EditMessageTextConfig {
+				config := tgbotapi.NewEditMessageText(1, 1, "Edited message")
+				button := tgbotapi.NewInlineKeyboardButtonData("Button", "data")
+				markup := tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(button))
+				config.ReplyMarkup = &markup
+				return config
+			}(),
+		},
+		{
+			name: "with InlineMessageID",
+			fields: fields{
+				InlineMessageID: "1",
+				Text:            "Edited message",
+			},
+			wantConfig: tgbotapi.EditMessageTextConfig{
+				BaseEdit: tgbotapi.BaseEdit{
+					InlineMessageID: "1",
+				},
+				Text: "Edited message",
+			},
+		},
+		{
+			name: "with InlineMessageID and ParseMode",
+			fields: fields{
+				InlineMessageID: "1",
+				Text:            "Edited message",
+				ParseMode:       "markdown",
+			},
+			wantConfig: tgbotapi.EditMessageTextConfig{
+				BaseEdit: tgbotapi.BaseEdit{
+					InlineMessageID: "1",
+				},
+				Text:      "Edited message",
+				ParseMode: "markdown",
+			},
+		},
+		{
+			name: "with InlineMessageID and InlineKeyboardMarkup",
+			fields: fields{
+				InlineMessageID: "1",
+				Text:            "Edited message",
+				ReplyMarkup: InlineKeyboardMarkup{
+					InlineKeyboard: [][]InlineKeyboardButton{
+						{
+							{
+								Text:         "Button",
+								CallbackData: "data",
+							},
+						},
+					},
+				},
+			},
+			wantConfig: func() tgbotapi.EditMessageTextConfig {
+				config := tgbotapi.EditMessageTextConfig{
+					BaseEdit: tgbotapi.BaseEdit{
+						InlineMessageID: "1",
+					},
+					Text: "Edited message",
+				}
+				button := tgbotapi.NewInlineKeyboardButtonData("Button", "data")
+				markup := tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(button))
+				config.ReplyMarkup = &markup
+				return config
+			}(),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := EditMessageTextRequest{
+				ChatID:          tt.fields.ChatID,
+				MessageID:       tt.fields.MessageID,
+				InlineMessageID: tt.fields.InlineMessageID,
+				Text:            tt.fields.Text,
+				ParseMode:       tt.fields.ParseMode,
+				ReplyMarkup:     tt.fields.ReplyMarkup,
+			}
+			gotConfig := r.config()
+			assert.Equal(t, tt.wantConfig, gotConfig)
 		})
 	}
 }
