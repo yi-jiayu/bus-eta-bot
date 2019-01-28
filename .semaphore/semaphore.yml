@@ -14,7 +14,9 @@ blocks:
             - sudo apt-get install -y google-cloud-sdk-app-engine-go google-cloud-sdk-datastore-emulator
             - checkout
             - sem-version go 1.11
+            - cache restore go-module-cache-$(checksum go.mod)
             - go test -coverprofile=coverage.txt -covermode=count ./...
+            - cache store go-module-cache-$(checksum go.mod) $GOPATH/pkg/mod
             - bash <(curl -s https://codecov.io/bash)
       env_vars:
         - name: GO111MODULE
