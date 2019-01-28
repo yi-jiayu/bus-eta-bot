@@ -1,0 +1,31 @@
+version: v1.0
+name: Bus Eta Bot
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Run with Go 1.11
+    task:
+      jobs:
+        - name: Setup Google Cloud SDK
+          commands:
+            - cache restore gcloud-$GCLOUD_VERSION
+            - if [ ! -f "$HOME/google-cloud-sdk/bin/gcloud" ]; then curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz | tar -z -x -C $HOME -f -; fi
+            - source $HOME/google-cloud-sdk/path.bash.inc
+            - gcloud --quiet components install app-engine-go
+            - gcloud --quiet components update --version $GCLOUD_VERSION
+            - cache store gcloud-$GCLOUD_VERSION $HOME/google-cloud-sdk
+        - name: go test
+          commands:
+            - cache restore gcloud-$GCLOUD_VERSION
+            - source $HOME/google-cloud-sdk/path.bash.inc
+            - checkout
+            - go test -coverprofile=coverage.txt -covermode=count ./...
+            - bash <(curl -s https://codecov.io/bash)
+          env_vars:
+            - name: GO111MODULE
+              value: on
+      env_vars:
+        - name: GCLOUD_VERSION
+          value: "231.0.0"
