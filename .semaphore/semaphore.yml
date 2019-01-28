@@ -9,11 +9,11 @@ blocks:
     task:
       env_vars:
         - name: GO111MODULE
-          value: on
+          value: "on"
         - name: GCLOUD_VERSION
           value: "231.0.0"
       secrets:
-        - codecov
+        - name: codecov
       jobs:
         - name: go test
           commands:
