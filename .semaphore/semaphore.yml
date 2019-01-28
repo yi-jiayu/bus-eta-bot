@@ -16,7 +16,7 @@ blocks:
             - sem-version go 1.11
             - cache restore go-module-cache-$(checksum go.mod)
             - go test -coverprofile=coverage.txt -covermode=count ./...
-            - cache store go-module-cache-$(checksum go.mod) $GOPATH/pkg/mod
+            - cache store go-module-cache-$(checksum go.mod) $(go env GOPATH)/pkg/mod
             - bash <(curl -s https://codecov.io/bash)
       env_vars:
         - name: GO111MODULE
