@@ -41,7 +41,7 @@ func (r SendMessageRequest) config() tgbotapi.MessageConfig {
 }
 
 func (r SendMessageRequest) doWith(c *Client) (result interface{}, err error) {
-	m, err := c.Client.Send(r.config())
+	m, err := c.client.Send(r.config())
 	if err != nil {
 		return nil, Error{Description: err.(tgbotapi.Error).Message}
 	}
@@ -52,13 +52,24 @@ type EditMessageRequest struct {
 }
 
 type AnswerCallbackQueryRequest struct {
+	CallbackQueryID string
+	Text            string
+}
+
+func (r AnswerCallbackQueryRequest) doWith(c *Client) (result interface{}, err error) {
+	config := tgbotapi.NewCallback(r.CallbackQueryID, r.Text)
+	res, err := c.client.AnswerCallbackQuery(config)
+	if err != nil {
+		return nil, Error{Description: res.Description}
+	}
+	return
 }
 
 type AnswerInlineQueryRequest struct {
 }
 
 type Client struct {
-	Client *tgbotapi.BotAPI
+	client *tgbotapi.BotAPI
 }
 
 func (c *Client) Do(request Request) error {
@@ -72,6 +83,6 @@ func NewClient(token string, httpClient *http.Client) (*Client, error) {
 		return nil, err
 	}
 	return &Client{
-		Client: client,
+		client: client,
 	}, nil
 }
