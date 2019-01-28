@@ -11,7 +11,7 @@ blocks:
         - name: go test
           commands:
             - sudo apt-get update && sudo apt-get install -y google-cloud-sdk=$GCLOUD_VERSION-0
-            - sudo apt-get install -y google-cloud-sdk-app-engine-go
+            - sudo apt-get install -y google-cloud-sdk-app-engine-go google-cloud-sdk-datastore-emulator
             - checkout
             - sem-version go 1.11
             - go test -coverprofile=coverage.txt -covermode=count ./...
