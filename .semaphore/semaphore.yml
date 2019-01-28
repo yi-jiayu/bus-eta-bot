@@ -10,8 +10,7 @@ blocks:
       jobs:
         - name: go test
           commands:
-            - gcloud --quiet components install app-engine-go
-            - gcloud --quiet components update --version $GCLOUD_VERSION
+            - sudo apt-get update && sudo apt-get upgrade google-cloud-sdk && sudo apt-get install google-cloud-sdk-app-engine-go
             - checkout
             - sem-version go 1.11
             - go test -coverprofile=coverage.txt -covermode=count ./...
