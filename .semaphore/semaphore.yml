@@ -10,8 +10,8 @@ blocks:
       jobs:
         - name: go test
           commands:
-            - install-package --update google-cloud-sdk=$GCLOUD_VERSION-0
-            - install-package google-cloud-sdk-app-engine-go google-cloud-sdk-datastore-emulator
+            - sudo install-package --update google-cloud-sdk=$GCLOUD_VERSION-0
+            - sudo install-package google-cloud-sdk-app-engine-go google-cloud-sdk-datastore-emulator
             - checkout
             - sem-version go 1.11
             - cache restore go-module-cache-$(checksum go.mod)
