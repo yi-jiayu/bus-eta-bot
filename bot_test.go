@@ -47,13 +47,12 @@ func (s *Spy) CommandHandler(context.Context, *BusEtaBot, *tgbotapi.Message, cha
 	s.Called = true
 }
 
-func (s *Spy) CallbackQueryHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+func (s *Spy) CallbackQueryHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
 	if s.SpyFunc != nil {
 		s.SpyFunc()
 	}
 
 	s.Called = true
-	return nil
 }
 
 func (s *Spy) InlineQueryHandler(ctx context.Context, bot *BusEtaBot, ilq *tgbotapi.InlineQuery) error {
@@ -109,16 +108,6 @@ func MockMessageWithType(chatType string) tgbotapi.Message {
 		MessageID: 1,
 		Chat:      &tgbotapi.Chat{ID: 1, Type: chatType},
 		From:      &tgbotapi.User{ID: 1, FirstName: "Jiayu"},
-	}
-}
-
-func MockCallbackQuery() tgbotapi.CallbackQuery {
-	return tgbotapi.CallbackQuery{
-		ID: "1",
-		From: &tgbotapi.User{
-			ID:        1,
-			FirstName: "Jiayu",
-		},
 	}
 }
 

@@ -126,11 +126,6 @@ func TestChosenInlineResultHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	datamall := MockDatamall{
-		BusArrival: newArrival(time.Time{}),
-		Error:      nil,
-	}
-
 	busStops := MockBusStops{
 		BusStop: &BusStop{
 			BusStopCode: "96049",
@@ -141,7 +136,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 
 	bot := BusEtaBot{
 		Telegram: tg,
-		Datamall: datamall,
+		Datamall: MockDatamall{},
 		BusStops: busStops,
 		NowFunc: func() time.Time {
 			return time.Time{}

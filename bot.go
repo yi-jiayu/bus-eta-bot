@@ -246,10 +246,9 @@ func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.Cal
 
 	if cbqType, ok := data["t"].(string); ok {
 		if handler, ok := bot.Handlers.CallbackQueryHandlers[cbqType]; ok {
-			err := handler(ctx, bot, cbq)
-			if err != nil {
-				callbackErrorHandler(ctx, bot, cbq, err)
-			}
+			responses := make(chan Response, ResponseBufferSize)
+			go bot.Dispatch(ctx, responses)
+			handler(ctx, bot, cbq, responses)
 		}
 	} else {
 		callbackErrorHandler(ctx, bot, cbq, errors.New("unrecognised callback query"))

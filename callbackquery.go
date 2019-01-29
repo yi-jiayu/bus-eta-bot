@@ -10,11 +10,13 @@ import (
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
 var callbackQueryHandlers = map[string]CallbackQueryHandler{
 	"refresh":  RefreshCallbackHandler,
-	"resend":   ResendCallbackHandler,
+	"resend":   NewEtaHandler,
 	"eta":      EtaCallbackHandler,
 	"eta_demo": EtaDemoCallbackHandler,
 	"new_eta":  NewEtaHandler,
@@ -23,7 +25,7 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 }
 
 // CallbackQueryHandler is a handler for callback queries
-type CallbackQueryHandler func(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error
+type CallbackQueryHandler func(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response)
 
 func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.CallbackConfig) error {
 	errs := make([]error, 0)
@@ -71,205 +73,110 @@ func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.C
 	}
 }
 
-func updateEtaMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, busStopID string, serviceNos []string) error {
-	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, serviceNos)
+func updateETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, code string, services []string, responses chan<- Response) {
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), code, services)
 	if err != nil {
-		return err
+		responses <- notOk(err)
+		return
 	}
-
-	var reply tgbotapi.EditMessageTextConfig
-	var inline bool
-	if cbq.Message != nil {
-		chatID := cbq.Message.Chat.ID
-		messageID := cbq.Message.MessageID
-		reply = tgbotapi.NewEditMessageText(chatID, messageID, text)
-
-		inline = false
+	editMessageTextRequest := telegram.EditMessageTextRequest{
+		Text:      text,
+		ParseMode: "markdown",
+	}
+	if cbq.InlineMessageID != "" {
+		editMessageTextRequest.InlineMessageID = cbq.InlineMessageID
+		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(code, services, true)
 	} else {
-		inlineMessageID := cbq.InlineMessageID
-		reply = tgbotapi.EditMessageTextConfig{
-			BaseEdit: tgbotapi.BaseEdit{
-				InlineMessageID: inlineMessageID,
-			},
-			Text: text,
-		}
-
-		inline = true
+		editMessageTextRequest.ChatID = cbq.Message.Chat.ID
+		editMessageTextRequest.MessageID = cbq.Message.MessageID
+		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(code, services, false)
 	}
+	responses <- ok(editMessageTextRequest)
+	answerCallbackQueryRequest := telegram.AnswerCallbackQueryRequest{
+		CallbackQueryID: cbq.ID,
+		Text:            "ETAs updated!",
+	}
+	responses <- ok(answerCallbackQueryRequest)
+}
 
-	reply.ParseMode = "markdown"
-
-	replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, inline)
+func sendETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, code string, services []string, responses chan<- Response) {
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), code, services)
 	if err != nil {
-		return err
+		responses <- notOk(err)
+		return
 	}
-	reply.ReplyMarkup = replyMarkup
-
-	answer := tgbotapi.NewCallback(cbq.ID, "Etas updated!")
-
-	if cbq.Message != nil {
-		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRefreshCallback, cbq.Message.Chat.Type)
-	} else {
-		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRefreshCallback, LabelInlineMessage)
+	markup := NewETAMessageReplyMarkup(code, services, false)
+	sendMessageRequest := telegram.SendMessageRequest{
+		Text:        text,
+		ChatID:      cbq.Message.Chat.ID,
+		ParseMode:   "markdown",
+		ReplyMarkup: markup,
 	}
-
-	err = answerCallbackQuery(bot, reply, answer)
-	return err
+	responses <- ok(sendMessageRequest)
+	answerCallbackQueryRequest := telegram.AnswerCallbackQueryRequest{
+		CallbackQueryID: cbq.ID,
+		Text:            "ETAs sent!",
+	}
+	responses <- ok(answerCallbackQueryRequest)
 }
 
 // RefreshCallbackHandler handles the callback for the Refresh button on an eta message.
-func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
+	defer close(responses)
+
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
-		return err
+		responses <- notOk(errors.Wrap(err, "error unmarshalling callback data"))
+		return
 	}
-
-	bsID, sNos := data.BusStopID, data.ServiceNos
-
-	return updateEtaMessage(ctx, bot, cbq, bsID, sNos)
+	updateETAMessage(ctx, bot, cbq, data.BusStopID, data.ServiceNos, responses)
+	return
 }
 
 // EtaCallbackHandler handles callback queries from eta messages from old versions of the bot for
 // backwards-compatibility.
-func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
+	defer close(responses)
+
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
+		responses <- notOk(errors.Wrap(err, "error unmarshalling callback data"))
+		return
 	}
-
-	var bsID string
-	var sNos []string
+	var code string
+	var services []string
 	if data.Argstr != "" {
-		bsID, sNos, _ = InferEtaQuery(data.Argstr)
+		code, services, _ = InferEtaQuery(data.Argstr)
 	} else {
-		bsID = data.BusStopID
-		sNos = data.ServiceNos
+		code = data.BusStopID
+		services = data.ServiceNos
 	}
-
-	callbackData := CallbackData{
-		Type:       "refresh",
-		BusStopID:  bsID,
-		ServiceNos: sNos,
-	}
-
-	callbackDataJSON, err := json.Marshal(callbackData)
-	if err != nil {
-		return err
-	}
-	callbackDataJSONStr := string(callbackDataJSON)
-	cbq.Data = callbackDataJSONStr
-
-	return updateEtaMessage(ctx, bot, cbq, bsID, sNos)
+	updateETAMessage(ctx, bot, cbq, code, services, responses)
+	return
 }
 
 // EtaDemoCallbackHandler handles an eta_demo callback from a start command.
-func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
-	chatID := cbq.Message.Chat.ID
-
-	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), "96049", nil)
-	if err != nil {
-		return err
-	}
-
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-
-	replyMarkup, err := EtaMessageReplyMarkup("96049", nil, false)
-	if err != nil {
-		return err
-	}
-	reply.ReplyMarkup = replyMarkup
-
-	if !cbq.Message.Chat.IsPrivate() {
-		reply.ReplyToMessageID = cbq.Message.MessageID
-	}
-
-	answer := tgbotapi.NewCallback(cbq.ID, "Etas sent!")
-
+func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
 	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaDemoCallback, cbq.Message.Chat.Type)
 
-	err = answerCallbackQuery(bot, reply, answer)
-	return err
+	sendETAMessage(ctx, bot, cbq, "96049", nil, responses)
+	close(responses)
 }
 
 // NewEtaHandler sends etas for a bus stop when a user taps "Get etas" on a bus stop location returned from a
 // location query
-func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
-	chatID := cbq.Message.Chat.ID
-
+func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
+		responses <- notOk(err)
+		return
 	}
-
-	bsID, sNos := data.BusStopID, data.ServiceNos
-
-	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), bsID, sNos)
-	if err != nil {
-		return err
-	}
-
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-
-	replyMarkup, err := EtaMessageReplyMarkup(bsID, sNos, false)
-	if err != nil {
-		return err
-	}
-	reply.ReplyMarkup = replyMarkup
-
-	if !cbq.Message.Chat.IsPrivate() {
-		reply.ReplyToMessageID = cbq.Message.MessageID
-	}
-
-	answer := tgbotapi.NewCallback(cbq.ID, "Etas sent!")
-
-	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaFromLocationCallback, cbq.Message.Chat.Type)
-
-	err = answerCallbackQuery(bot, reply, answer)
-	return err
-}
-
-// ResendCallbackHandler handles the "Resend" button on eta results.
-// todo: combine with NewEtaHandler
-func ResendCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
-	chatID := cbq.Message.Chat.ID
-
-	var data CallbackData
-	err := json.Unmarshal([]byte(cbq.Data), &data)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
-	}
-
-	busStopID, serviceNos := data.BusStopID, data.ServiceNos
-
-	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, serviceNos)
-	if err != nil {
-		return err
-	}
-
-	reply := tgbotapi.NewMessage(chatID, text)
-	reply.ParseMode = "markdown"
-
-	replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
-	if err != nil {
-		return err
-	}
-	reply.ReplyMarkup = replyMarkup
-
-	if !cbq.Message.Chat.IsPrivate() {
-		reply.ReplyToMessageID = cbq.Message.MessageID
-	}
-
-	answer := tgbotapi.NewCallback(cbq.ID, "Etas resent!")
-
-	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionResendCallback, cbq.Message.Chat.Type)
-
-	err = answerCallbackQuery(bot, reply, answer)
-	return err
+	code, services := data.BusStopID, data.ServiceNos
+	sendETAMessage(ctx, bot, cbq, code, services, responses)
+	close(responses)
 }
 
 func stringInSlice(a string, list []string) (bool, int) {
@@ -282,18 +189,20 @@ func stringInSlice(a string, list []string) (bool, int) {
 }
 
 // ToggleFavouritesHandler handles the toggle favourite callback button on etas
-func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery) error {
+func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
 	userID := cbq.From.ID
 
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data))
+		responses <- notOk(errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data)))
+		return
 	}
 
 	favourites, err := GetUserFavourites(ctx, userID)
 	if err != nil {
-		return errors.Wrap(err, "could not retrieve user favourites")
+		responses <- notOk(errors.Wrap(err, "could not retrieve user favourites"))
+		return
 	}
 
 	var action string
@@ -313,7 +222,7 @@ func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.
 
 	err = SetUserFavourites(ctx, userID, favourites)
 	if err != nil {
-		return errors.Wrap(err, "error updating user favourites")
+		responses <- notOk(errors.Wrap(err, "error updating user favourites"))
 	}
 
 	text := fmt.Sprintf("Eta query `%s` %s favourites!", data.Argstr, action)
@@ -346,7 +255,10 @@ func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.
 	}
 
 	err = answerCallbackQuery(bot, msg, answer)
-	return errors.WithStack(err)
+	if err != nil {
+		responses <- notOk(err)
+		return
+	}
 }
 
 // callbackErrorHandler is for informing the user about an error while processing a callback query.

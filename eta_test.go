@@ -38,18 +38,25 @@ func (b MockBusStops) Get(ID string) *BusStop {
 	return b.BusStop
 }
 
-type MockDatamall struct {
+type MockETAService struct {
 	BusArrival datamall.BusArrival
 	Error      error
 }
 
-func (d MockDatamall) GetBusArrival(busStopCode string, serviceNo string) (datamall.BusArrival, error) {
-	return d.BusArrival, d.Error
+func (s MockETAService) GetBusArrival(string, string) (datamall.BusArrival, error) {
+	return s.BusArrival, s.Error
 }
 
-func newArrival(t time.Time) datamall.BusArrival {
+type MockDatamall struct {
+}
+
+func (d MockDatamall) GetBusArrival(code string, serviceNo string) (datamall.BusArrival, error) {
+	return newArrival(time.Time{}, code), nil
+}
+
+func newArrival(t time.Time, code string) datamall.BusArrival {
 	return datamall.BusArrival{
-		BusStopID: "96049",
+		BusStopID: code,
 		Services: []datamall.Service{
 			{
 				ServiceNo: "2",
@@ -194,7 +201,7 @@ func TestCalculateEtas(t *testing.T) {
 	now, _ := time.Parse(time.RFC3339, time.RFC3339)
 
 	t.Run("In operation, all etas", func(t *testing.T) {
-		etas := CalculateEtas(now, newArrival(now))
+		etas := CalculateEtas(now, newArrival(now, ""))
 
 		actual := etas.Services
 		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"-1", "10", "36"}, Loads: [3]string{"", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
@@ -205,7 +212,7 @@ func TestCalculateEtas(t *testing.T) {
 		}
 	})
 	t.Run("In operation, missing etas", func(t *testing.T) {
-		arrival := newArrival(now)
+		arrival := newArrival(now, "")
 		arrival.Services[0].NextBus2.EstimatedArrival = ""
 		arrival.Services[0].NextBus3.EstimatedArrival = ""
 
@@ -220,7 +227,7 @@ func TestCalculateEtas(t *testing.T) {
 		}
 	})
 	t.Run("In operation, no etas", func(t *testing.T) {
-		arrival := newArrival(now)
+		arrival := newArrival(now, "")
 		arrival.Services[0].NextBus.EstimatedArrival = ""
 		arrival.Services[0].NextBus2.EstimatedArrival = ""
 		arrival.Services[0].NextBus3.EstimatedArrival = ""
@@ -529,15 +536,11 @@ func TestETAMessageText(t *testing.T) {
 				busStopRepository: MockBusStops{
 					BusStop: &stop,
 				},
-				etaService: MockDatamall{
-					BusArrival: datamall.BusArrival{
-						Services: make([]datamall.Service, 1),
-					},
-				},
-				formatter: MockETAFormatter("formatter output"),
-				t:         time.Time{},
-				code:      "",
-				services:  nil,
+				etaService: MockDatamall{},
+				formatter:  MockETAFormatter("formatter output"),
+				t:          time.Time{},
+				code:       "",
+				services:   nil,
 			},
 			want: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n" +
 				"formatter output\n" +
@@ -550,12 +553,10 @@ func TestETAMessageText(t *testing.T) {
 				busStopRepository: MockBusStops{
 					BusStop: &stop,
 				},
-				etaService: MockDatamall{
-					BusArrival: datamall.BusArrival{},
-				},
-				formatter: MockETAFormatter("formatter output"),
-				t:         time.Time{},
-				code:      "",
+				etaService: MockDatamall{},
+				formatter:  MockETAFormatter("formatter output"),
+				t:          time.Time{},
+				code:       "",
 			},
 			want: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n" +
 				"formatter output\n" +
@@ -568,7 +569,7 @@ func TestETAMessageText(t *testing.T) {
 				busStopRepository: MockBusStops{
 					BusStop: &stop,
 				},
-				etaService: MockDatamall{
+				etaService: MockETAService{
 					Error: datamall.Error{StatusCode: 501},
 				},
 				formatter: MockETAFormatter("body"),
@@ -585,15 +586,11 @@ func TestETAMessageText(t *testing.T) {
 			name: "when bus stop is not found but has arriving buses",
 			args: args{
 				busStopRepository: MockBusStops{},
-				etaService: MockDatamall{
-					BusArrival: datamall.BusArrival{
-						Services: make([]datamall.Service, 1),
-					},
-				},
-				formatter: MockETAFormatter("formatter output"),
-				t:         time.Time{},
-				code:      "96049",
-				services:  nil,
+				etaService:        MockDatamall{},
+				formatter:         MockETAFormatter("formatter output"),
+				t:                 time.Time{},
+				code:              "96049",
+				services:          nil,
 			},
 			want: "*96049*\n" +
 				"formatter output\n" +
@@ -604,7 +601,7 @@ func TestETAMessageText(t *testing.T) {
 			name: "when bus stop is not found and has no arriving buses",
 			args: args{
 				busStopRepository: MockBusStops{},
-				etaService: MockDatamall{
+				etaService: MockETAService{
 					BusArrival: datamall.BusArrival{},
 				},
 				formatter: MockETAFormatter("formatter output"),
@@ -620,7 +617,7 @@ func TestETAMessageText(t *testing.T) {
 			name: "when bus stop is not found and datamall is down",
 			args: args{
 				busStopRepository: MockBusStops{},
-				etaService: MockDatamall{
+				etaService: MockETAService{
 					Error: datamall.Error{StatusCode: 501},
 				},
 				formatter: MockETAFormatter("body"),
