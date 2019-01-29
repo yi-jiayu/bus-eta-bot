@@ -120,13 +120,13 @@ func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
 			log.Errorf(ctx, "%+v", err)
 		}
 		wg.Add(1)
-		go func() {
+		go func(request telegram.Request) {
 			defer wg.Done()
-			err := bot.TelegramService.Do(r.Request)
+			err := bot.TelegramService.Do(request)
 			if err != nil {
 				log.Errorf(ctx, "%+v", err)
 			}
-		}()
+		}(r.Request)
 	}
 }
 
