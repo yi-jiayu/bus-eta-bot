@@ -4,6 +4,7 @@ require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.8.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/golang/mock v1.2.0
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/kr/pretty v0.1.0

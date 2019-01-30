@@ -190,7 +190,7 @@ func stringInSlice(a string, list []string) (bool, int) {
 
 // ToggleFavouritesHandler handles the toggle favourite callback button on etas
 func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
-	userID := cbq.From.ID
+	defer close(responses)
 
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
@@ -198,15 +198,13 @@ func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.
 		responses <- notOk(errors.Wrap(err, fmt.Sprintf("error unmarshalling callback data: %s", cbq.Data)))
 		return
 	}
-
-	favourites, err := GetUserFavourites(ctx, userID)
+	userID := cbq.From.ID
+	favourites, err := bot.Users.GetUserFavourites(ctx, userID)
 	if err != nil {
 		responses <- notOk(errors.Wrap(err, "could not retrieve user favourites"))
 		return
 	}
-
 	var action string
-
 	// if the entry is already in the favourites, we remove it
 	if exists, pos := stringInSlice(data.Argstr, favourites); exists {
 		// remove item from slice
@@ -219,45 +217,41 @@ func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.
 		favourites = append(favourites, data.Argstr)
 		action = "added to"
 	}
-
-	err = SetUserFavourites(ctx, userID, favourites)
+	err = bot.Users.SetUserFavourites(ctx, userID, favourites)
 	if err != nil {
 		responses <- notOk(errors.Wrap(err, "error updating user favourites"))
 	}
-
-	text := fmt.Sprintf("Eta query `%s` %s favourites!", data.Argstr, action)
-	msg := tgbotapi.NewMessage(int64(userID), text)
-	msg.ParseMode = "markdown"
-
+	sendMessageRequest := telegram.SendMessageRequest{
+		ChatID:    cbq.Message.Chat.ID,
+		Text:      fmt.Sprintf("ETA query `%s` %s favourites!", data.Argstr, action),
+		ParseMode: "markdown",
+	}
 	if len(favourites) > 0 {
-		var keyboard [][]tgbotapi.KeyboardButton
+		var keyboard [][]telegram.KeyboardButton
 		for _, fav := range favourites {
-			keyboard = append(keyboard, []tgbotapi.KeyboardButton{
-				{
-					Text: fav,
-				},
-			})
+			button := telegram.KeyboardButton{
+				Text: fav,
+			}
+			row := []telegram.KeyboardButton{button}
+			keyboard = append(keyboard, row)
 		}
-		msg.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
+		sendMessageRequest.ReplyMarkup = telegram.ReplyKeyboardMarkup{
 			Keyboard:       keyboard,
 			ResizeKeyboard: true,
 		}
 	} else {
-		msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(false)
+		sendMessageRequest.ReplyMarkup = telegram.ReplyKeyboardRemove{}
 	}
+	responses <- ok(sendMessageRequest)
+	answerCallbackQueryRequest := telegram.AnswerCallbackQueryRequest{
+		CallbackQueryID: cbq.ID,
+	}
+	responses <- ok(answerCallbackQueryRequest)
 
-	answer := tgbotapi.NewCallback(cbq.ID, "")
-
-	if action == "removed_from" {
+	if action == "removed from" {
 		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRemoveFavouriteCalback, cbq.Message.Chat.Type)
 	} else {
 		go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionAddFavouriteCalback, cbq.Message.Chat.Type)
-	}
-
-	err = answerCallbackQuery(bot, msg, answer)
-	if err != nil {
-		responses <- notOk(err)
-		return
 	}
 }
 

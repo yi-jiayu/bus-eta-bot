@@ -8,8 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/golang/mock/gomock"
 	"github.com/yi-jiayu/telegram-bot-api"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/mocks"
 )
 
 // Telegram chat types
@@ -276,6 +278,7 @@ func (r *MockUserRepository) UpdateUserLastSeenTime(ctx context.Context, userID 
 }
 
 func TestBusEtaBot_HandleUpdate_UpdateUserLastSeenTime(t *testing.T) {
+	const userID = 1
 	testCases := []struct {
 		Name   string
 		Update *tgbotapi.Update
@@ -285,7 +288,7 @@ func TestBusEtaBot_HandleUpdate_UpdateUserLastSeenTime(t *testing.T) {
 			Update: &tgbotapi.Update{
 				Message: &tgbotapi.Message{
 					From: &tgbotapi.User{
-						ID:        1,
+						ID:        userID,
 						FirstName: "Jiayu",
 					},
 				},
@@ -296,7 +299,7 @@ func TestBusEtaBot_HandleUpdate_UpdateUserLastSeenTime(t *testing.T) {
 			Update: &tgbotapi.Update{
 				CallbackQuery: &tgbotapi.CallbackQuery{
 					From: &tgbotapi.User{
-						ID:        1,
+						ID:        userID,
 						FirstName: "Jiayu",
 					},
 				},
@@ -307,7 +310,7 @@ func TestBusEtaBot_HandleUpdate_UpdateUserLastSeenTime(t *testing.T) {
 			Update: &tgbotapi.Update{
 				InlineQuery: &tgbotapi.InlineQuery{
 					From: &tgbotapi.User{
-						ID:        1,
+						ID:        userID,
 						FirstName: "Jiayu",
 					},
 				},
@@ -317,11 +320,14 @@ func TestBusEtaBot_HandleUpdate_UpdateUserLastSeenTime(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			m := mocks.NewMockUserRepository(ctrl)
+			m.EXPECT().UpdateUserLastSeenTime(gomock.Any(), userID, gomock.Any()).Times(1)
 			bot := &BusEtaBot{
-				Users: &MockUserRepository{},
+				Users: m,
 			}
 			bot.HandleUpdate(context.Background(), tc.Update)
-			assert.True(t, bot.Users.(*MockUserRepository).Called, "Users.UpdateUserLastSeenTime not called")
 		})
 	}
 }

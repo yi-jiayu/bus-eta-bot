@@ -3,15 +3,21 @@ package busetabot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/mocks"
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
+
+//go:generate mockgen -destination mocks/users.go -package mocks github.com/yi-jiayu/bus-eta-bot/v4 UserRepository
 
 func newCallbackQueryFromMessage(data string) *tgbotapi.CallbackQuery {
 	return &tgbotapi.CallbackQuery{
@@ -394,5 +400,114 @@ func TestNewEtaHandler(t *testing.T) {
 	}
 	if !assert.Equal(t, expected, actual) {
 		pretty.Println(actual)
+	}
+}
+
+func TestToggleFavouritesHandler(t *testing.T) {
+	const userID = 1
+	type testCase struct {
+		Name               string
+		Favourites         []string
+		BusStopCode        string
+		ExpectedFavourites []string
+		ExpectedResponses  []Response
+	}
+	testCases := []testCase{
+		{
+			Name:               "when toggling a new favourite",
+			Favourites:         nil,
+			BusStopCode:        "96049",
+			ExpectedFavourites: []string{"96049"},
+			ExpectedResponses: []Response{
+				{
+					Request: telegram.SendMessageRequest{
+						ChatID:    1,
+						Text:      "ETA query `96049` added to favourites!",
+						ParseMode: "markdown",
+						ReplyMarkup: telegram.ReplyKeyboardMarkup{
+							Keyboard: [][]telegram.KeyboardButton{
+								{
+									{Text: "96049"},
+								},
+							},
+							ResizeKeyboard: true,
+						},
+					},
+				},
+				{
+					Request: telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1"},
+				},
+			},
+		},
+		{
+			Name:               "when toggling an existing favourite",
+			Favourites:         []string{"96049", "81111"},
+			BusStopCode:        "96049",
+			ExpectedFavourites: []string{"81111"},
+			ExpectedResponses: []Response{
+				{
+					Request: telegram.SendMessageRequest{
+						ChatID:    1,
+						Text:      "ETA query `96049` removed from favourites!",
+						ParseMode: "markdown",
+						ReplyMarkup: telegram.ReplyKeyboardMarkup{
+							Keyboard: [][]telegram.KeyboardButton{
+								{
+									{Text: "81111"},
+								},
+							},
+							ResizeKeyboard: true,
+						},
+					},
+				},
+				{
+					Request: telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1"},
+				},
+			},
+		},
+		{
+			Name:               "when toggling the only favourite",
+			Favourites:         []string{"96049"},
+			BusStopCode:        "96049",
+			ExpectedFavourites: []string{},
+			ExpectedResponses: []Response{
+				{
+					Request: telegram.SendMessageRequest{
+						ChatID:      1,
+						Text:        "ETA query `96049` removed from favourites!",
+						ParseMode:   "markdown",
+						ReplyMarkup: telegram.ReplyKeyboardRemove{},
+					},
+				},
+				{
+					Request: telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1"},
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			m := mocks.NewMockUserRepository(ctrl)
+			m.EXPECT().GetUserFavourites(gomock.Any(), userID).Return(tc.Favourites, nil)
+			m.EXPECT().SetUserFavourites(gomock.Any(), userID, tc.ExpectedFavourites).Return(nil)
+			bot := &BusEtaBot{
+				Users: m,
+				NowFunc: func() time.Time {
+					return time.Time{}
+				},
+			}
+			cbq := newCallbackQueryFromMessage(fmt.Sprintf(`{"t":"togf","a": "%s"}`, tc.BusStopCode))
+			responses := make(chan Response, ResponseBufferSize)
+			go ToggleFavouritesHandler(context.TODO(), bot, cbq, responses)
+			actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !assert.Equal(t, tc.ExpectedResponses, actual) {
+				pretty.Println(actual)
+			}
+		})
 	}
 }

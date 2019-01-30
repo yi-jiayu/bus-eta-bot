@@ -38,6 +38,8 @@ type BusStopRepository interface {
 
 type UserRepository interface {
 	UpdateUserLastSeenTime(ctx context.Context, userID int, t time.Time) error
+	GetUserFavourites(ctx context.Context, userID int) (favourites []string, err error)
+	SetUserFavourites(ctx context.Context, userID int, favourites []string) error
 }
 
 type ETAService interface {
