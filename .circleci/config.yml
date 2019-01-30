@@ -51,7 +51,6 @@ jobs:
               cp results.xml ${TEST_RESULTS}/go-test/
             }
             trap store_test_output EXIT
-            go generate ./...
             go test -v -coverprofile=coverage.txt -covermode=count ./... 2>&1 | tee go-test.out
       - save_cache:
           name: Save Go module cache
