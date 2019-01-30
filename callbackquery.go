@@ -168,6 +168,8 @@ func EtaDemoCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 // NewEtaHandler sends etas for a bus stop when a user taps "Get etas" on a bus stop location returned from a
 // location query
 func NewEtaHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
+	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionEtaFromLocationCallback, "")
+
 	var data CallbackData
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
