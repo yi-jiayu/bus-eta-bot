@@ -17,6 +17,8 @@ before_install:
   - gcloud --quiet components install app-engine-python
   - if [ -n "$GCLOUD_VERSION" ]; then gcloud --quiet components update --version $GCLOUD_VERSION; fi
 install: true
+before_script:
+  - go generate ./...
 script:
   - go test -coverprofile=coverage.txt -covermode=count ./...
 after_success:
