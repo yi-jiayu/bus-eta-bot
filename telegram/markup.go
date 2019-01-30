@@ -65,3 +65,40 @@ func NewForceReply(selective bool) ForceReply {
 		Selective: selective,
 	}
 }
+
+type KeyboardButton struct {
+	Text string
+}
+
+type ReplyKeyboardMarkup struct {
+	Keyboard       [][]KeyboardButton
+	ResizeKeyboard bool
+}
+
+func (r ReplyKeyboardMarkup) markup() interface{} {
+	var rows [][]tgbotapi.KeyboardButton
+	for _, r := range r.Keyboard {
+		var row []tgbotapi.KeyboardButton
+		for _, b := range r {
+			button := tgbotapi.KeyboardButton{
+				Text: b.Text,
+			}
+			row = append(row, button)
+		}
+		rows = append(rows, row)
+	}
+	return tgbotapi.ReplyKeyboardMarkup{
+		Keyboard:       rows,
+		ResizeKeyboard: r.ResizeKeyboard,
+	}
+}
+
+type ReplyKeyboardRemove struct {
+}
+
+func (r ReplyKeyboardRemove) markup() interface{} {
+	return tgbotapi.ReplyKeyboardRemove{
+		RemoveKeyboard: true,
+		Selective:      false,
+	}
+}

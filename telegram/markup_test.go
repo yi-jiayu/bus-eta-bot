@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInlineKeyboardMarkup_inlineKeyboardMarkup(t *testing.T) {
+func TestInlineKeyboardMarkup_markup(t *testing.T) {
 	markup := InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
 			{
@@ -22,7 +22,7 @@ func TestInlineKeyboardMarkup_inlineKeyboardMarkup(t *testing.T) {
 			},
 		},
 	}
-	actual := markup.inlineKeyboardMarkup()
+	actual := markup.markup()
 	expected := tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
 			{
@@ -66,5 +66,49 @@ func TestNewSwitchInlineQueryCurrentChat(t *testing.T) {
 	actual := NewSwitchInlineQueryCurrentChat("SUTD")
 	q := "SUTD"
 	expected := &q
+	assert.Equal(t, expected, actual)
+}
+
+func TestReplyKeyboardMarkup_markup(t *testing.T) {
+	markup := ReplyKeyboardMarkup{
+		Keyboard: [][]KeyboardButton{
+			{
+				{
+					Text: "96049",
+				},
+			},
+			{
+				{
+					Text: "81111 155 150",
+				},
+			},
+		},
+		ResizeKeyboard: true,
+	}
+	actual := markup.markup()
+	expected := tgbotapi.ReplyKeyboardMarkup{
+		Keyboard: [][]tgbotapi.KeyboardButton{
+			{
+				{
+					Text: "96049",
+				},
+			},
+			{
+				{
+					Text: "81111 155 150",
+				},
+			},
+		},
+		ResizeKeyboard: true,
+	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestReplyKeyboardRemove_markup(t *testing.T) {
+	markup := ReplyKeyboardRemove{}
+	actual := markup.markup()
+	expected := tgbotapi.ReplyKeyboardRemove{
+		RemoveKeyboard: true,
+	}
 	assert.Equal(t, expected, actual)
 }
