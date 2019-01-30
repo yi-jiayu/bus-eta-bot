@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/telegram-bot-api"
@@ -26,52 +25,6 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 
 // CallbackQueryHandler is a handler for callback queries
 type CallbackQueryHandler func(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response)
-
-func answerCallbackQuery(bot *BusEtaBot, c tgbotapi.Chattable, answer tgbotapi.CallbackConfig) error {
-	errs := make([]error, 0)
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	errChan := make(chan error, 2)
-	go func() {
-		for err := range errChan {
-			errs = append(errs, err)
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		_, err := bot.Telegram.Send(c)
-		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("%#v", c))
-			errChan <- err
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		_, err := bot.Telegram.AnswerCallbackQuery(answer)
-		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("%#v", answer))
-			errChan <- err
-		}
-	}()
-
-	wg.Wait()
-	close(errChan)
-
-	switch len(errs) {
-	case 1:
-		return errs[0]
-	case 2:
-		return fmt.Errorf("%v\n%v", errs[0], errs[1])
-	default:
-		return nil
-	}
-}
 
 func updateETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, code string, services []string, responses chan<- Response) {
 	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), code, services)
