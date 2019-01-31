@@ -18,6 +18,13 @@ func (err Error) Error() string {
 	return err.Description
 }
 
+func newError(err error) error {
+	if err, ok := err.(tgbotapi.Error); ok {
+		return Error{Description: err.Message}
+	}
+	return err
+}
+
 type SendMessageRequest struct {
 	ChatID           int64
 	Text             string
@@ -43,7 +50,7 @@ func (r SendMessageRequest) config() tgbotapi.MessageConfig {
 func (r SendMessageRequest) doWith(c *Client) (result interface{}, err error) {
 	m, err := c.client.Send(r.config())
 	if err != nil {
-		return nil, Error{Description: err.(tgbotapi.Error).Message}
+		return nil, newError(err)
 	}
 	return m, nil
 }
@@ -81,7 +88,7 @@ func (r EditMessageTextRequest) config() (config tgbotapi.EditMessageTextConfig)
 func (r EditMessageTextRequest) doWith(c *Client) (result interface{}, err error) {
 	m, err := c.client.Send(r.config())
 	if err != nil {
-		return nil, Error{Description: err.(tgbotapi.Error).Message}
+		return nil, newError(err)
 	}
 	return m, nil
 }
@@ -93,9 +100,9 @@ type AnswerCallbackQueryRequest struct {
 
 func (r AnswerCallbackQueryRequest) doWith(c *Client) (result interface{}, err error) {
 	config := tgbotapi.NewCallback(r.CallbackQueryID, r.Text)
-	res, err := c.client.AnswerCallbackQuery(config)
+	_, err = c.client.AnswerCallbackQuery(config)
 	if err != nil {
-		return nil, Error{Description: res.Description}
+		return nil, newError(err)
 	}
 	return
 }
