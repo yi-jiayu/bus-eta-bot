@@ -55,6 +55,25 @@ jobs:
             gcloud --quiet config set project bus-eta-bot
       - checkout
       - run:
+          name: Load staging.app.yaml
+          command: |
+            base64 -d <<< $STAGING_APP_YAML_BASE64 > web/staging.app.yaml
+      - run:
+          name: Associate deploy with Sentry
+          command: |
+            curl -sL https://sentry.io/get-cli/ | bash
+
+            VERSION=$(sentry-cli releases propose-version)
+
+            # Create a release
+            sentry-cli releases new -p bus-eta-bot $VERSION
+
+            # Associate commits with the release
+            sentry-cli releases set-commits --auto $VERSION
+
+            # Set SENTRY_RELEASE in staging.app.yaml
+            sed "s/sentry_release/$VERSION/" < web/staging.app.yaml > web/staging.app.yaml~ && mv web/staging.app.yaml~ web/staging.app.yaml
+      - run:
           name: Deploy to staging
           command: |
             # embed current version into source
@@ -66,7 +85,6 @@ jobs:
             # version cannot contain dots
             tag_escaped=$(sed "s/\./-/g" <<< ${tag})
 
-            base64 -d <<< $STAGING_APP_YAML_BASE64 > web/staging.app.yaml
             gcloud --quiet app deploy --verbosity=info web/staging.app.yaml --version ${tag_escaped}
   deploy-production:
     docker:
