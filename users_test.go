@@ -10,14 +10,10 @@ import (
 	"google.golang.org/appengine/datastore"
 )
 
-var devAppserverOptions = &aetest.Options{
-	SupportDatastoreEmulator: func(b bool) *bool { return &b }(true), // hacky way of getting a pointer to a bool inline
-}
-
 func TestDatastoreUserRepository_UpdateUserLastSeenTime(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := NewContextWithOptions(devAppserverOptions)
+	ctx, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +42,7 @@ func TestDatastoreUserRepository_UpdateUserLastSeenTime(t *testing.T) {
 func TestDatastoreUserRepository_GetUserFavourites(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := NewContextWithOptions(devAppserverOptions)
+	ctx, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +104,7 @@ func TestDatastoreUserRepository_GetUserFavourites(t *testing.T) {
 func TestDatastoreUserRepository_SetUserFavourites(t *testing.T) {
 	t.Parallel()
 
-	ctx, done, err := NewContextWithOptions(devAppserverOptions)
+	ctx, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
 	}
