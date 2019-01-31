@@ -5,16 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"github.com/getsentry/raven-go"
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"go.opencensus.io/trace"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
+	gaelog "google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4"
@@ -37,7 +39,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Errorf(ctx, "%+v", err)
+		gaelog.Errorf(ctx, "%+v", err)
 
 		// return a 200 status to all webhooks so that telegram does not redeliver them
 		// w.WriteHeader(http.StatusInternalServerError)
@@ -48,14 +50,14 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	var pretty bytes.Buffer
 	err = json.Indent(&pretty, bs, "", "  ")
 	if err != nil {
-		log.Errorf(ctx, "%+v", err)
+		gaelog.Errorf(ctx, "%+v", err)
 	}
-	log.Infof(ctx, "%s", pretty.String())
+	gaelog.Infof(ctx, "%s", pretty.String())
 
 	var update tgbotapi.Update
 	err = json.Unmarshal(bs, &update)
 	if err != nil {
-		log.Errorf(ctx, "%+v", err)
+		gaelog.Errorf(ctx, "%+v", err)
 
 		// return a 200 status to all webhooks so that telegram does not redeliver them
 		// w.WriteHeader(http.StatusInternalServerError)
@@ -87,7 +89,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	telegramService, err := telegram.NewClient(BotToken, client)
 	if err != nil {
 		err = errors.Wrap(err, "error creating telegram service")
-		log.Errorf(ctx, "%+v", err)
+		gaelog.Errorf(ctx, "%+v", err)
 		return
 	}
 	bot.TelegramService = telegramService
@@ -100,6 +102,7 @@ func init() {
 	busStopRepository, err = busetabot.NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json", "")
 	if err != nil {
 		fmt.Printf("%+v\n", err)
+		raven.CaptureErrorAndWait(err, nil)
 		os.Exit(1)
 	}
 
@@ -115,11 +118,12 @@ func init() {
 		// Create and register a OpenCensus Stackdriver Trace exporter.
 		exporter, err := stackdriver.NewExporter(stackdriver.Options{})
 		if err != nil {
-			fmt.Printf("%+v\n", err)
-			os.Exit(1)
+			log.Printf("error setting up opencensus stackdriver exporter: %+v\n", err)
+			raven.CaptureError(err, nil)
+		} else {
+			trace.RegisterExporter(exporter)
+			trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 		}
-		trace.RegisterExporter(exporter)
-		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	}
 }
 

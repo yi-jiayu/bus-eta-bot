@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getsentry/raven-go"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine/log"
@@ -120,6 +121,7 @@ func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
 		err := r.Error
 		if err != nil {
 			log.Errorf(ctx, "%+v", err)
+			raven.CaptureError(err, nil)
 		}
 		wg.Add(1)
 		go func(request telegram.Request) {
@@ -127,6 +129,7 @@ func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
 			err := bot.TelegramService.Do(request)
 			if err != nil {
 				log.Errorf(ctx, "%+v", err)
+				raven.CaptureError(err, nil)
 			}
 		}(r.Request)
 	}
