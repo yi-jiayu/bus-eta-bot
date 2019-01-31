@@ -41,19 +41,19 @@ func (s *Spy) MessageHandler(context.Context, *BusEtaBot, *tgbotapi.Message) err
 	return nil
 }
 
-func (s *Spy) CommandHandler(context.Context, *BusEtaBot, *tgbotapi.Message, chan<- Response) {
+func (s *Spy) CommandHandler(ctx context.Context, bot *BusEtaBot, msg *tgbotapi.Message, responses chan<- Response) {
+	defer close(responses)
 	if s.SpyFunc != nil {
 		s.SpyFunc()
 	}
-
 	s.Called = true
 }
 
 func (s *Spy) CallbackQueryHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
+	defer close(responses)
 	if s.SpyFunc != nil {
 		s.SpyFunc()
 	}
-
 	s.Called = true
 }
 
