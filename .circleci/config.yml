@@ -46,7 +46,7 @@ jobs:
           command: bash <(curl -s https://codecov.io/bash)
   deploy-staging:
     docker:
-      - image: google/cloud-sdk
+      - image: google/cloud-sdk:231.0.0
     steps:
       - run:
           name: Authorize the Google Cloud SDK
@@ -68,6 +68,13 @@ jobs:
 
             base64 -d <<< $STAGING_APP_YAML_BASE64 > web/staging.app.yaml
             gcloud --quiet app deploy --verbosity=info web/staging.app.yaml --version ${tag_escaped}
+  deploy-production:
+    docker:
+      - image: google/cloud-sdk:231.0.0
+    steps:
+      - run:
+          name: Mock deploy to production
+          command: echo "Pretending to deploy to production..."
 workflows:
   version: 2
   test_and_deploy:
@@ -76,3 +83,10 @@ workflows:
       - deploy-staging:
           requires:
             - test
+      - approve-deploy-production:
+          type: approval
+          requires:
+            - deploy-staging
+      - deploy-production:
+          requires:
+            - approve-deploy-production
