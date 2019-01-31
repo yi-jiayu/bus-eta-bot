@@ -83,10 +83,3 @@ workflows:
       - deploy-staging:
           requires:
             - test
-      - approve-deploy-production:
-          type: approval
-          requires:
-            - deploy-staging
-      - deploy-production:
-          requires:
-            - approve-deploy-production
