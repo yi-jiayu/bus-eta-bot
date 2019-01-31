@@ -1,16 +1,14 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
-      - image: circleci/golang:1.11
+      - image: jiayuyi/circleci-go-gcloud:go1.11-gcloud231.0.0
     working_directory: /go/src/github.com/yi-jiayu/bus-eta-bot
     environment:
       ARTIFACTS: /tmp/artifacts
       TEST_RESULTS: /tmp/test-results
       GO111MODULE: "on"
-      GCLOUD_VERSION: "230.0.0"
     steps:
-      - run: GO111MODULE=off go get github.com/jstemmer/go-junit-report
       - checkout
       - run:
           name: Set up artifact and test result directories
@@ -21,26 +19,6 @@ jobs:
           name: Restore Go module cache
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
-      - restore_cache:
-          name: Restore cached gcloud installation
-          keys:
-            - google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
-      - run:
-          name: Install gcloud
-          command: |
-            if [ ! -f "/tmp/google-cloud-sdk/bin/gcloud" ]; then
-              curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-$GCLOUD_VERSION-linux-x86_64.tar.gz |
-              tar -z -x -C /tmp -f -
-            fi
-            echo 'source /tmp/google-cloud-sdk/path.bash.inc' >> $BASH_ENV
-      - run:
-          name: Update gcloud
-          command: |
-            gcloud --quiet components install app-engine-go
-            gcloud --quiet components install app-engine-python
-            if [ -n "$GCLOUD_VERSION" ]; then
-              gcloud --quiet components update --version $GCLOUD_VERSION
-            fi
       - run:
           name: Run unit tests
           command: |
@@ -57,17 +35,51 @@ jobs:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      - save_cache:
-          name: Cache gcloud installation
-          key: google-cloud-sdk-v2-{{ .Environment.GCLOUD_VERSION }}
-          paths:
-            - "/tmp/google-cloud-sdk"
-      - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+      - store_artifacts:
           path: /tmp/artifacts
           destination: artifacts
-      - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+      - store_test_results:
           path: /tmp/test-results
           destination: test-results
       - run:
           name: Upload coverage
           command: bash <(curl -s https://codecov.io/bash)
+  deploy-staging:
+    docker:
+      - image: google/cloud-sdk:231.0.0
+    steps:
+      - run:
+          name: Authorize the Google Cloud SDK
+          command: |
+            echo $CIRCLECI_SERVICE_ACCOUNT_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project bus-eta-bot
+      - checkout
+      - run:
+          name: Deploy to staging
+          command: |
+            # embed current version into source
+            tag=$(git describe --tags)
+            date=$(date +%Y-%m-%d)
+            sed "s/VERSION/$tag/" < version.go > version.go~ && mv version.go~ version.go
+            sed "s/VERSION/$tag/; s/DATE/$date/" < index.html > index.html~ && mv index.html~ index.html
+
+            # version cannot contain dots
+            tag_escaped=$(sed "s/\./-/g" <<< ${tag})
+
+            base64 -d <<< $STAGING_APP_YAML_BASE64 > web/staging.app.yaml
+            gcloud --quiet app deploy --verbosity=info web/staging.app.yaml --version ${tag_escaped}
+  deploy-production:
+    docker:
+      - image: google/cloud-sdk:231.0.0
+    steps:
+      - run:
+          name: Mock deploy to production
+          command: echo "Pretending to deploy to production..."
+workflows:
+  version: 2
+  test_and_deploy:
+    jobs:
+      - test
+      - deploy-staging:
+          requires:
+            - test

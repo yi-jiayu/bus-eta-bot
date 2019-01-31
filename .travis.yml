@@ -28,12 +28,6 @@ before_deploy:
   - echo $PROD_APP_YAML_V4 | base64 -d > web/prod.app.yaml
 deploy:
   - provider: script
-    script: ./deploy.sh staging
-    skip_cleanup: true
-    on:
-      all_branches: true
-      condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$STAGING_APP_YAML"
-  - provider: script
     script: ./deploy.sh prod
     skip_cleanup: true
     on:
