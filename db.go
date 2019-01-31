@@ -1,16 +1,9 @@
 package busetabot
 
 import (
-	"context"
 	"os"
 
 	"github.com/pkg/errors"
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
-)
-
-const (
-	favouritesKind = "Favourites"
 )
 
 const (
@@ -38,26 +31,4 @@ func GetBotEnvironment() string {
 	default:
 		return devEnvironment
 	}
-}
-
-// GetUserFavourites retrieved a user's saved favourites.
-func GetUserFavourites(ctx context.Context, userID int) ([]string, error) {
-	// set namespace
-	ctx, err := appengine.Namespace(ctx, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	var favourites Favourites
-	key := datastore.NewKey(ctx, favouritesKind, "", int64(userID), nil)
-	err = datastore.Get(ctx, key, &favourites)
-	if err != nil {
-		if err == datastore.ErrNoSuchEntity {
-			return nil, nil
-		}
-
-		return nil, err
-	}
-
-	return favourites.Favourites, nil
 }
