@@ -29,11 +29,6 @@ var (
 
 var namespace = GetBotEnvironment()
 
-// Favourites contains a user's saved favourites.
-type Favourites struct {
-	Favourites []string
-}
-
 func GetBotEnvironment() string {
 	switch os.Getenv("BOT_ENVIRONMENT") {
 	case stagingEnvironment:
@@ -65,21 +60,4 @@ func GetUserFavourites(ctx context.Context, userID int) ([]string, error) {
 	}
 
 	return favourites.Favourites, nil
-}
-
-// SetUserFavourites sets a user's saved favourites.
-func SetUserFavourites(ctx context.Context, userID int, favourites []string) error {
-	// set namespace
-	ctx, err := appengine.Namespace(ctx, namespace)
-	if err != nil {
-		return err
-	}
-
-	favs := Favourites{
-		Favourites: favourites,
-	}
-
-	key := datastore.NewKey(ctx, favouritesKind, "", int64(userID), nil)
-	_, err = datastore.Put(ctx, key, &favs)
-	return err
 }

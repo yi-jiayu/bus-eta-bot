@@ -9,7 +9,15 @@ import (
 	"google.golang.org/appengine/datastore"
 )
 
-const KindUser = "User"
+const (
+	KindFavourites = "Favourites"
+	KindUser       = "User"
+)
+
+// Favourites contains a user's saved favourites.
+type Favourites struct {
+	Favourites []string
+}
 
 type User struct {
 	LastSeenTime time.Time
@@ -38,38 +46,44 @@ func (r *DatastoreUserRepository) UpdateUserLastSeenTime(ctx context.Context, us
 func (r *DatastoreUserRepository) GetUserFavourites(ctx context.Context, userID int) (favourites []string, err error) {
 	ctx, err = appengine.Namespace(ctx, namespace)
 	if err != nil {
+		err = errors.Wrap(err, "error setting namespace")
 		return
 	}
-	k := datastore.NewKey(ctx, KindUser, "", int64(userID), nil)
-	var u User
-	err = datastore.Get(ctx, k, &u)
+	k := datastore.NewKey(ctx, KindFavourites, "", int64(userID), nil)
+	var f Favourites
+	err = datastore.Get(ctx, k, &f)
 	if err != nil {
 		if err != datastore.ErrNoSuchEntity {
+			err = errors.Wrap(err, "error getting user favourites")
 			return
 		}
 		return nil, nil
 	}
-	favourites = u.Favourites
+	favourites = f.Favourites
 	return
 }
 
 func (r *DatastoreUserRepository) SetUserFavourites(ctx context.Context, userID int, favourites []string) error {
-	k := datastore.NewKey(ctx, KindUser, "", int64(userID), nil)
-	err := datastore.RunInTransaction(ctx, func(tc context.Context) (err error) {
-		var u User
-		err = datastore.Get(tc, k, &u)
+	ctx, err := appengine.Namespace(ctx, namespace)
+	if err != nil {
+		return errors.Wrap(err, "error setting namespace")
+	}
+	k := datastore.NewKey(ctx, KindFavourites, "", int64(userID), nil)
+	err = datastore.RunInTransaction(ctx, func(tc context.Context) (err error) {
+		var f Favourites
+		err = datastore.Get(tc, k, &f)
 		if err != nil && err != datastore.ErrNoSuchEntity {
-			return errors.Wrap(err, "error getting user from datastore")
+			return errors.Wrap(err, "error getting user favourites from datastore")
 		}
-		u.Favourites = favourites
-		_, err = datastore.Put(tc, k, &u)
+		f.Favourites = favourites
+		_, err = datastore.Put(tc, k, &f)
 		if err != nil {
-			return errors.Wrap(err, "error putting user into datastore")
+			return errors.Wrap(err, "error putting user favourites into datastore")
 		}
 		return nil
 	}, nil)
 	if err != nil {
-		return errors.Wrap(err, "error updating user in transaction")
+		return errors.Wrap(err, "error updating user favourites in transaction")
 	}
 	return nil
 }
