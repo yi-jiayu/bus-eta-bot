@@ -37,8 +37,6 @@ func collectResponsesWithTimeout(responses <-chan Response, timeout time.Duratio
 }
 
 func TestFallbackCommandHandler(t *testing.T) {
-	t.Parallel()
-
 	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
 	defer tgAPI.Close()
 

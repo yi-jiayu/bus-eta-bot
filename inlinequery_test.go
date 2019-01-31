@@ -116,8 +116,6 @@ func TestInlineQueryHandler(t *testing.T) {
 }
 
 func TestChosenInlineResultHandler(t *testing.T) {
-	t.Parallel()
-
 	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
 	defer tgAPI.Close()
 

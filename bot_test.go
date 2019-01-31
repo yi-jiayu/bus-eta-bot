@@ -124,8 +124,6 @@ func MockInlineQuery() tgbotapi.InlineQuery {
 }
 
 func TestBusEtaBot_HandleUpdate(t *testing.T) {
-	t.Parallel()
-
 	// commands
 	startCmdSpy := Spy{}
 	aboutCmdSpy := Spy{}

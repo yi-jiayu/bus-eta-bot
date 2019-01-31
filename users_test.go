@@ -11,8 +11,6 @@ import (
 )
 
 func TestDatastoreUserRepository_UpdateUserLastSeenTime(t *testing.T) {
-	t.Parallel()
-
 	ctx, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
@@ -40,8 +38,6 @@ func TestDatastoreUserRepository_UpdateUserLastSeenTime(t *testing.T) {
 }
 
 func TestDatastoreUserRepository_GetUserFavourites(t *testing.T) {
-	t.Parallel()
-
 	ctx, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
@@ -102,8 +98,6 @@ func TestDatastoreUserRepository_GetUserFavourites(t *testing.T) {
 }
 
 func TestDatastoreUserRepository_SetUserFavourites(t *testing.T) {
-	t.Parallel()
-
 	ctx, done, err := aetest.NewContext()
 	if err != nil {
 		t.Fatal(err)
