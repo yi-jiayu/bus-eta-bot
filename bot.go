@@ -3,11 +3,11 @@ package busetabot
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"sync"
 	"time"
 
 	"github.com/getsentry/raven-go"
+	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine/log"
@@ -217,8 +217,8 @@ func (bot *BusEtaBot) handleMessage(ctx context.Context, message *tgbotapi.Messa
 func (bot *BusEtaBot) handleCommand(ctx context.Context, command string, message *tgbotapi.Message) {
 	if handler, exists := bot.Handlers.CommandHandlers[command]; exists {
 		responses := make(chan Response, ResponseBufferSize)
-		go bot.Dispatch(ctx, responses)
-		handler(ctx, bot, message, responses)
+		go handler(ctx, bot, message, responses)
+		bot.Dispatch(ctx, responses)
 	} else {
 		err := bot.Handlers.FallbackCommandHandler(ctx, bot, message)
 		if err != nil {
@@ -252,8 +252,8 @@ func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.Cal
 	if cbqType, ok := data["t"].(string); ok {
 		if handler, ok := bot.Handlers.CallbackQueryHandlers[cbqType]; ok {
 			responses := make(chan Response, ResponseBufferSize)
-			go bot.Dispatch(ctx, responses)
-			handler(ctx, bot, cbq, responses)
+			go handler(ctx, bot, cbq, responses)
+			bot.Dispatch(ctx, responses)
 		}
 	} else {
 		callbackErrorHandler(ctx, bot, cbq, errors.New("unrecognised callback query"))
