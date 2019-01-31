@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	"github.com/yi-jiayu/telegram-bot-api"
-	"google.golang.org/appengine/log"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
@@ -212,66 +211,35 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 	responses <- ok(resp)
 }
 
-func showFavourites(bot *BusEtaBot, message *tgbotapi.Message, favourites []string) error {
-	chatID := message.Chat.ID
-
-	var reply tgbotapi.MessageConfig
-	if len(favourites) == 0 {
-		reply = tgbotapi.NewMessage(chatID, "Oops, you haven't saved any favourites yet.")
-	} else {
-		var keyboard [][]tgbotapi.KeyboardButton
-		for _, fav := range favourites {
-			keyboard = append(keyboard, []tgbotapi.KeyboardButton{
-				{
-					Text: fav,
-				},
-			})
-		}
-
-		reply = tgbotapi.NewMessage(chatID, "Favourites keyboard activated.")
-		reply.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-			Keyboard:       keyboard,
-			ResizeKeyboard: true,
-		}
-	}
-
-	if !message.Chat.IsPrivate() {
-		reply.ReplyToMessageID = message.MessageID
-	}
-
-	_, err := bot.Telegram.Send(reply)
-	return err
-}
-
 // ShowFavouritesCmdHandler will display a reply keyboard for quick access to the user's favourites.
 func ShowFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
-	userID := message.From.ID
+	defer close(responses)
 
-	favourites, err := GetUserFavourites(ctx, userID)
-	if err != nil {
-		log.Errorf(ctx, "%+v", err)
-	}
-
-	err = showFavourites(bot, message, favourites)
+	favourites, err := bot.Users.GetUserFavourites(ctx, message.From.ID)
 	if err != nil {
 		responses <- notOk(err)
+		return
 	}
-	close(responses)
+	resp := telegram.SendMessageRequest{
+		ChatID: message.Chat.ID,
+		Text:   "You haven't set any favourites yet!",
+	}
+	if len(favourites) > 0 {
+		resp.Text = "Favourites keyboard activated!"
+		resp.ReplyMarkup = newShowFavouritesMarkup(favourites)
+	}
+	responses <- ok(resp)
 }
 
 // HideFavouritesCmdHandler hides the favourites keyboard.
 func HideFavouritesCmdHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, responses chan<- Response) {
 	chatID := message.Chat.ID
-
-	reply := tgbotapi.NewMessage(chatID, "Favourites keyboard hidden.")
-	reply.ReplyMarkup = tgbotapi.ReplyKeyboardRemove{
-		RemoveKeyboard: true,
+	resp := telegram.SendMessageRequest{
+		ChatID:      chatID,
+		Text:        "Favourites keyboard hidden!",
+		ReplyMarkup: telegram.ReplyKeyboardRemove{},
 	}
-
-	_, err := bot.Telegram.Send(reply)
-	if err != nil {
-		responses <- notOk(err)
-	}
+	responses <- ok(resp)
 	close(responses)
 }
 

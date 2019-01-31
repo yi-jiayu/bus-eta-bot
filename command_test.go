@@ -8,9 +8,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/telegram-bot-api"
 
+	"github.com/yi-jiayu/bus-eta-bot/v4/mocks"
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
@@ -317,97 +320,90 @@ func TestFeedbackCmdHandler(t *testing.T) {
 }
 
 func TestShowFavouritesCmdHandler(t *testing.T) {
-	t.Parallel()
-
-	type TestCase struct {
+	const userID = 1
+	type testCase struct {
 		Name       string
 		Favourites []string
-		Expected   Request
+		Expected   []Response
 	}
-
-	cases := []TestCase{
+	testCases := []testCase{
 		{
-			Name:       "No favourites saved",
-			Favourites: nil,
-			Expected:   Request{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&text=Oops%2C+you+haven%27t+saved+any+favourites+yet."},
-		},
-		{
-			Name: "Show favourites keyboard",
-			Favourites: []string{
-				"96049 2 24",
-				"83062 2 24",
+			Name:       "when user has favourites",
+			Favourites: []string{"96049", "81111"},
+			Expected: []Response{
+				ok(telegram.SendMessageRequest{
+					ChatID: 1,
+					Text:   "Favourites keyboard activated!",
+					ReplyMarkup: telegram.ReplyKeyboardMarkup{
+						Keyboard: [][]telegram.KeyboardButton{
+							{{Text: "96049"}},
+							{{Text: "81111"}},
+						},
+						ResizeKeyboard: true,
+					},
+				}),
 			},
-			Expected: Request{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22keyboard%22%3A%5B%5B%7B%22text%22%3A%2296049+2+24%22%2C%22request_contact%22%3Afalse%2C%22request_location%22%3Afalse%7D%5D%2C%5B%7B%22text%22%3A%2283062+2+24%22%2C%22request_contact%22%3Afalse%2C%22request_location%22%3Afalse%7D%5D%5D%2C%22resize_keyboard%22%3Atrue%2C%22one_time_keyboard%22%3Afalse%2C%22selective%22%3Afalse%7D&text=Favourites+keyboard+activated."},
+		},
+		{
+			Name:       "when user has no favourites",
+			Favourites: nil,
+			Expected: []Response{
+				ok(telegram.SendMessageRequest{
+					ChatID: 1,
+					Text:   "You haven't set any favourites yet!",
+				}),
+			},
+		},
+		{
+			Name:       "when user has empty favourites",
+			Favourites: []string{},
+			Expected: []Response{
+				ok(telegram.SendMessageRequest{
+					ChatID: 1,
+					Text:   "You haven't set any favourites yet!",
+				}),
+			},
 		},
 	}
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
-	}
-
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
-
-	for _, tc := range cases {
+	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			message := MockMessage()
-
-			err := showFavourites(&bot, &message, tc.Favourites)
-			if err != nil {
-				t.Fatalf("%v", err)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			m := mocks.NewMockUserRepository(ctrl)
+			m.EXPECT().GetUserFavourites(gomock.Any(), userID).Return(tc.Favourites, nil)
+			bot := &BusEtaBot{
+				Users: m,
 			}
-
-			select {
-			case req := <-reqChan:
-				actual := req
-				expected := tc.Expected
-
-				if actual != expected {
-					fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-					t.Fail()
-				}
-			case err := <-errChan:
-				t.Fatalf("%v", err)
+			message := MockMessage()
+			responses := make(chan Response, ResponseBufferSize)
+			go ShowFavouritesCmdHandler(context.TODO(), bot, &message, responses)
+			actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !assert.Equal(t, tc.Expected, actual) {
+				pretty.Println(actual)
 			}
 		})
 	}
 }
 
 func TestHideFavouritesCmdHandler(t *testing.T) {
-	t.Parallel()
-
-	tgAPI, reqChan, errChan := NewMockTelegramAPIWithPath()
-	defer tgAPI.Close()
-
-	tg := &tgbotapi.BotAPI{
-		APIEndpoint: tgAPI.URL + "/bot%s/%s",
-		Client:      http.DefaultClient,
-	}
-
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
-
 	message := MockMessage()
-
-	responses := make(chan Response)
-	go HideFavouritesCmdHandler(nil, &bot, &message, responses)
-
-	select {
-	case req := <-reqChan:
-		actual := req
-		expected := Request{Path: "/bot/sendMessage", Body: "chat_id=1&disable_notification=false&disable_web_page_preview=false&reply_markup=%7B%22remove_keyboard%22%3Atrue%2C%22selective%22%3Afalse%7D&text=Favourites+keyboard+hidden."}
-
-		if actual != expected {
-			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
-			t.Fail()
-		}
-	case err := <-errChan:
-		t.Fatalf("%v", err)
-	case r := <-responses:
-		if err := r.Error; err != nil {
-			t.Fatalf("%+v", err)
-		}
+	responses := make(chan Response, ResponseBufferSize)
+	go HideFavouritesCmdHandler(context.TODO(), nil, &message, responses)
+	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := []Response{
+		ok(telegram.SendMessageRequest{
+			ChatID:      1,
+			Text:        "Favourites keyboard hidden!",
+			ReplyMarkup: telegram.ReplyKeyboardRemove{},
+		}),
+	}
+	if !assert.Equal(t, expected, actual) {
+		pretty.Println(actual)
 	}
 }

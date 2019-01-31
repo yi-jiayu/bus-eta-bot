@@ -143,6 +143,21 @@ func stringInSlice(a string, list []string) (bool, int) {
 	return false, 0
 }
 
+func newShowFavouritesMarkup(favourites []string) telegram.ReplyKeyboardMarkup {
+	var keyboard [][]telegram.KeyboardButton
+	for _, fav := range favourites {
+		button := telegram.KeyboardButton{
+			Text: fav,
+		}
+		row := []telegram.KeyboardButton{button}
+		keyboard = append(keyboard, row)
+	}
+	return telegram.ReplyKeyboardMarkup{
+		Keyboard:       keyboard,
+		ResizeKeyboard: true,
+	}
+}
+
 // ToggleFavouritesHandler handles the toggle favourite callback button on etas
 func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response) {
 	defer close(responses)
@@ -182,18 +197,7 @@ func ToggleFavouritesHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.
 		ParseMode: "markdown",
 	}
 	if len(favourites) > 0 {
-		var keyboard [][]telegram.KeyboardButton
-		for _, fav := range favourites {
-			button := telegram.KeyboardButton{
-				Text: fav,
-			}
-			row := []telegram.KeyboardButton{button}
-			keyboard = append(keyboard, row)
-		}
-		sendMessageRequest.ReplyMarkup = telegram.ReplyKeyboardMarkup{
-			Keyboard:       keyboard,
-			ResizeKeyboard: true,
-		}
+		sendMessageRequest.ReplyMarkup = newShowFavouritesMarkup(favourites)
 	} else {
 		sendMessageRequest.ReplyMarkup = telegram.ReplyKeyboardRemove{}
 	}
