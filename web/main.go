@@ -17,15 +17,15 @@ import (
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
-	. "github.com/yi-jiayu/bus-eta-bot/v4"
+	"github.com/yi-jiayu/bus-eta-bot/v4"
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
 var BotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
 
 var (
-	busStopRepository BusStopRepository
-	userRepository    UserRepository
+	busStopRepository busetabot.BusStopRepository
+	userRepository    busetabot.UserRepository
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := NewContext(r)
+	ctx := busetabot.NewContext(r)
 
 	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -76,11 +76,11 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		Client:     client,
 	}
 
-	mp := NewMeasurementProtocolClientWithClient(os.Getenv("GA_TID"), client)
+	mp := busetabot.NewMeasurementProtocolClientWithClient(os.Getenv("GA_TID"), client)
 
-	sv := NewStreetViewAPI(os.Getenv("GOOGLE_API_KEY"))
+	sv := busetabot.NewStreetViewAPI(os.Getenv("GOOGLE_API_KEY"))
 
-	bot := NewBusEtaBot(DefaultHandlers(), tg, dm, &sv, &mp)
+	bot := busetabot.NewBusEtaBot(busetabot.DefaultHandlers(), tg, dm, &sv, &mp)
 	bot.BusStops = busStopRepository
 	bot.Users = userRepository
 
@@ -97,13 +97,13 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	var err error
-	busStopRepository, err = NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json", "")
+	busStopRepository, err = busetabot.NewInMemoryBusStopRepositoryFromFile("data/bus_stops.json", "")
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 		os.Exit(1)
 	}
 
-	userRepository = new(DatastoreUserRepository)
+	userRepository = new(busetabot.DatastoreUserRepository)
 
 	http.HandleFunc("/", rootHandler)
 
@@ -111,7 +111,7 @@ func init() {
 		http.HandleFunc("/"+token, webhookHandler)
 	}
 
-	if GetBotEnvironment() != EnvironmentDev {
+	if busetabot.GetBotEnvironment() != busetabot.EnvironmentDev {
 		// Create and register a OpenCensus Stackdriver Trace exporter.
 		exporter, err := stackdriver.NewExporter(stackdriver.Options{})
 		if err != nil {
