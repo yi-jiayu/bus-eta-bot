@@ -113,9 +113,9 @@ func (c *Client) Do(request Request) error {
 }
 
 func NewClient(token string, httpClient *http.Client) (*Client, error) {
-	client, err := tgbotapi.NewBotAPIWithClient(token, httpClient)
-	if err != nil {
-		return nil, err
+	client := &tgbotapi.BotAPI{
+		Token:  token,
+		Client: httpClient,
 	}
 	return &Client{
 		client: client,
