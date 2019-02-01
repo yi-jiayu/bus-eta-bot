@@ -45,7 +45,7 @@ func TestInlineQueryHandler(t *testing.T) {
 
 	sv := NewStreetViewAPI("API_KEY")
 
-	bot := NewBusEtaBot(handlers, tg, nil, &sv, nil)
+	bot := NewBot(handlers, tg, nil, &sv, nil)
 	bot.BusStops = NewInMemoryBusStopRepository(busStops, nil)
 
 	testCases := []struct {

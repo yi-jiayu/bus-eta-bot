@@ -45,7 +45,7 @@ func TestFallbackCommandHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+	bot := NewBot(handlers, tg, nil, nil, nil)
 
 	testCases := []struct {
 		Name     string

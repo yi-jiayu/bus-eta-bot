@@ -16,7 +16,7 @@ import (
 	"github.com/yi-jiayu/telegram-bot-api"
 	"go.opencensus.io/trace"
 	"google.golang.org/appengine"
-	gaelog "google.golang.org/appengine/log"
+	aelog "google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4"
@@ -39,7 +39,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	bs, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		gaelog.Errorf(ctx, "%+v", err)
+		aelog.Errorf(ctx, "%+v", err)
 
 		// return a 200 status to all webhooks so that telegram does not redeliver them
 		// w.WriteHeader(http.StatusInternalServerError)
@@ -50,14 +50,14 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	var pretty bytes.Buffer
 	err = json.Indent(&pretty, bs, "", "  ")
 	if err != nil {
-		gaelog.Errorf(ctx, "%+v", err)
+		aelog.Errorf(ctx, "%+v", err)
 	}
-	gaelog.Infof(ctx, "%s", pretty.String())
+	aelog.Infof(ctx, "%s", pretty.String())
 
 	var update tgbotapi.Update
 	err = json.Unmarshal(bs, &update)
 	if err != nil {
-		gaelog.Errorf(ctx, "%+v", err)
+		aelog.Errorf(ctx, "%+v", err)
 
 		// return a 200 status to all webhooks so that telegram does not redeliver them
 		// w.WriteHeader(http.StatusInternalServerError)
@@ -82,14 +82,14 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	sv := busetabot.NewStreetViewAPI(os.Getenv("GOOGLE_API_KEY"))
 
-	bot := busetabot.NewBusEtaBot(busetabot.DefaultHandlers(), tg, dm, &sv, &mp)
+	bot := busetabot.NewBot(busetabot.DefaultHandlers(), tg, dm, &sv, &mp)
 	bot.BusStops = busStopRepository
 	bot.Users = userRepository
 
 	telegramService, err := telegram.NewClient(BotToken, client)
 	if err != nil {
 		err = errors.Wrap(err, "error creating telegram service")
-		gaelog.Errorf(ctx, "%+v", err)
+		aelog.Errorf(ctx, "%+v", err)
 		return
 	}
 	bot.TelegramService = telegramService

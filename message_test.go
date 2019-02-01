@@ -20,7 +20,7 @@ func TestLocationHandler(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+	bot := NewBot(handlers, tg, nil, nil, nil)
 	bot.BusStops = &MockBusStops{
 		NearbyBusStops: []BusStop{
 			{
@@ -84,7 +84,7 @@ func TestLocationHandlerNothingNearby(t *testing.T) {
 		Client:      http.DefaultClient,
 	}
 
-	bot := NewBusEtaBot(handlers, tg, nil, nil, nil)
+	bot := NewBot(handlers, tg, nil, nil, nil)
 	bot.BusStops = &MockBusStops{
 		NearbyBusStops: make([]BusStop, 0),
 	}

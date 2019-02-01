@@ -3,6 +3,8 @@ package busetabot
 import (
 	"context"
 	"encoding/json"
+	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -10,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v2"
 	"github.com/yi-jiayu/telegram-bot-api"
-	"google.golang.org/appengine/log"
+	aelog "google.golang.org/appengine/log"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
@@ -62,6 +64,7 @@ type BusEtaBot struct {
 	BusStops            BusStopRepository
 	Users               UserRepository
 	TelegramService     TelegramService
+	Sentry              *raven.Client
 }
 
 // Handlers contains all the handlers used by the bot.
@@ -99,8 +102,8 @@ func DefaultHandlers() Handlers {
 	return handlers
 }
 
-// NewBusEtaBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.
-func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm ETAService, sv *StreetViewAPI, mp *MeasurementProtocolClient) BusEtaBot {
+// NewBot creates a new Bus Eta Bot with the provided tgbotapi.BotAPI and datamall.APIClient.
+func NewBot(handlers Handlers, tg *tgbotapi.BotAPI, dm ETAService, sv *StreetViewAPI, mp *MeasurementProtocolClient) BusEtaBot {
 	bot := BusEtaBot{
 		Handlers:            handlers,
 		Telegram:            tg,
@@ -108,9 +111,12 @@ func NewBusEtaBot(handlers Handlers, tg *tgbotapi.BotAPI, dm ETAService, sv *Str
 		StreetView:          sv,
 		MeasurementProtocol: mp,
 	}
-
 	bot.NowFunc = time.Now
-
+	sentry, err := raven.New("")
+	if err != nil {
+		log.Printf("error creating sentry client: %v\n", err)
+	}
+	bot.Sentry = sentry
 	return bot
 }
 
@@ -120,16 +126,16 @@ func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
 	for r := range responses {
 		err := r.Error
 		if err != nil {
-			log.Errorf(ctx, "%+v", err)
-			raven.CaptureError(err, nil)
+			aelog.Errorf(ctx, "%+v", err)
+			bot.Sentry.CaptureError(err, nil)
 		} else {
 			wg.Add(1)
 			go func(request telegram.Request) {
 				defer wg.Done()
 				err := bot.TelegramService.Do(request)
 				if err != nil {
-					log.Errorf(ctx, "%+v", err)
-					raven.CaptureError(err, nil)
+					aelog.Errorf(ctx, "%+v", err)
+					bot.Sentry.CaptureError(err, nil)
 				}
 			}(r.Request)
 		}
@@ -149,7 +155,7 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 				defer wg.Done()
 				err := bot.Users.UpdateUserLastSeenTime(ctx, message.From.ID, time.Now())
 				if err != nil {
-					log.Warningf(ctx, "%+v", err)
+					aelog.Warningf(ctx, "%+v", err)
 				}
 			}()
 		}
@@ -164,7 +170,7 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 				defer wg.Done()
 				err := bot.Users.UpdateUserLastSeenTime(ctx, cbq.From.ID, time.Now())
 				if err != nil {
-					log.Warningf(ctx, "%+v", err)
+					aelog.Warningf(ctx, "%+v", err)
 				}
 			}()
 		}
@@ -182,7 +188,7 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 				defer wg.Done()
 				err := bot.Users.UpdateUserLastSeenTime(ctx, ilq.From.ID, time.Now())
 				if err != nil {
-					log.Warningf(ctx, "%+v", err)
+					aelog.Warningf(ctx, "%+v", err)
 				}
 			}()
 		}
@@ -200,6 +206,11 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 }
 
 func (bot *BusEtaBot) handleMessage(ctx context.Context, message *tgbotapi.Message) {
+	if bot.Sentry != nil {
+		bot.Sentry.SetUserContext(&raven.User{
+			ID: strconv.Itoa(message.From.ID),
+		})
+	}
 	if command := message.Command(); command != "" {
 		bot.handleCommand(ctx, command, message)
 		return
@@ -244,6 +255,11 @@ func (bot *BusEtaBot) handleLocation(ctx context.Context, message *tgbotapi.Mess
 }
 
 func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.CallbackQuery) {
+	if bot.Sentry != nil {
+		bot.Sentry.SetUserContext(&raven.User{
+			ID: strconv.Itoa(cbq.From.ID),
+		})
+	}
 	var data map[string]interface{}
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
@@ -265,14 +281,14 @@ func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.Cal
 func (bot *BusEtaBot) handleInlineQuery(ctx context.Context, ilq *tgbotapi.InlineQuery) {
 	err := bot.Handlers.InlineQueryHandler(ctx, bot, ilq)
 	if err != nil {
-		log.Errorf(ctx, "%+v", err)
+		aelog.Errorf(ctx, "%+v", err)
 	}
 }
 
 func (bot *BusEtaBot) handleChosenInlineResult(ctx context.Context, cir *tgbotapi.ChosenInlineResult) {
 	err := bot.Handlers.ChosenInlineResultHandler(ctx, bot, cir)
 	if err != nil {
-		log.Errorf(ctx, "%+v", err)
+		aelog.Errorf(ctx, "%+v", err)
 	}
 }
 
@@ -281,7 +297,7 @@ func (bot *BusEtaBot) LogEvent(ctx context.Context, user *tgbotapi.User, categor
 	if bot.MeasurementProtocol != nil {
 		_, err := bot.MeasurementProtocol.LogEvent(user.ID, user.LanguageCode, category, action, label)
 		if err != nil {
-			log.Errorf(ctx, "error while logging event: %v", err)
+			aelog.Errorf(ctx, "error while logging event: %v", err)
 		}
 	}
 }
