@@ -122,17 +122,19 @@ func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
 		if err != nil {
 			log.Errorf(ctx, "%+v", err)
 			raven.CaptureError(err, nil)
+		} else {
+			wg.Add(1)
+			go func(request telegram.Request) {
+				defer wg.Done()
+				err := bot.TelegramService.Do(request)
+				if err != nil {
+					log.Errorf(ctx, "%+v", err)
+					raven.CaptureError(err, nil)
+				}
+			}(r.Request)
 		}
-		wg.Add(1)
-		go func(request telegram.Request) {
-			defer wg.Done()
-			err := bot.TelegramService.Do(request)
-			if err != nil {
-				log.Errorf(ctx, "%+v", err)
-				raven.CaptureError(err, nil)
-			}
-		}(r.Request)
 	}
+	wg.Wait()
 }
 
 // HandleUpdate dispatches an incoming update to the corresponding handler depending on the update type
