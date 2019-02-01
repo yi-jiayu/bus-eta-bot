@@ -59,20 +59,21 @@ jobs:
           command: |
             base64 -d <<< $STAGING_APP_YAML_BASE64 > web/staging.app.yaml
       - run:
-          name: Associate deploy with Sentry
+          name: Create release on Sentry
           command: |
             curl -sL https://sentry.io/get-cli/ | bash
 
-            VERSION=$(sentry-cli releases propose-version)
+            SENTRY_RELEASE=$(sentry-cli releases propose-version)
+            echo "export SENTRY_RELEASE=$SENTRY_RELEASE" >> $BASH_ENV
 
             # Create a release
-            sentry-cli releases new -p bus-eta-bot $VERSION
+            sentry-cli releases new -p bus-eta-bot $SENTRY_RELEASE
 
             # Associate commits with the release
-            sentry-cli releases set-commits --auto $VERSION
+            sentry-cli releases set-commits --auto $SENTRY_RELEASE
 
             # Set SENTRY_RELEASE in staging.app.yaml
-            sed "s/sentry_release/$VERSION/" < web/staging.app.yaml > web/staging.app.yaml~ && mv web/staging.app.yaml~ web/staging.app.yaml
+            sed "s/sentry_release/$SENTRY_RELEASE/" < web/staging.app.yaml > web/staging.app.yaml~ && mv web/staging.app.yaml~ web/staging.app.yaml
       - run:
           name: Deploy to staging
           command: |
@@ -86,6 +87,9 @@ jobs:
             tag_escaped=$(sed "s/\./-/g" <<< ${tag})
 
             gcloud --quiet app deploy --verbosity=info web/staging.app.yaml --version ${tag_escaped}
+      - run:
+          name: Create deploy on Sentry
+          command: sentry-cli releases deploys $SENTRY_RELEASE new --env staging
   deploy-production:
     docker:
       - image: google/cloud-sdk:231.0.0
@@ -105,16 +109,17 @@ jobs:
           command: |
             curl -sL https://sentry.io/get-cli/ | bash
 
-            VERSION=$(sentry-cli releases propose-version)
+            SENTRY_RELEASE=$(sentry-cli releases propose-version)
+            echo "export SENTRY_RELEASE=$SENTRY_RELEASE" >> $BASH_ENV
 
             # Create a release
-            sentry-cli releases new -p bus-eta-bot $VERSION
+            sentry-cli releases new -p bus-eta-bot $SENTRY_RELEASE
 
             # Associate commits with the release
-            sentry-cli releases set-commits --auto $VERSION
+            sentry-cli releases set-commits --auto $SENTRY_RELEASE
 
-            # Set SENTRY_RELEASE in staging.app.yaml
-            sed "s/sentry_release/$VERSION/" < web/prod.app.yaml > web/prod.app.yaml~ && mv web/prod.app.yaml~ web/prod.app.yaml
+            # Set SENTRY_RELEASE in prod.app.yaml
+            sed "s/sentry_release/$SENTRY_RELEASE/" < web/prod.app.yaml > web/prod.app.yaml~ && mv web/prod.app.yaml~ web/prod.app.yaml
       - run:
           name: Deploy to production (without promotion)
           command: |
@@ -128,6 +133,9 @@ jobs:
             tag_escaped=$(sed "s/\./-/g" <<< ${tag})
 
             gcloud --quiet app deploy --verbosity=info web/prod.app.yaml --version ${tag_escaped} --no-promote
+      - run:
+          name: Create deploy on Sentry
+          command: sentry-cli releases deploys $SENTRY_RELEASE new --env production
 workflows:
   version: 2
   test_and_deploy:
