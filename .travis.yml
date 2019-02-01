@@ -19,20 +19,9 @@ before_install:
   - gcloud version
 install: true
 script:
-  - go test -coverprofile=coverage.txt -covermode=count ./...
+  - go test -v -coverprofile=coverage.txt -covermode=count ./...
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-before_deploy:
-  - echo $TRAVIS_CI_SERVICE_ACCOUNT | base64 -d > travis-ci-service-account.json
-  - echo $STAGING_APP_YAML | base64 -d > web/staging.app.yaml
-  - echo $PROD_APP_YAML_V4 | base64 -d > web/prod.app.yaml
-deploy:
-  - provider: script
-    script: ./deploy.sh prod
-    skip_cleanup: true
-    on:
-      condition: -n "$TRAVIS_CI_SERVICE_ACCOUNT" && -n "$PROD_APP_YAML_V4"
-      tags: true
 env:
   global:
     - GCLOUD_VERSION=231.0.0
