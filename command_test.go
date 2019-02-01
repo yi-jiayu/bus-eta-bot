@@ -282,7 +282,7 @@ func TestPrivacyHandler(t *testing.T) {
 	bot := new(BusEtaBot)
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
-	PrivacyHandler(context.Background(), bot, &message, responses)
+	go PrivacyHandler(context.Background(), bot, &message, responses)
 	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
@@ -301,7 +301,7 @@ func TestFeedbackCmdHandler(t *testing.T) {
 	bot := new(BusEtaBot)
 	message := MockMessage()
 	responses := make(chan Response, ResponseBufferSize)
-	FeedbackCmdHandler(context.Background(), bot, &message, responses)
+	go FeedbackCmdHandler(context.Background(), bot, &message, responses)
 	actual, err := collectResponsesWithTimeout(responses, 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
