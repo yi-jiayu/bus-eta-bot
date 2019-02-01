@@ -1,5 +1,29 @@
 # Bus Eta Bot Release Notes
 
+## 4.1.1
+### Under the hood
+- Refactored code to avoid direct calls to the tgbotapi package and use an internal abstraction instead and improve 
+testability (this is an ongoing effort)
+- Added Sentry for error tracking
+
+### Continuous integration
+- Semaphore CI: Migrated from Semaphore Classic to Semaphore 2.0
+- CircleCI: Migrated from CircleCI 1.0 to 2.0
+- Use CircleCI instead of Travis CI for deployments
+
+## v4.1.0-rc1
+### Report when DataMall is down
+- Display an error message telling the user that DataMall is down instead of showing an error or not responding.
+
+## v4.0.1-rc1
+### Under the hood
+- Bus Eta Bot is now a Go module
+- Migrated to Google App Engine Go 1.11 Standard Environment
+- Look up bus stops in memory instead of from Cloud Datastore
+- Search for nearby bus stops in memory instead of using the App Engine Search API
+- Full-text search for bus stops in memory instead of using the App Engine Search API
+- Added tracing to searching for nearby bus stops and full-text search for bus stops
+
 ## v3.11.2 - 2018-01-09
 ### Miscellaneous
 - Record analytics on how often favourites are toggled
