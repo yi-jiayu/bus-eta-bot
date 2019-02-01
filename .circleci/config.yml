@@ -91,8 +91,43 @@ jobs:
       - image: google/cloud-sdk:231.0.0
     steps:
       - run:
-          name: Mock deploy to production
-          command: echo "Pretending to deploy to production..."
+          name: Authorize the Google Cloud SDK
+          command: |
+            echo $CIRCLECI_SERVICE_ACCOUNT_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project bus-eta-bot
+      - checkout
+      - run:
+          name: Load prod.app.yaml
+          command: |
+            base64 -d <<< $PROD_APP_YAML_BASE64 > web/prod.app.yaml
+      - run:
+          name: Associate deploy with Sentry
+          command: |
+            curl -sL https://sentry.io/get-cli/ | bash
+
+            VERSION=$(sentry-cli releases propose-version)
+
+            # Create a release
+            sentry-cli releases new -p bus-eta-bot $VERSION
+
+            # Associate commits with the release
+            sentry-cli releases set-commits --auto $VERSION
+
+            # Set SENTRY_RELEASE in staging.app.yaml
+            sed "s/sentry_release/$VERSION/" < web/prod.app.yaml > web/prod.app.yaml~ && mv web/prod.app.yaml~ web/prod.app.yaml
+      - run:
+          name: Deploy to production (without promotion)
+          command: |
+            # embed current version into source
+            tag=$(git describe --tags)
+            date=$(date +%Y-%m-%d)
+            sed "s/VERSION/$tag/" < version.go > version.go~ && mv version.go~ version.go
+            sed "s/VERSION/$tag/; s/DATE/$date/" < index.html > index.html~ && mv index.html~ index.html
+
+            # version cannot contain dots
+            tag_escaped=$(sed "s/\./-/g" <<< ${tag})
+
+            gcloud --quiet app deploy --verbosity=info web/prod.app.yaml --version ${tag_escaped} --no-promote
 workflows:
   version: 2
   test_and_deploy:
@@ -101,3 +136,10 @@ workflows:
       - deploy-staging:
           requires:
             - test
+      - approve-deploy-production:
+          type: approval
+          requires:
+            - deploy-staging
+      - deploy-production:
+          requires:
+            - approve-deploy-production
