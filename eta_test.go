@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yi-jiayu/datamall/v2"
+	"github.com/yi-jiayu/datamall/v3"
 	"github.com/yi-jiayu/telegram-bot-api"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
@@ -61,15 +61,17 @@ func newArrival(t time.Time, code string) datamall.BusArrival {
 			{
 				ServiceNo: "2",
 				NextBus: datamall.ArrivingBus{
-					EstimatedArrival: t.Add(-100 * time.Second).Format(time.RFC3339),
+					EstimatedArrival: t.Add(-100 * time.Second),
+					Load:             "SDA",
+					Type:             "DD",
 				},
 				NextBus2: datamall.ArrivingBus{
-					EstimatedArrival: t.Add(600 * time.Second).Format(time.RFC3339),
+					EstimatedArrival: t.Add(600 * time.Second),
 					Load:             "SDA",
 					Type:             "DD",
 				},
 				NextBus3: datamall.ArrivingBus{
-					EstimatedArrival: t.Add(2200 * time.Second).Format(time.RFC3339),
+					EstimatedArrival: t.Add(2200 * time.Second),
 					Load:             "LSD",
 					Feature:          "WAB",
 					Type:             "BD",
@@ -78,18 +80,18 @@ func newArrival(t time.Time, code string) datamall.BusArrival {
 			{
 				ServiceNo: "24",
 				NextBus: datamall.ArrivingBus{
-					EstimatedArrival: t.Add(100 * time.Second).Format(time.RFC3339),
+					EstimatedArrival: t.Add(100 * time.Second),
 					Load:             "SEA",
 					Type:             "SD",
 				},
 				NextBus2: datamall.ArrivingBus{
-					EstimatedArrival: t.Add(200 * time.Second).Format(time.RFC3339),
+					EstimatedArrival: t.Add(200 * time.Second),
 					Load:             "SDA",
 					Type:             "DD",
 					Feature:          "WAB",
 				},
 				NextBus3: datamall.ArrivingBus{
-					EstimatedArrival: t.Add(400 * time.Second).Format(time.RFC3339),
+					EstimatedArrival: t.Add(400 * time.Second),
 					Load:             "LSD",
 					Type:             "BD",
 				},
@@ -204,7 +206,7 @@ func TestCalculateEtas(t *testing.T) {
 		etas := CalculateEtas(now, newArrival(now, ""))
 
 		actual := etas.Services
-		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"-1", "10", "36"}, Loads: [3]string{"", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
+		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"-1", "10", "36"}, Loads: [3]string{"SDA", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"DD", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
 
 		if !reflect.DeepEqual(actual, expected) {
 			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
@@ -213,13 +215,13 @@ func TestCalculateEtas(t *testing.T) {
 	})
 	t.Run("In operation, missing etas", func(t *testing.T) {
 		arrival := newArrival(now, "")
-		arrival.Services[0].NextBus2.EstimatedArrival = ""
-		arrival.Services[0].NextBus3.EstimatedArrival = ""
+		arrival.Services[0].NextBus2.EstimatedArrival = time.Time{}
+		arrival.Services[0].NextBus3.EstimatedArrival = time.Time{}
 
 		etas := CalculateEtas(now, arrival)
 
 		actual := etas.Services
-		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"-1", "?", "?"}, Loads: [3]string{"", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
+		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"-1", "?", "?"}, Loads: [3]string{"SDA", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"DD", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
 
 		if !reflect.DeepEqual(actual, expected) {
 			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
@@ -228,14 +230,14 @@ func TestCalculateEtas(t *testing.T) {
 	})
 	t.Run("In operation, no etas", func(t *testing.T) {
 		arrival := newArrival(now, "")
-		arrival.Services[0].NextBus.EstimatedArrival = ""
-		arrival.Services[0].NextBus2.EstimatedArrival = ""
-		arrival.Services[0].NextBus3.EstimatedArrival = ""
+		arrival.Services[0].NextBus.EstimatedArrival = time.Time{}
+		arrival.Services[0].NextBus2.EstimatedArrival = time.Time{}
+		arrival.Services[0].NextBus3.EstimatedArrival = time.Time{}
 
 		etas := CalculateEtas(now, arrival)
 
 		actual := etas.Services
-		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"?", "?", "?"}, Loads: [3]string{"", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
+		expected := []IncomingBuses{{ServiceNo: "2", Etas: [3]string{"?", "?", "?"}, Loads: [3]string{"SDA", "SDA", "LSD"}, Features: [3]string{"", "", "WAB"}, Types: [3]string{"DD", "DD", "BD"}}, {ServiceNo: "24", Etas: [3]string{"1", "3", "6"}, Loads: [3]string{"SEA", "SDA", "LSD"}, Features: [3]string{"", "WAB", ""}, Types: [3]string{"SD", "DD", "BD"}}}
 
 		if !reflect.DeepEqual(actual, expected) {
 			fmt.Printf("Expected:\n%#v\nActual:\n%#v\n", expected, actual)
@@ -570,7 +572,7 @@ func TestETAMessageText(t *testing.T) {
 					BusStop: &stop,
 				},
 				etaService: MockETAService{
-					Error: datamall.Error{StatusCode: 501},
+					Error: &datamall.Error{StatusCode: 501},
 				},
 				formatter: MockETAFormatter("body"),
 				t:         time.Time{},
@@ -618,7 +620,7 @@ func TestETAMessageText(t *testing.T) {
 			args: args{
 				busStopRepository: MockBusStops{},
 				etaService: MockETAService{
-					Error: datamall.Error{StatusCode: 501},
+					Error: &datamall.Error{StatusCode: 501},
 				},
 				formatter: MockETAFormatter("body"),
 				t:         time.Time{},

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/yi-jiayu/datamall/v2"
+	"github.com/yi-jiayu/datamall/v3"
 	"github.com/yi-jiayu/telegram-bot-api"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
@@ -100,7 +100,7 @@ func ETAMessageText(busStops BusStopRepository, etaService ETAService, formatter
 	var body string
 	arrival, err := etaService.GetBusArrival(code, "")
 	if err != nil {
-		if err, ok := err.(datamall.Error); ok {
+		if err, ok := err.(*datamall.Error); ok {
 			body = fmt.Sprintf("\nOh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code %d).", err.StatusCode)
 		} else {
 			return "", errors.Wrap(err, "error getting etas from datamall")
@@ -160,13 +160,8 @@ func CalculateEtas(t time.Time, busArrival datamall.BusArrival) BusEtas {
 				incomingBus = service.NextBus3
 			}
 
-			if estArrival := incomingBus.EstimatedArrival; estArrival != "" {
-				eta, err := time.Parse(time.RFC3339, estArrival)
-				if err != nil {
-					return BusEtas{}
-				}
-
-				diff := (eta.Unix() - t.Unix()) / 60
+			if estArrival := incomingBus.EstimatedArrival; estArrival != (time.Time{}) {
+				diff := (estArrival.Unix() - t.Unix()) / 60
 				incomingBuses.Etas[i] = fmt.Sprintf("%d", diff)
 			} else {
 				incomingBuses.Etas[i] = placeholder

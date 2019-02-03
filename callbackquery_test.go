@@ -10,7 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
-	"github.com/yi-jiayu/datamall/v2"
+	"github.com/yi-jiayu/datamall/v3"
 	"github.com/yi-jiayu/telegram-bot-api"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/mocks"
@@ -125,7 +125,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 			Name:          "when datamall returns an error",
 			CallbackQuery: newCallbackQueryFromInlineMessage(`{"t":"refresh","b":"96049"}`),
 			ETAService: MockETAService{
-				Error: datamall.Error{StatusCode: 501},
+				Error: &datamall.Error{StatusCode: 501},
 			},
 			Expected: []Response{
 				ok(telegram.EditMessageTextRequest{

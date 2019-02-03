@@ -10,7 +10,7 @@ import (
 
 	"github.com/getsentry/raven-go"
 	"github.com/pkg/errors"
-	"github.com/yi-jiayu/datamall/v2"
+	"github.com/yi-jiayu/datamall/v3"
 	"github.com/yi-jiayu/telegram-bot-api"
 	aelog "google.golang.org/appengine/log"
 

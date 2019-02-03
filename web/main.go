@@ -12,7 +12,7 @@ import (
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/getsentry/raven-go"
 	"github.com/pkg/errors"
-	"github.com/yi-jiayu/datamall/v2"
+	"github.com/yi-jiayu/datamall/v3"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"go.opencensus.io/trace"
 	"google.golang.org/appengine"
@@ -72,11 +72,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		Client:      client,
 	}
 
-	dm := &datamall.APIClient{
-		Endpoint:   datamall.DataMallEndpoint,
-		AccountKey: os.Getenv("DATAMALL_ACCOUNT_KEY"),
-		Client:     client,
-	}
+	dm := datamall.NewClient(os.Getenv("DATAMALL_ACCOUNT_KEY"), client)
 
 	mp := busetabot.NewMeasurementProtocolClientWithClient(os.Getenv("GA_TID"), client)
 
