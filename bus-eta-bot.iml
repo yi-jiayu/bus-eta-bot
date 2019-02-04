@@ -6,6 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/data" />
       <excludeFolder url="file://$MODULE_DIR$/scripts" />
       <excludeFolder url="file://$MODULE_DIR$/web/data" />
+      <excludeFolder url="file://$MODULE_DIR$/web/templates" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="GOPATH &lt;bus-eta-bot&gt;" level="project" />

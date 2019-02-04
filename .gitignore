@@ -3,6 +3,7 @@
 
 # symlinks to app root in web/
 web/data
+web/templates
 web/index.html
 
 # app.yaml files contain environment variables

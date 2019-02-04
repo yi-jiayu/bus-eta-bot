@@ -14,11 +14,12 @@ import (
 
 // BusStop represents a bus stop.
 type BusStop struct {
-	BusStopCode string
-	RoadName    string
-	Description string
-	Latitude    float64
-	Longitude   float64
+	BusStopCode string   `json:"code"`
+	RoadName    string   `json:"road_name"`
+	Description string   `json:"description"`
+	Latitude    float64  `json:"latitude"`
+	Longitude   float64  `json:"longitude"`
+	Services    []string `json:"services"`
 }
 
 type NearbyBusStop struct {
