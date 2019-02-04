@@ -174,14 +174,15 @@ func NewInMemoryBusStopRepository(busStops []BusStop, synonyms map[string]string
 }
 
 func NewInMemoryBusStopRepositoryFromFile(path, synonymsPath string) (*InMemoryBusStopRepository, error) {
-	busStopsJSONFile, err := os.Open(path)
+	busStopsFile, err := os.Open(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening bus stops JSON file")
 	}
-	var busStopsJSON []BusStop
-	err = json.NewDecoder(busStopsJSONFile).Decode(&busStopsJSON)
+	defer busStopsFile.Close()
+	var busStops []BusStop
+	err = json.NewDecoder(busStopsFile).Decode(&busStops)
 	if err != nil {
 		return nil, errors.Wrap(err, "error decoding bus stops JSON file")
 	}
-	return NewInMemoryBusStopRepository(busStopsJSON, nil), nil
+	return NewInMemoryBusStopRepository(busStops, nil), nil
 }
