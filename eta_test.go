@@ -56,7 +56,7 @@ func (d MockDatamall) GetBusArrival(code string, serviceNo string) (datamall.Bus
 
 func newArrival(t time.Time, code string) datamall.BusArrival {
 	return datamall.BusArrival{
-		BusStopID: code,
+		BusStopCode: code,
 		Services: []datamall.Service{
 			{
 				ServiceNo: "2",

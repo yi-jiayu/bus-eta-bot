@@ -1,0 +1,25 @@
+{{ define "body" -}}
+```
+Svc   Eta  Sea  Typ  Fea
+---   ---  ---  ---  ---
+{{- range (.Services | arrivingBuses | sortByArrival) }}
+{{ $eta := until $.Now .EstimatedArrival -}}
+{{ $sea := .Load -}}
+{{ $typ := .Type -}}
+{{ $fea := .Feature -}}
+{{ printf "%-4v" .ServiceNo }} {{ printf "%4v" $eta }} {{ printf "%4v" $sea }} {{ printf "%4v" $typ }} {{ printf "%4v" $fea -}}
+{{ end }}
+```
+{{ template "services_count" . }}
+
+Legend:
+`SEA` - Seats available
+`SDA` - Standing available
+`LSD` - Limited standing
+
+`SD` - Single deck
+`DD` - Double deck
+`BD` - Bendy
+
+`WAB` - Wheelchair accessible
+{{- end -}}

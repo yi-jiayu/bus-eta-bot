@@ -1,0 +1,8 @@
+{{ define "header" }}
+{{- if .BusStop.Description -}}
+*{{ .BusStop.Description }} ({{ .BusStop.BusStopCode }})*
+{{ .BusStop.RoadName }}
+{{- else -}}
+*{{ .BusStop.BusStopCode }}*
+{{- end -}}
+{{ end -}}

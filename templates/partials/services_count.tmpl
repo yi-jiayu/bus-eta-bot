@@ -1,0 +1,7 @@
+{{ define "services_count" -}}
+{{ if (len .Services) and (len .BusStop.Services) -}}
+Showing {{ len .Services }} out of {{ len .BusStop.Services }}
+{{- if gt (len .BusStop.Services) 1 }} services {{ else }} service {{ end -}}
+for this bus stop.
+{{- end }}
+{{- end -}}

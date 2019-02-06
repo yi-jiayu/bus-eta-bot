@@ -1,0 +1,9 @@
+{{ block "header" . }}Header{{ end }}
+{{ if .Services -}}
+{{ block "body" . }}Body{{ end }}
+{{- else if .Error -}}
+{{ .Error }}
+{{- else -}}
+No ETAs available.
+{{- end }}
+{{ block "footer" . }}Footer{{ end -}}

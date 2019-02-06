@@ -27,6 +27,15 @@ var (
 	sgt = time.FixedZone("SGT", 8*3600)
 )
 
+type ETA struct {
+	BusStop  BusStop
+	Now      time.Time
+	Services []datamall.Service
+	Shown    []string
+	Hidden   []string
+	Error    string
+}
+
 // BusEtas represents the calculated time before buses arrive at a bus stop
 type BusEtas struct {
 	BusStopID   string
