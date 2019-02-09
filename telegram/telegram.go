@@ -7,7 +7,7 @@ import (
 )
 
 type Request interface {
-	doWith(c *Client) (result interface{}, err error)
+	doWith(c *client) (result interface{}, err error)
 }
 
 type Error struct {
@@ -47,8 +47,8 @@ func (r SendMessageRequest) config() tgbotapi.MessageConfig {
 	return message
 }
 
-func (r SendMessageRequest) doWith(c *Client) (result interface{}, err error) {
-	m, err := c.client.Send(r.config())
+func (r SendMessageRequest) doWith(c *client) (result interface{}, err error) {
+	m, err := c.botAPI.Send(r.config())
 	if err != nil {
 		return nil, newError(err)
 	}
@@ -85,8 +85,8 @@ func (r EditMessageTextRequest) config() (config tgbotapi.EditMessageTextConfig)
 	return
 }
 
-func (r EditMessageTextRequest) doWith(c *Client) (result interface{}, err error) {
-	m, err := c.client.Send(r.config())
+func (r EditMessageTextRequest) doWith(c *client) (result interface{}, err error) {
+	m, err := c.botAPI.Send(r.config())
 	if err != nil {
 		return nil, newError(err)
 	}
@@ -98,30 +98,34 @@ type AnswerCallbackQueryRequest struct {
 	Text            string
 }
 
-func (r AnswerCallbackQueryRequest) doWith(c *Client) (result interface{}, err error) {
+func (r AnswerCallbackQueryRequest) doWith(c *client) (result interface{}, err error) {
 	config := tgbotapi.NewCallback(r.CallbackQueryID, r.Text)
-	_, err = c.client.AnswerCallbackQuery(config)
+	_, err = c.botAPI.AnswerCallbackQuery(config)
 	if err != nil {
 		return nil, newError(err)
 	}
 	return
 }
 
-type Client struct {
-	client *tgbotapi.BotAPI
+type Client interface {
+	Do(request Request) error
 }
 
-func (c *Client) Do(request Request) error {
+type client struct {
+	botAPI *tgbotapi.BotAPI
+}
+
+func (c *client) Do(request Request) error {
 	_, err := request.doWith(c)
 	return err
 }
 
-func NewClient(token string, httpClient *http.Client) (*Client, error) {
-	client := &tgbotapi.BotAPI{
+func NewClient(token string, httpClient *http.Client) (Client, error) {
+	botAPI := &tgbotapi.BotAPI{
 		Token:  token,
 		Client: httpClient,
 	}
-	return &Client{
-		client: client,
+	return &client{
+		botAPI: botAPI,
 	}, nil
 }

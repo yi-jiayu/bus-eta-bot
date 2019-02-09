@@ -69,8 +69,8 @@ func (r AnswerInlineQueryRequest) config() tgbotapi.InlineConfig {
 	}
 }
 
-func (r AnswerInlineQueryRequest) doWith(c *Client) (result interface{}, err error) {
-	_, err = c.client.AnswerInlineQuery(r.config())
+func (r AnswerInlineQueryRequest) doWith(c *client) (result interface{}, err error) {
+	_, err = c.botAPI.AnswerInlineQuery(r.config())
 	if err != nil {
 		return nil, newError(err)
 	}
