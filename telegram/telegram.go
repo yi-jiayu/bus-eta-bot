@@ -107,9 +107,6 @@ func (r AnswerCallbackQueryRequest) doWith(c *Client) (result interface{}, err e
 	return
 }
 
-type AnswerInlineQueryRequest struct {
-}
-
 type Client struct {
 	client *tgbotapi.BotAPI
 }
