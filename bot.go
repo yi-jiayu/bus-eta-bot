@@ -282,6 +282,7 @@ func (bot *BusEtaBot) handleInlineQuery(ctx context.Context, ilq *tgbotapi.Inlin
 	err := bot.Handlers.InlineQueryHandler(ctx, bot, ilq)
 	if err != nil {
 		aelog.Errorf(ctx, "%+v", err)
+		bot.Sentry.CaptureError(err, nil)
 	}
 }
 

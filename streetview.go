@@ -3,6 +3,8 @@ package busetabot
 import (
 	"fmt"
 	"net/url"
+
+	"github.com/pkg/errors"
 )
 
 // StreetViewEndpoint is the endpoint for the Street View Image API.
@@ -17,7 +19,7 @@ type StreetViewAPI struct {
 func (s StreetViewAPI) getPhotoURL(params url.Values) (string, error) {
 	u, err := url.Parse(s.Endpoint)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error parsing street view endpoint")
 	}
 	u.RawQuery = params.Encode()
 
