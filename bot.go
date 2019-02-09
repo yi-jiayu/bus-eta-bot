@@ -58,7 +58,7 @@ type BusEtaBot struct {
 	Handlers            Handlers
 	Telegram            *tgbotapi.BotAPI
 	Datamall            ETAService
-	StreetView          *StreetViewAPI
+	StreetView          StreetViewProvider
 	MeasurementProtocol *MeasurementProtocolClient
 	NowFunc             func() time.Time
 	BusStops            BusStopRepository
