@@ -7,9 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/yi-jiayu/telegram-bot-api"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
 // MessageHandler is a handler for incoming messages
@@ -22,53 +25,50 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 	}
 
 	chatID := message.Chat.ID
+	// a message is a continuation if it was a reply to a message asking for a bus stop code
 	continuation := message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for."
 
-	var reply tgbotapi.MessageConfig
 	busStopID, serviceNos, err := InferEtaQuery(message.Text)
 	if err != nil {
+		// if it wasn't a continuation, we ignore the message
 		if !continuation {
-			go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
 			return nil
 		}
-
-		if err == errBusStopIDInvalid {
-			reply = tgbotapi.NewMessage(chatID, "Oops, that bus stop code was invalid.")
-		} else {
-			reply = tgbotapi.NewMessage(chatID, "Oops, a bus stop code can only contain a maximum of 5 characters.")
+		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionContinuedTextMessage, message.Chat.Type)
+		// else, we should inform the user if it was invalid
+		req := telegram.SendMessageRequest{
+			ChatID: chatID,
+			Text:   "Oops, a bus stop code should be a 5-digit number.",
 		}
-	} else {
-		text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, serviceNos)
+		err = bot.TelegramService.Do(req)
 		if err != nil {
-			if err == errNotFound {
-				reply = tgbotapi.NewMessage(chatID, text)
-			} else {
-				return err
-			}
-		} else {
-			reply = tgbotapi.NewMessage(chatID, text)
-			reply.ParseMode = "markdown"
-
-			replyMarkup, err := EtaMessageReplyMarkup(busStopID, serviceNos, false)
-			if err != nil {
-				return err
-			}
-			reply.ReplyMarkup = replyMarkup
+			return errors.Wrap(err, "error sending message")
 		}
+		return nil
+	}
+	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, serviceNos)
+	if err != nil {
+		return err
+	}
+	markup := NewETAMessageReplyMarkup(busStopID, serviceNos, false)
+	req := telegram.SendMessageRequest{
+		ChatID:      chatID,
+		Text:        text,
+		ParseMode:   "markdown",
+		ReplyMarkup: markup,
 	}
 
-	if !message.Chat.IsPrivate() {
-		reply.ReplyToMessageID = message.MessageID
-	}
-
-	if message.ReplyToMessage != nil && message.ReplyToMessage.Text == "Alright, send me a bus stop code to get etas for." {
+	if continuation {
 		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionContinuedTextMessage, message.Chat.Type)
 	} else {
 		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionEtaTextMessage, message.Chat.Type)
 	}
 
-	_, err = bot.Telegram.Send(reply)
-	return err
+	err = bot.TelegramService.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "error sending message")
+	}
+	return nil
 }
 
 // LocationHandler handles messages contain a location

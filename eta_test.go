@@ -149,51 +149,51 @@ func TestInferEtaQuery(t *testing.T) {
 			},
 		},
 		{
-			Name: "Bus stop ID too long",
-			Text: "!@#$%!",
+			Name: "Not comprised of 5 digits",
+			Text: "hello",
 			Expected: struct {
 				BusStopID  string
 				ServiceNos []string
 				Err        error
 			}{
-				Err: errBusStopIDTooLong,
+				Err: errInvalidBusStopCode,
 			},
 		},
 		{
-			Name: "Invalid bus stop ID",
-			Text: "!@#$%",
+			Name: "More than 5 digits",
+			Text: "123456",
 			Expected: struct {
 				BusStopID  string
 				ServiceNos []string
 				Err        error
 			}{
-				Err: errBusStopIDInvalid,
+				Err: errInvalidBusStopCode,
+			},
+		},
+		{
+			Name: "doesn't start with bus stop code",
+			Text: "hello 12345",
+			Expected: struct {
+				BusStopID  string
+				ServiceNos []string
+				Err        error
+			}{
+				Err: errInvalidBusStopCode,
 			},
 		},
 	}
-
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			text := tc.Text
 			busStopID, serviceNos, err := InferEtaQuery(text)
-			if err != nil {
-				if expected := tc.Expected.Err; err != expected {
-					fmt.Printf("Expected error: %v\nActual error:   %v\n", expected, err)
-					t.Fail()
-				}
+			if expected := tc.Expected.Err; expected != nil {
+				assert.Equal(t, expected, err)
 			} else {
-				actual := struct {
-					BusStopID  string
-					ServiceNos []string
-					Err        error
-				}{
-					BusStopID:  busStopID,
-					ServiceNos: serviceNos,
+				if err != nil {
+					t.Fatal(err)
 				}
-
-				if !reflect.DeepEqual(actual, tc.Expected) {
-					fmt.Printf("Expected: %v\nActual:   %v\n", tc.Expected, actual)
-				}
+				assert.Equal(t, tc.Expected.BusStopID, busStopID)
+				assert.Equal(t, tc.Expected.ServiceNos, serviceNos)
 			}
 		})
 	}

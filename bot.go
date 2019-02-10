@@ -20,6 +20,8 @@ import (
 // ResponseBufferSize is the size of the channel used to queue responses to be sent via the Telegram Bot API.
 const ResponseBufferSize = 10
 
+const MaxMessageLength = 35
+
 var handlers = Handlers{
 	CommandHandlers:           commandHandlers,
 	FallbackCommandHandler:    FallbackCommandHandler,
@@ -211,6 +213,12 @@ func (bot *BusEtaBot) handleMessage(ctx context.Context, message *tgbotapi.Messa
 			ID: strconv.Itoa(message.From.ID),
 		})
 	}
+
+	// ignore messages longer than a certain length
+	if len(message.Text) > MaxMessageLength {
+		return
+	}
+
 	if command := message.Command(); command != "" {
 		bot.handleCommand(ctx, command, message)
 		return

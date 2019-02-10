@@ -3,7 +3,6 @@ package busetabot
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -15,12 +14,8 @@ import (
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
-var collapseWhitespaceRegex = regexp.MustCompile(`\s+`)
-var illegalCharsRegex = regexp.MustCompile(`[^A-Z0-9 ]`)
-
 var (
-	errBusStopIDTooLong = errors.New("bus stop id too long")
-	errBusStopIDInvalid = errors.New("bus stop id invalid")
+	errInvalidBusStopCode = errors.New("bus stop code invalid")
 )
 
 var (
@@ -128,23 +123,14 @@ func ETAMessageText(busStops BusStopRepository, etaService ETAService, formatter
 
 // InferEtaQuery extracts a bus stop ID and service numbers from a text message.
 func InferEtaQuery(text string) (string, []string, error) {
-	if len(text) > 30 {
-		text = text[:30]
+	m := busStopRegex.FindStringSubmatch(text)
+	if m == nil {
+		return "", nil, errInvalidBusStopCode
 	}
-
-	text = strings.ToUpper(text)
-	tokens := collapseWhitespaceRegex.Split(text, -1)
-	busStopID, serviceNos := tokens[0], tokens[1:]
-
-	if len(busStopID) > 5 {
-		return busStopID, serviceNos, errBusStopIDTooLong
-	}
-
-	if illegalCharsRegex.MatchString(busStopID) {
-		return busStopID, serviceNos, errBusStopIDInvalid
-	}
-
-	return busStopID, serviceNos, nil
+	code := m[1]
+	rest := strings.TrimPrefix(text, code)
+	services := strings.Fields(rest)
+	return code, services, nil
 }
 
 // CalculateEtas calculates the time before buses arrive from the LTA DataMall bus arrival response

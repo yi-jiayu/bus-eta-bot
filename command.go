@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	busStopRegex = regexp.MustCompile(`\d{5}`)
+	busStopRegex = regexp.MustCompile(`^(\d{5})(?:\s|$)`)
 )
 
 var commandHandlers = map[string]CommandHandler{

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/yi-jiayu/telegram-bot-api"
@@ -103,6 +102,12 @@ func MockMessage() tgbotapi.Message {
 		Chat: &tgbotapi.Chat{ID: 1},
 		From: &tgbotapi.User{ID: 1, FirstName: "Jiayu"},
 	}
+}
+
+func MockMessageWithText(text string) *tgbotapi.Message {
+	message := MockMessage()
+	message.Text = text
+	return &message
 }
 
 func MockMessageWithType(chatType string) tgbotapi.Message {
@@ -264,15 +269,6 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 			}
 		})
 	}
-}
-
-type MockUserRepository struct {
-	Called bool
-}
-
-func (r *MockUserRepository) UpdateUserLastSeenTime(ctx context.Context, userID int, t time.Time) error {
-	r.Called = true
-	return nil
 }
 
 func TestBusEtaBot_HandleUpdate_UpdateUserLastSeenTime(t *testing.T) {

@@ -7,8 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/telegram-bot-api"
+
+	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
 func TestLocationHandler(t *testing.T) {
@@ -114,5 +117,99 @@ func TestLocationHandlerNothingNearby(t *testing.T) {
 		}
 	case err := <-errChan:
 		t.Fatal(err)
+	}
+}
+
+func TestTextHandler(t *testing.T) {
+	busStops := MockBusStops{
+		BusStop: &BusStop{
+			BusStopCode: "96049",
+			RoadName:    "Upp Changi Rd East",
+			Description: "Opp Tropicana Condo",
+		},
+	}
+	type testCase struct {
+		Name     string
+		Message  *tgbotapi.Message
+		Expected []telegram.Request
+	}
+	testCases := []testCase{
+		{
+			Name:     "should ignore inline queries from itself",
+			Message:  MockMessageWithText("Fetching etas..."),
+			Expected: nil,
+		},
+		{
+			Name:    "should respond with eta message when message contains a bus stop code",
+			Message: MockMessageWithText("96049"),
+			Expected: []telegram.Request{
+				telegram.SendMessageRequest{
+					ChatID:    1,
+					Text:      "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
+					ParseMode: "markdown",
+					ReplyMarkup: telegram.InlineKeyboardMarkup{
+						InlineKeyboard: [][]telegram.InlineKeyboardButton{
+							{
+								{
+									Text:         "Refresh",
+									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+								},
+								{
+									Text:         "Resend",
+									CallbackData: "{\"t\":\"resend\",\"b\":\"96049\"}",
+								},
+								{
+									Text:         "⭐",
+									CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "should validate eta message when message is a reply to a message asking for a bus stop code",
+			Message: func() *tgbotapi.Message {
+				reply := MockMessageWithText("Alright, send me a bus stop code to get etas for.")
+				message := MockMessageWithText("jiayu")
+				message.ReplyToMessage = reply
+				return message
+			}(),
+			Expected: []telegram.Request{
+				telegram.SendMessageRequest{
+					ChatID:           1,
+					Text:             "Oops, a bus stop code should be a 5-digit number.",
+					ParseMode:        "",
+					ReplyToMessageID: 0,
+					ReplyMarkup:      nil,
+				},
+			},
+		},
+		{
+			Name:     "should ignore messages that are not replies which do not contain a bus stop code",
+			Message:  MockMessageWithText("jiayu"),
+			Expected: nil,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			tg := &mockTelegramService{}
+			bot := &BusEtaBot{
+				Datamall: MockDatamall{},
+				BusStops: busStops,
+				NowFunc: func() time.Time {
+					return time.Time{}
+				},
+				TelegramService: tg,
+			}
+			err := TextHandler(context.Background(), bot, tc.Message)
+			if err != nil {
+				t.Fatalf("%+v", err)
+			}
+			if actual := tg.Requests; !assert.Equal(t, tc.Expected, actual) {
+				pretty.Println(actual)
+			}
+		})
 	}
 }
