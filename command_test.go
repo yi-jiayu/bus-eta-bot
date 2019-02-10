@@ -128,8 +128,10 @@ func TestEtaHandler(t *testing.T) {
 			Text:     "/eta",
 			Expected: []Response{
 				ok(telegram.SendMessageRequest{
-					ChatID: 1,
-					Text:   "Alright, send me a bus stop code to get etas for.",
+					ChatID:           1,
+					Text:             "Alright, send me a bus stop code to get etas for.",
+					ReplyToMessageID: 1,
+					ReplyMarkup:      telegram.NewForceReply(true),
 				}),
 			},
 		},

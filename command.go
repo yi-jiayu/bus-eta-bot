@@ -203,10 +203,8 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 		ChatID: chatID,
 		Text:   text,
 	}
-	if !message.Chat.IsPrivate() {
-		resp.ReplyMarkup = telegram.NewForceReply(true)
-		resp.ReplyToMessageID = message.MessageID
-	}
+	resp.ReplyMarkup = telegram.NewForceReply(true)
+	resp.ReplyToMessageID = message.MessageID
 	go bot.LogEvent(ctx, message.From, CategoryCommand, ActionEtaCommandWithoutArgs, message.Chat.Type)
 	responses <- ok(resp)
 }
