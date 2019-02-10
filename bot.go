@@ -216,6 +216,8 @@ func (bot *BusEtaBot) handleMessage(ctx context.Context, message *tgbotapi.Messa
 
 	// ignore messages longer than a certain length
 	if len(message.Text) > MaxMessageLength {
+		go bot.LogEvent(ctx, message.From, CategoryMessage, ActionIgnoredTextMessage, message.Chat.Type)
+		aelog.Infof(ctx, "ignoring long message")
 		return
 	}
 
