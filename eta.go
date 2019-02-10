@@ -1,14 +1,17 @@
 package busetabot
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v3"
+	"google.golang.org/appengine"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
@@ -25,9 +28,15 @@ type ETA struct {
 	BusStop  BusStop
 	Now      time.Time
 	Services []datamall.Service
-	Shown    []string
-	Hidden   []string
 	Error    string
+}
+
+type FormatterFactory interface {
+	GetFormatter(ctx context.Context, userID int) Formatter
+}
+
+type BusStopGetter interface {
+	Get(ID string) *BusStop
 }
 
 // BusEtas represents the calculated time before buses arrive at a bus stop
@@ -60,6 +69,67 @@ type ETAFormatter interface {
 
 // SummaryETAFormatter displays ETAs for up to the next 3 buses at a bus stop.
 type SummaryETAFormatter struct{}
+
+type ETARequest struct {
+	UserID   int
+	Time     time.Time
+	Code     string
+	Services []string
+}
+
+type ETAMessageFactory struct {
+	busStopGetter    BusStopGetter
+	etaService       ETAService
+	formatterFactory FormatterFactory
+}
+
+func (f ETAMessageFactory) Text(ctx context.Context, request ETARequest) (string, error) {
+	var wg sync.WaitGroup
+	var eta ETA
+	var formatter Formatter
+	wg.Add(2)
+	go func() {
+		eta = NewETA(ctx, f.busStopGetter, f.etaService, request)
+		wg.Done()
+	}()
+	go func() {
+		formatter = f.formatterFactory.GetFormatter(ctx, request.UserID)
+		wg.Done()
+	}()
+	wg.Wait()
+	return formatter.Format(eta)
+}
+
+func NewETA(ctx context.Context, busStopGetter BusStopGetter, etaService ETAService, request ETARequest) (eta ETA) {
+	eta.Now = request.Time
+	stop := busStopGetter.Get(request.Code)
+	if stop != nil {
+		eta.BusStop = *stop
+	} else {
+		eta.BusStop.BusStopCode = request.Code
+	}
+	arrival, err := etaService.GetBusArrival(request.Code, "")
+	if err != nil {
+		if err, ok := err.(*datamall.Error); ok {
+			eta.Error = fmt.Sprintf("LTA DataMall could be down at the moment (status code %d)", err.StatusCode)
+			// TODO: record metrics about DataMall disruptions
+		} else {
+			eta.Error = fmt.Sprintf("An error occurred while fetching ETAs (request ID: %s)", appengine.RequestID(ctx))
+			logError(ctx, err)
+		}
+		return
+	}
+	if len(request.Services) == 0 {
+		eta.Services = arrival.Services
+	} else {
+		for _, svc := range arrival.Services {
+			if contains(request.Services, svc.ServiceNo) {
+				eta.Services = append(eta.Services, svc)
+			}
+		}
+	}
+	return
+}
 
 func (SummaryETAFormatter) Format(etas BusEtas, serviceNos []string) string {
 	showing := 0

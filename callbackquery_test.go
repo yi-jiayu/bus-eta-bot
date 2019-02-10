@@ -52,8 +52,8 @@ func TestRefreshCallbackHandler(t *testing.T) {
 	now := func() (t time.Time) {
 		return t
 	}
-	etaService := MockDatamall{}
-	busStopRepository := MockBusStops{
+	etaService := mockDatamall{}
+	busStopRepository := mockBusStopRepository{
 		BusStop: &BusStop{
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
@@ -124,7 +124,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 		{
 			Name:          "when datamall returns an error",
 			CallbackQuery: newCallbackQueryFromInlineMessage(`{"t":"refresh","b":"96049"}`),
-			ETAService: MockETAService{
+			ETAService: mockETAService{
 				Error: &datamall.Error{StatusCode: 501},
 			},
 			Expected: []Response{
@@ -149,7 +149,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 		{
 			Name:          "when ETAService returns some other error",
 			CallbackQuery: newCallbackQueryFromInlineMessage(`{"t":"refresh","b":"96049"}`),
-			ETAService: MockETAService{
+			ETAService: mockETAService{
 				Error: errors.New("unexpected error"),
 			},
 			ExpectError: true,
@@ -191,8 +191,8 @@ func TestEtaCallbackHandler(t *testing.T) {
 	now := func() (t time.Time) {
 		return t
 	}
-	etaService := MockDatamall{}
-	busStopRepository := MockBusStops{
+	etaService := mockDatamall{}
+	busStopRepository := mockBusStopRepository{
 		BusStop: &BusStop{
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
@@ -297,8 +297,8 @@ func TestEtaDemoCallbackHandler(t *testing.T) {
 	now := func() (t time.Time) {
 		return t
 	}
-	etaService := MockDatamall{}
-	busStopRepository := MockBusStops{
+	etaService := mockDatamall{}
+	busStopRepository := mockBusStopRepository{
 		BusStop: &BusStop{
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
@@ -352,8 +352,8 @@ func TestNewEtaHandler(t *testing.T) {
 	now := func() (t time.Time) {
 		return t
 	}
-	etaService := MockDatamall{}
-	busStopRepository := MockBusStops{
+	etaService := mockDatamall{}
+	busStopRepository := mockBusStopRepository{
 		BusStop: &BusStop{
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",

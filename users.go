@@ -87,3 +87,8 @@ func (r *DatastoreUserRepository) SetUserFavourites(ctx context.Context, userID 
 	}
 	return nil
 }
+
+// GetFormatter returns the user's preferred ETA formatter, or the default ETA formatter.
+func (r *DatastoreUserRepository) GetFormatter(ctx context.Context, userID int) Formatter {
+	return SummaryFormatter
+}

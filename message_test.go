@@ -24,7 +24,7 @@ func TestLocationHandler(t *testing.T) {
 	}
 
 	bot := NewBot(handlers, tg, nil, nil, nil)
-	bot.BusStops = &MockBusStops{
+	bot.BusStops = &mockBusStopRepository{
 		NearbyBusStops: []BusStop{
 			{
 				BusStopCode: "96041",
@@ -88,7 +88,7 @@ func TestLocationHandlerNothingNearby(t *testing.T) {
 	}
 
 	bot := NewBot(handlers, tg, nil, nil, nil)
-	bot.BusStops = &MockBusStops{
+	bot.BusStops = &mockBusStopRepository{
 		NearbyBusStops: make([]BusStop, 0),
 	}
 
@@ -121,7 +121,7 @@ func TestLocationHandlerNothingNearby(t *testing.T) {
 }
 
 func TestTextHandler(t *testing.T) {
-	busStops := MockBusStops{
+	busStops := mockBusStopRepository{
 		BusStop: &BusStop{
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
@@ -196,7 +196,7 @@ func TestTextHandler(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			tg := &mockTelegramService{}
 			bot := &BusEtaBot{
-				Datamall: MockDatamall{},
+				Datamall: mockDatamall{},
 				BusStops: busStops,
 				NowFunc: func() time.Time {
 					return time.Time{}

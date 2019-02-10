@@ -237,7 +237,7 @@ func TestInlineQueryHandler(t *testing.T) {
 }
 
 func TestChosenInlineResultHandler(t *testing.T) {
-	busStops := MockBusStops{
+	busStops := mockBusStopRepository{
 		BusStop: &BusStop{
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
@@ -304,7 +304,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 			}
 			tg := new(mockTelegramService)
 			bot := &BusEtaBot{
-				Datamall: MockDatamall{},
+				Datamall: mockDatamall{},
 				BusStops: busStops,
 				NowFunc: func() time.Time {
 					return time.Time{}

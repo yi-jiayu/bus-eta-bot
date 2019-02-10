@@ -2,6 +2,7 @@ package busetabot
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -10,21 +11,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/datamall/v3"
-	"github.com/yi-jiayu/telegram-bot-api"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
 
-type MockBusStops struct {
+type mockBusStopRepository struct {
 	BusStop        *BusStop
 	NearbyBusStops []BusStop
 }
 
-func (b MockBusStops) Search(ctx context.Context, query string, limit int) []BusStop {
+func (b mockBusStopRepository) Search(ctx context.Context, query string, limit int) []BusStop {
 	panic("implement me")
 }
 
-func (b MockBusStops) Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
+func (b mockBusStopRepository) Nearby(ctx context.Context, lat, lon, radius float64, limit int) (nearby []NearbyBusStop) {
 	for _, bs := range b.NearbyBusStops {
 		nearby = append(nearby, NearbyBusStop{
 			BusStop:  bs,
@@ -34,23 +34,23 @@ func (b MockBusStops) Nearby(ctx context.Context, lat, lon, radius float64, limi
 	return
 }
 
-func (b MockBusStops) Get(ID string) *BusStop {
+func (b mockBusStopRepository) Get(ID string) *BusStop {
 	return b.BusStop
 }
 
-type MockETAService struct {
+type mockETAService struct {
 	BusArrival datamall.BusArrival
 	Error      error
 }
 
-func (s MockETAService) GetBusArrival(string, string) (datamall.BusArrival, error) {
+func (s mockETAService) GetBusArrival(string, string) (datamall.BusArrival, error) {
 	return s.BusArrival, s.Error
 }
 
-type MockDatamall struct {
+type mockDatamall struct {
 }
 
-func (d MockDatamall) GetBusArrival(code string, serviceNo string) (datamall.BusArrival, error) {
+func (d mockDatamall) GetBusArrival(code string, serviceNo string) (datamall.BusArrival, error) {
 	return newArrival(time.Time{}, code), nil
 }
 
@@ -94,20 +94,6 @@ func newArrival(t time.Time, code string) datamall.BusArrival {
 					EstimatedArrival: t.Add(400 * time.Second),
 					Load:             "LSD",
 					Type:             "BD",
-				},
-			},
-		},
-	}
-}
-
-func newEtaMessageReplyMarkupInline(busStopCode string) *tgbotapi.InlineKeyboardMarkup {
-	callbackData := fmt.Sprintf(`{"t":"refresh","b":"%s"}`, busStopCode)
-	return &tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
-				{
-					Text:         "Refresh",
-					CallbackData: &callbackData,
 				},
 			},
 		},
@@ -524,10 +510,10 @@ func TestETAMessageText(t *testing.T) {
 		{
 			name: "when bus stop is found and has arriving buses",
 			args: args{
-				busStopRepository: MockBusStops{
+				busStopRepository: mockBusStopRepository{
 					BusStop: &stop,
 				},
-				etaService: MockDatamall{},
+				etaService: mockDatamall{},
 				formatter:  MockETAFormatter("formatter output"),
 				t:          time.Time{},
 				code:       "",
@@ -541,10 +527,10 @@ func TestETAMessageText(t *testing.T) {
 		{
 			name: "when bus stop is found but has no arriving buses",
 			args: args{
-				busStopRepository: MockBusStops{
+				busStopRepository: mockBusStopRepository{
 					BusStop: &stop,
 				},
-				etaService: MockDatamall{},
+				etaService: mockDatamall{},
 				formatter:  MockETAFormatter("formatter output"),
 				t:          time.Time{},
 				code:       "",
@@ -557,10 +543,10 @@ func TestETAMessageText(t *testing.T) {
 		{
 			name: "when bus stop is found but datamall is down",
 			args: args{
-				busStopRepository: MockBusStops{
+				busStopRepository: mockBusStopRepository{
 					BusStop: &stop,
 				},
-				etaService: MockETAService{
+				etaService: mockETAService{
 					Error: &datamall.Error{StatusCode: 501},
 				},
 				formatter: MockETAFormatter("body"),
@@ -576,8 +562,8 @@ func TestETAMessageText(t *testing.T) {
 		{
 			name: "when bus stop is not found but has arriving buses",
 			args: args{
-				busStopRepository: MockBusStops{},
-				etaService:        MockDatamall{},
+				busStopRepository: mockBusStopRepository{},
+				etaService:        mockDatamall{},
 				formatter:         MockETAFormatter("formatter output"),
 				t:                 time.Time{},
 				code:              "96049",
@@ -591,8 +577,8 @@ func TestETAMessageText(t *testing.T) {
 		{
 			name: "when bus stop is not found and has no arriving buses",
 			args: args{
-				busStopRepository: MockBusStops{},
-				etaService: MockETAService{
+				busStopRepository: mockBusStopRepository{},
+				etaService: mockETAService{
 					BusArrival: datamall.BusArrival{},
 				},
 				formatter: MockETAFormatter("formatter output"),
@@ -607,8 +593,8 @@ func TestETAMessageText(t *testing.T) {
 		{
 			name: "when bus stop is not found and datamall is down",
 			args: args{
-				busStopRepository: MockBusStops{},
-				etaService: MockETAService{
+				busStopRepository: mockBusStopRepository{},
+				etaService: mockETAService{
 					Error: &datamall.Error{StatusCode: 501},
 				},
 				formatter: MockETAFormatter("body"),
@@ -633,4 +619,102 @@ func TestETAMessageText(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewETA(t *testing.T) {
+	busStop := BusStop{
+		BusStopCode: "96049",
+		RoadName:    "Upp Changi Rd East",
+		Description: "Opp Tropicana Condo",
+	}
+	t.Run("populates bus stop when bus stop is found", func(t *testing.T) {
+		getter := mockBusStopRepository{
+			BusStop: &busStop,
+		}
+		actual := NewETA(context.Background(), getter, mockDatamall{}, ETARequest{})
+		assert.Equal(t, busStop, actual.BusStop)
+	})
+	t.Run("populates bus stop code when bus stop is not found", func(t *testing.T) {
+		getter := mockBusStopRepository{}
+		code := "96049"
+		actual := NewETA(context.Background(), getter, mockDatamall{}, ETARequest{
+			Code: code,
+		})
+		expected := BusStop{
+			BusStopCode: code,
+		}
+		assert.Equal(t, expected, actual.BusStop)
+	})
+	t.Run("contains appropriate error when datamall is down", func(t *testing.T) {
+		getter := mockBusStopRepository{}
+		etaService := mockETAService{
+			Error: &datamall.Error{
+				StatusCode: 503,
+			},
+		}
+		actual := NewETA(context.Background(), getter, etaService, ETARequest{})
+		expected := "LTA DataMall could be down at the moment (status code 503)"
+		assert.Equal(t, expected, actual.Error)
+	})
+	t.Run("contains appropriate error when something else went wrong", func(t *testing.T) {
+		getter := mockBusStopRepository{}
+		etaService := mockETAService{
+			Error: errors.New("some other error"),
+		}
+		actual := NewETA(context.Background(), getter, etaService, ETARequest{})
+		expected := "An error occurred while fetching ETAs (request ID: )"
+		assert.Equal(t, expected, actual.Error)
+	})
+	t.Run("doesn't filter services when services is empty", func(t *testing.T) {
+		getter := mockBusStopRepository{}
+		arrival := newArrival(time.Time{}, "")
+		etaService := mockETAService{
+			BusArrival: arrival,
+		}
+		actual := NewETA(context.Background(), getter, etaService, ETARequest{})
+		assert.Equal(t, arrival.Services, actual.Services)
+	})
+	t.Run("doesn't filter services when services is empty", func(t *testing.T) {
+		getter := mockBusStopRepository{}
+		arrival := newArrival(time.Time{}, "")
+		etaService := mockETAService{
+			BusArrival: arrival,
+		}
+		request := ETARequest{
+			Services: []string{"2"},
+		}
+		actual := NewETA(context.Background(), getter, etaService, request)
+		expected := []datamall.Service{
+			arrival.Services[0],
+		}
+		assert.Equal(t, expected, actual.Services)
+	})
+}
+
+type mockFormatter struct{}
+
+func (f mockFormatter) GetFormatter(ctx context.Context, userID int) Formatter {
+	return f
+}
+
+func (f mockFormatter) Format(eta ETA) (string, error) {
+	var output string
+	for _, svc := range eta.Services {
+		output += " " + svc.ServiceNo
+	}
+	return "services:" + output, nil
+}
+
+func TestETAMessageFactory_Text(t *testing.T) {
+	f := ETAMessageFactory{
+		busStopGetter:    mockBusStopRepository{},
+		etaService:       mockDatamall{},
+		formatterFactory: mockFormatter{},
+	}
+	actual, err := f.Text(context.Background(), ETARequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := "services: 2 24"
+	assert.Equal(t, expected, actual)
 }
