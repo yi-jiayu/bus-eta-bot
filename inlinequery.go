@@ -127,19 +127,12 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 	if err != nil {
 		return err
 	}
-
-	replyMarkup, err := EtaMessageReplyMarkup(busStopID, nil, true)
-	if err != nil {
-		return err
-	}
-
-	reply := tgbotapi.EditMessageTextConfig{
-		BaseEdit: tgbotapi.BaseEdit{
-			InlineMessageID: cir.InlineMessageID,
-			ReplyMarkup:     replyMarkup,
-		},
-		Text:      text,
-		ParseMode: "markdown",
+	markup := NewETAMessageReplyMarkup(busStopID, nil, true)
+	reply := telegram.EditMessageTextRequest{
+		InlineMessageID: cir.InlineMessageID,
+		Text:            text,
+		ParseMode:       "markdown",
+		ReplyMarkup:     markup,
 	}
 
 	if len(tokens) > 1 && tokens[1] == "geo" {
@@ -148,6 +141,9 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 		go bot.LogEvent(ctx, cir.From, CategoryChosenInlineResult, ActionChosenInlineResult, "")
 	}
 
-	_, err = bot.Telegram.Send(reply)
-	return err
+	err = bot.TelegramService.Do(reply)
+	if err != nil {
+		return errors.Wrap(err, "error updating inline query after chosen inline result")
+	}
+	return nil
 }
