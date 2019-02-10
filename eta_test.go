@@ -261,17 +261,6 @@ func TestEtaTable(t *testing.T) {
 	}
 }
 
-func TestEtaMessageReplyMarkup(t *testing.T) {
-	t.Run("for inline message", func(t *testing.T) {
-		expected := newEtaMessageReplyMarkupInline("96049")
-		actual, err := EtaMessageReplyMarkup("96049", nil, true)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, expected, actual)
-	})
-}
-
 func TestSummaryETAFormatter_Format(t *testing.T) {
 	svc2 := IncomingBuses{
 		ServiceNo: "2",

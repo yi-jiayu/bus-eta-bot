@@ -9,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v3"
-	"github.com/yi-jiayu/telegram-bot-api"
 
 	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
 )
@@ -265,73 +264,6 @@ func EtaTable(etas [][4]string) string {
 
 	// remove final newline
 	return output[:len(output)-1]
-}
-
-// EtaMessageReplyMarkup generates the reply markup for an eta message, including a resend callback button only when
-// the message is not an inline message.
-func EtaMessageReplyMarkup(busStopID string, serviceNos []string, inline bool) (*tgbotapi.InlineKeyboardMarkup, error) {
-	refreshCallbackData := CallbackData{
-		Type:       "refresh",
-		BusStopID:  busStopID,
-		ServiceNos: serviceNos,
-	}
-
-	refreshCallbackDataJSON, err := json.Marshal(refreshCallbackData)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", refreshCallbackData))
-	}
-	refreshCallbackDataJSONStr := string(refreshCallbackDataJSON)
-
-	replyMarkup := tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
-			{
-				tgbotapi.InlineKeyboardButton{
-					Text:         "Refresh",
-					CallbackData: &refreshCallbackDataJSONStr,
-				},
-			},
-		},
-	}
-
-	if !inline {
-		resendCallbackData := CallbackData{
-			Type:       "resend",
-			BusStopID:  busStopID,
-			ServiceNos: serviceNos,
-		}
-
-		resendCallbackDataJSON, err := json.Marshal(resendCallbackData)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", refreshCallbackData))
-		}
-		resendCallbackDataJSONStr := string(resendCallbackDataJSON)
-
-		replyMarkup.InlineKeyboard[0] = append(replyMarkup.InlineKeyboard[0], tgbotapi.InlineKeyboardButton{
-			Text:         "Resend",
-			CallbackData: &resendCallbackDataJSONStr,
-		})
-
-		argstr := busStopID
-		if len(serviceNos) > 0 {
-			argstr += " " + strings.Join(serviceNos, " ")
-		}
-		toggleFavouriteCallbackData := CallbackData{
-			Type:   "togf",
-			Argstr: argstr,
-		}
-		addFavouriteCallbackDataJSON, err := json.Marshal(toggleFavouriteCallbackData)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error marshalling callback data: %#v", refreshCallbackData))
-		}
-		addFavouriteCallbackDataJSONStr := string(addFavouriteCallbackDataJSON)
-
-		replyMarkup.InlineKeyboard[0] = append(replyMarkup.InlineKeyboard[0], tgbotapi.InlineKeyboardButton{
-			Text:         "⭐",
-			CallbackData: &addFavouriteCallbackDataJSONStr,
-		})
-	}
-
-	return &replyMarkup, nil
 }
 
 func NewRefreshButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
