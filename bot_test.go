@@ -240,6 +240,9 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 			Spy:  &refreshCbqSpy,
 			Update: &tgbotapi.Update{
 				CallbackQuery: &tgbotapi.CallbackQuery{
+					From: &tgbotapi.User{
+						ID: 1,
+					},
 					Data: `{"t":"refresh"}`,
 				},
 			},
@@ -262,7 +265,7 @@ func TestBusEtaBot_HandleUpdate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			busEtaBot.HandleUpdate(nil, tc.Update)
+			busEtaBot.HandleUpdate(context.Background(), tc.Update)
 
 			if !tc.Spy.Called {
 				t.Fail()

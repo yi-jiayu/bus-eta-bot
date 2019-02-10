@@ -3,12 +3,10 @@ package busetabot
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/getsentry/raven-go"
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/datamall/v3"
 	"github.com/yi-jiayu/telegram-bot-api"
@@ -66,7 +64,6 @@ type BusEtaBot struct {
 	BusStops            BusStopRepository
 	Users               UserRepository
 	TelegramService     TelegramService
-	Sentry              *raven.Client
 }
 
 // Handlers contains all the handlers used by the bot.
@@ -114,11 +111,6 @@ func NewBot(handlers Handlers, tg *tgbotapi.BotAPI, dm ETAService, sv *StreetVie
 		MeasurementProtocol: mp,
 	}
 	bot.NowFunc = time.Now
-	sentry, err := raven.New("")
-	if err != nil {
-		log.Printf("error creating sentry client: %v\n", err)
-	}
-	bot.Sentry = sentry
 	return bot
 }
 
@@ -128,16 +120,14 @@ func (bot *BusEtaBot) Dispatch(ctx context.Context, responses <-chan Response) {
 	for r := range responses {
 		err := r.Error
 		if err != nil {
-			aelog.Errorf(ctx, "%+v", err)
-			bot.Sentry.CaptureError(err, nil)
+			logError(ctx, err)
 		} else {
 			wg.Add(1)
 			go func(request telegram.Request) {
 				defer wg.Done()
 				err := bot.TelegramService.Do(request)
 				if err != nil {
-					aelog.Errorf(ctx, "%+v", err)
-					bot.Sentry.CaptureError(err, nil)
+					logError(ctx, err)
 				}
 			}(r.Request)
 		}
@@ -208,11 +198,7 @@ func (bot *BusEtaBot) HandleUpdate(ctx context.Context, update *tgbotapi.Update)
 }
 
 func (bot *BusEtaBot) handleMessage(ctx context.Context, message *tgbotapi.Message) {
-	if bot.Sentry != nil {
-		bot.Sentry.SetUserContext(&raven.User{
-			ID: strconv.Itoa(message.From.ID),
-		})
-	}
+	setUserContext(ctx, strconv.Itoa(message.From.ID))
 
 	// ignore messages longer than a certain length
 	if len(message.Text) > MaxMessageLength {
@@ -265,11 +251,8 @@ func (bot *BusEtaBot) handleLocation(ctx context.Context, message *tgbotapi.Mess
 }
 
 func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.CallbackQuery) {
-	if bot.Sentry != nil {
-		bot.Sentry.SetUserContext(&raven.User{
-			ID: strconv.Itoa(cbq.From.ID),
-		})
-	}
+	setUserContext(ctx, strconv.Itoa(cbq.From.ID))
+
 	var data map[string]interface{}
 	err := json.Unmarshal([]byte(cbq.Data), &data)
 	if err != nil {
@@ -291,8 +274,7 @@ func (bot *BusEtaBot) handleCallbackQuery(ctx context.Context, cbq *tgbotapi.Cal
 func (bot *BusEtaBot) handleInlineQuery(ctx context.Context, ilq *tgbotapi.InlineQuery) {
 	err := bot.Handlers.InlineQueryHandler(ctx, bot, ilq)
 	if err != nil {
-		aelog.Errorf(ctx, "%+v", err)
-		bot.Sentry.CaptureError(err, nil)
+		logError(ctx, err)
 	}
 }
 
