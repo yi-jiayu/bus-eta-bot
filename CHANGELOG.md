@@ -1,5 +1,13 @@
 # Bus Eta Bot Release Notes
 
+## 4.2.0
+### Incoming buses summary and details views
+- Added a button to switch between viewing a summary of all incoming buses for all services and the
+  features of the next 10 incoming buses.
+
+### Miscellaneous
+- Updated bus stop data
+
 ## 4.1.1
 ### Under the hood
 - Refactored code to avoid direct calls to the tgbotapi package and use an internal abstraction instead and improve 
