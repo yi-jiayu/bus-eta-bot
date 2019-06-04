@@ -47,8 +47,8 @@ var (
 
 var (
 	Formatters = map[string]Formatter{
-		"summary":  summaryFormatter,
-		"features": featuresFormatter,
+		"s": summaryFormatter,
+		"f": featuresFormatter,
 	}
 )
 
