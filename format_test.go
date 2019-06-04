@@ -144,7 +144,7 @@ func TestSummaryFormatter(t *testing.T) {
 		{
 			Name:     "normal eta response",
 			ETA:      etaServicesPopulated,
-			Expected: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\nSvc   Nxt  2nd  3rd\n---   ---  ---  ---\n2      -1   10   36\n24      0    3    6\n```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated on Sun, 24 Nov 74 00:00 SGT_",
+			Expected: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   0 |   3 |   6 |\n```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated on Sun, 24 Nov 74 00:00 SGT_",
 		},
 		{
 			Name:     "services is empty",
@@ -180,7 +180,7 @@ func TestFeaturesFormatter(t *testing.T) {
 		{
 			Name:     "normal eta response",
 			ETA:      etaServicesPopulated,
-			Expected: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\nSvc   Eta  Sea  Typ  Fea\n---   ---  ---  ---  ---\n2      -1  SDA   DD     \n24      0  SEA   SD     \n24      3  SDA   DD  WAB\n24      6  LSD   BD     \n2      10  SDA   DD     \n2      36  LSD   BD  WAB\n```\nShowing 2 out of 2 services for this bus stop.\n\nLegend:\n`SEA` - Seats available\n`SDA` - Standing available\n`LSD` - Limited standing\n\n`SD` - Single deck\n`DD` - Double deck\n`BD` - Bendy\n\n`WAB` - Wheelchair accessible\n\n_Last updated on Sun, 24 Nov 74 00:00 SGT_",
+			Expected: "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\nSvc   Eta  Sea  Typ  Fea\n---   ---  ---  ---  ---\n2      -1  SDA   DD     \n24      0  SEA   SD     \n24      3  SDA   DD  WAB\n24      6  LSD   BD     \n2      10  SDA   DD     \n2      36  LSD   BD  WAB\n```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated on Sun, 24 Nov 74 00:00 SGT_",
 		},
 		{
 			Name:     "services is empty",
@@ -259,12 +259,12 @@ func TestSummaryTemplate(t *testing.T) {
 		{
 			Name:     "services are fully populated",
 			ETA:      etaServicesPopulated,
-			Expected: "```\nSvc   Nxt  2nd  3rd\n---   ---  ---  ---\n2      -1   10   36\n24      0    3    6\n```\nShowing 2 out of 2 services for this bus stop.",
+			Expected: "```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   0 |   3 |   6 |\n```\nShowing 2 out of 2 services for this bus stop.",
 		},
 		{
 			Name:     "some buses have no data",
 			ETA:      etaSomeBusesEmpty,
-			Expected: "```\nSvc   Nxt  2nd  3rd\n---   ---  ---  ---\n2      -1   10    ?\n24      0    3    ?\n```\nShowing 2 out of 2 services for this bus stop.",
+			Expected: "```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |   ? |\n| 24   |   0 |   3 |   ? |\n```\nShowing 2 out of 2 services for this bus stop.",
 		},
 	}
 	formatter := TemplateFormatter{
@@ -295,12 +295,12 @@ func TestFeaturesTemplate(t *testing.T) {
 		{
 			Name:     "services are fully populated",
 			ETA:      etaServicesPopulated,
-			Expected: "```\nSvc   Eta  Sea  Typ  Fea\n---   ---  ---  ---  ---\n2      -1  SDA   DD     \n24      0  SEA   SD     \n24      3  SDA   DD  WAB\n24      6  LSD   BD     \n2      10  SDA   DD     \n2      36  LSD   BD  WAB\n```\nShowing 2 out of 2 services for this bus stop.\n\nLegend:\n`SEA` - Seats available\n`SDA` - Standing available\n`LSD` - Limited standing\n\n`SD` - Single deck\n`DD` - Double deck\n`BD` - Bendy\n\n`WAB` - Wheelchair accessible",
+			Expected: "```\nSvc   Eta  Sea  Typ  Fea\n---   ---  ---  ---  ---\n2      -1  SDA   DD     \n24      0  SEA   SD     \n24      3  SDA   DD  WAB\n24      6  LSD   BD     \n2      10  SDA   DD     \n2      36  LSD   BD  WAB\n```\nShowing 2 out of 2 services for this bus stop.",
 		},
 		{
 			Name:     "some buses have no data",
 			ETA:      etaSomeBusesEmpty,
-			Expected: "```\nSvc   Eta  Sea  Typ  Fea\n---   ---  ---  ---  ---\n2      -1  SDA   DD     \n24      0  SEA   SD     \n24      3  SDA   DD  WAB\n2      10  SDA   DD     \n```\nShowing 2 out of 2 services for this bus stop.\n\nLegend:\n`SEA` - Seats available\n`SDA` - Standing available\n`LSD` - Limited standing\n\n`SD` - Single deck\n`DD` - Double deck\n`BD` - Bendy\n\n`WAB` - Wheelchair accessible",
+			Expected: "```\nSvc   Eta  Sea  Typ  Fea\n---   ---  ---  ---  ---\n2      -1  SDA   DD     \n24      0  SEA   SD     \n24      3  SDA   DD  WAB\n2      10  SDA   DD     \n```\nShowing 2 out of 2 services for this bus stop.",
 		},
 	}
 	formatter := TemplateFormatter{

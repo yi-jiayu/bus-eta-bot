@@ -1,13 +1,13 @@
 {{ define "body" -}}
 ```
-Svc   Nxt  2nd  3rd
----   ---  ---  ---
+| Svc  | Nxt | 2nd | 3rd |
+|------|-----|-----|-----|
 {{- range (.Services | sortByService) }}
 {{ $fst := until $.Now .NextBus.EstimatedArrival -}}
 {{ $snd := until $.Now .NextBus2.EstimatedArrival -}}
 {{ $thd := until $.Now .NextBus3.EstimatedArrival -}}
-{{ printf "%-4v" .ServiceNo }} {{ printf "%4v" $fst }} {{ printf "%4v" $snd }} {{ printf "%4v" $thd -}}
-{{ end }}
+| {{ printf "%-4v" .ServiceNo }} | {{ printf "%3v" $fst }} | {{ printf "%3v" $snd }} | {{ printf "%3v" $thd }} |
+{{- end }}
 ```
 {{ template "services_count" . }}
 {{- end -}}
