@@ -25,7 +25,7 @@ var (
 )
 
 var (
-	FeaturesFormatter = TemplateFormatter{
+	featuresFormatter = TemplateFormatter{
 		template: template.Must(template.New("message.tmpl").
 			Funcs(funcMap).
 			ParseFiles("templates/message.tmpl",
@@ -34,7 +34,7 @@ var (
 				"templates/partials/services_count.tmpl",
 				"templates/partials/footer.tmpl")),
 	}
-	SummaryFormatter = TemplateFormatter{
+	summaryFormatter = TemplateFormatter{
 		template: template.Must(template.New("message.tmpl").
 			Funcs(funcMap).
 			ParseFiles("templates/message.tmpl",
@@ -42,6 +42,13 @@ var (
 				"templates/partials/summary.tmpl",
 				"templates/partials/footer.tmpl",
 				"templates/partials/services_count.tmpl")),
+	}
+)
+
+var (
+	Formatters = map[string]Formatter{
+		"summary":  summaryFormatter,
+		"features": featuresFormatter,
 	}
 )
 

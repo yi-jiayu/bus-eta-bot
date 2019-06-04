@@ -159,7 +159,7 @@ func TestSummaryFormatter(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			actual, err := SummaryFormatter.Format(tc.ETA)
+			actual, err := summaryFormatter.Format(tc.ETA)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -195,7 +195,7 @@ func TestFeaturesFormatter(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			actual, err := FeaturesFormatter.Format(tc.ETA)
+			actual, err := featuresFormatter.Format(tc.ETA)
 			if err != nil {
 				t.Fatal(err)
 			}
