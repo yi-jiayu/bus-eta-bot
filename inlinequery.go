@@ -93,7 +93,7 @@ func buildInlineQueryResult(streetView StreetViewProvider, bs BusStop) (telegram
 			}
 		}
 	}
-	markup := NewETAMessageReplyMarkup(bs.BusStopCode, nil, true)
+	markup := NewETAMessageReplyMarkup(bs.BusStopCode, nil, "", true)
 	result := telegram.InlineQueryResultArticle{
 		ID:          bs.BusStopCode,
 		Title:       fmt.Sprintf("%s (%s)", bs.Description, bs.BusStopCode),
@@ -127,7 +127,7 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 	if err != nil {
 		return err
 	}
-	markup := NewETAMessageReplyMarkup(busStopID, nil, true)
+	markup := NewETAMessageReplyMarkup(busStopID, nil, "", true)
 	reply := telegram.EditMessageTextRequest{
 		InlineMessageID: cir.InlineMessageID,
 		Text:            text,

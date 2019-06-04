@@ -61,6 +61,7 @@ type CallbackData struct {
 	BusStopID  string   `json:"b,omitempty"`
 	ServiceNos []string `json:"s,omitempty"`
 	Argstr     string   `json:"a,omitempty"`
+	Formatter  string   `json:"f,omitempty"`
 }
 
 type ETAFormatter interface {
@@ -336,11 +337,12 @@ func EtaTable(etas [][4]string) string {
 	return output[:len(output)-1]
 }
 
-func NewRefreshButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
+func NewRefreshButton(busStopCode string, serviceNos []string, formatter string) telegram.InlineKeyboardButton {
 	data := CallbackData{
 		Type:       "refresh",
 		BusStopID:  busStopCode,
 		ServiceNos: serviceNos,
+		Formatter:  formatter,
 	}
 	JSON, _ := json.Marshal(data)
 	return telegram.InlineKeyboardButton{
@@ -349,11 +351,12 @@ func NewRefreshButton(busStopCode string, serviceNos []string) telegram.InlineKe
 	}
 }
 
-func NewResendButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
+func NewResendButton(busStopCode string, serviceNos []string, formatter string) telegram.InlineKeyboardButton {
 	data := CallbackData{
 		Type:       "resend",
 		BusStopID:  busStopCode,
 		ServiceNos: serviceNos,
+		Formatter:  formatter,
 	}
 	JSON, _ := json.Marshal(data)
 	return telegram.InlineKeyboardButton{
@@ -378,13 +381,13 @@ func NewToggleFavouriteButton(busStopCode string, serviceNos []string) telegram.
 	}
 }
 
-func NewETAMessageReplyMarkup(busStopCode string, serviceNos []string, inline bool) telegram.InlineKeyboardMarkup {
+func NewETAMessageReplyMarkup(busStopCode string, serviceNos []string, formatter string, inline bool) telegram.InlineKeyboardMarkup {
 	row := []telegram.InlineKeyboardButton{
-		NewRefreshButton(busStopCode, serviceNos),
+		NewRefreshButton(busStopCode, serviceNos, formatter),
 	}
 	if !inline {
 		row = append(row,
-			NewResendButton(busStopCode, serviceNos),
+			NewResendButton(busStopCode, serviceNos, formatter),
 			NewToggleFavouriteButton(busStopCode, serviceNos))
 	}
 	return telegram.InlineKeyboardMarkup{

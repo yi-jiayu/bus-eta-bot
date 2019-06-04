@@ -340,7 +340,7 @@ func TestNewRefreshButton(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			actual := NewRefreshButton(tc.BusStopCode, tc.ServiceNos)
+			actual := NewRefreshButton(tc.BusStopCode, tc.ServiceNos, "")
 			assert.Equal(t, tc.Expected, actual)
 		})
 	}
@@ -376,7 +376,7 @@ func TestNewResendButton(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			actual := NewResendButton(tc.BusStopCode, tc.ServiceNos)
+			actual := NewResendButton(tc.BusStopCode, tc.ServiceNos, "")
 			assert.Equal(t, tc.Expected, actual)
 		})
 	}
@@ -422,6 +422,7 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 	type args struct {
 		busStopCode string
 		serviceNos  []string
+		formatter   string
 		inline      bool
 	}
 	tests := []struct {
@@ -455,6 +456,32 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 			},
 		},
 		{
+			name: "when not inline, with formatter",
+			args: args{
+				busStopCode: "96049",
+				formatter:   "s",
+				inline:      false,
+			},
+			want: telegram.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegram.InlineKeyboardButton{
+					{
+						{
+							Text:         "Refresh",
+							CallbackData: `{"t":"refresh","b":"96049","f":"s"}`,
+						},
+						{
+							Text:         "Resend",
+							CallbackData: `{"t":"resend","b":"96049","f":"s"}`,
+						},
+						{
+							Text:         "⭐",
+							CallbackData: `{"t":"togf","a":"96049"}`,
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "when inline",
 			args: args{
 				busStopCode: "96049",
@@ -471,10 +498,28 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "when inline, with formatter",
+			args: args{
+				busStopCode: "96049",
+				formatter:   "s",
+				inline:      true,
+			},
+			want: telegram.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegram.InlineKeyboardButton{
+					{
+						{
+							Text:         "Refresh",
+							CallbackData: `{"t":"refresh","b":"96049","f":"s"}`,
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewETAMessageReplyMarkup(tt.args.busStopCode, tt.args.serviceNos, tt.args.inline); !reflect.DeepEqual(got, tt.want) {
+			if got := NewETAMessageReplyMarkup(tt.args.busStopCode, tt.args.serviceNos, tt.args.formatter, tt.args.inline); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewETAMessageReplyMarkup() = %v, want %v", got, tt.want)
 			}
 		})

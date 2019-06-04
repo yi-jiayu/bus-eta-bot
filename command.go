@@ -188,7 +188,7 @@ func EtaHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message, 
 			ChatID:      chatID,
 			Text:        text,
 			ParseMode:   "markdown",
-			ReplyMarkup: NewETAMessageReplyMarkup(busStopCode, serviceNos, false),
+			ReplyMarkup: NewETAMessageReplyMarkup(busStopCode, serviceNos, "", false),
 		}
 		if !message.Chat.IsPrivate() {
 			resp.ReplyToMessageID = message.MessageID

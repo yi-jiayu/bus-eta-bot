@@ -39,11 +39,11 @@ func updateETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callbac
 	}
 	if cbq.InlineMessageID != "" {
 		editMessageTextRequest.InlineMessageID = cbq.InlineMessageID
-		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(req.Code, req.Services, true)
+		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(req.Code, req.Services, "", true)
 	} else {
 		editMessageTextRequest.ChatID = cbq.Message.Chat.ID
 		editMessageTextRequest.MessageID = cbq.Message.MessageID
-		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(req.Code, req.Services, false)
+		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(req.Code, req.Services, "", false)
 	}
 	responses <- ok(editMessageTextRequest)
 	answerCallbackQueryRequest := telegram.AnswerCallbackQueryRequest{
@@ -59,7 +59,7 @@ func sendETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQ
 		responses <- notOk(err)
 		return
 	}
-	markup := NewETAMessageReplyMarkup(code, services, false)
+	markup := NewETAMessageReplyMarkup(code, services, "", false)
 	sendMessageRequest := telegram.SendMessageRequest{
 		Text:        text,
 		ChatID:      cbq.Message.Chat.ID,

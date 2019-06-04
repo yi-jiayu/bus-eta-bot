@@ -50,7 +50,7 @@ func TextHandler(ctx context.Context, bot *BusEtaBot, message *tgbotapi.Message)
 	if err != nil {
 		return err
 	}
-	markup := NewETAMessageReplyMarkup(busStopID, serviceNos, false)
+	markup := NewETAMessageReplyMarkup(busStopID, serviceNos, "", false)
 	req := telegram.SendMessageRequest{
 		ChatID:      chatID,
 		Text:        text,
