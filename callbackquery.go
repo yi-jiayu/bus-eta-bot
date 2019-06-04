@@ -26,8 +26,9 @@ var callbackQueryHandlers = map[string]CallbackQueryHandler{
 // CallbackQueryHandler is a handler for callback queries
 type CallbackQueryHandler func(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, responses chan<- Response)
 
-func updateETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, code string, services []string, responses chan<- Response) {
-	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), code, services)
+func updateETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, req ETARequest, responses chan<- Response) {
+	eta := NewETA(ctx, bot.BusStops, bot.Datamall, req)
+	text, err := summaryFormatter.Format(eta)
 	if err != nil {
 		responses <- notOk(err)
 		return
@@ -38,11 +39,11 @@ func updateETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callbac
 	}
 	if cbq.InlineMessageID != "" {
 		editMessageTextRequest.InlineMessageID = cbq.InlineMessageID
-		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(code, services, true)
+		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(req.Code, req.Services, true)
 	} else {
 		editMessageTextRequest.ChatID = cbq.Message.Chat.ID
 		editMessageTextRequest.MessageID = cbq.Message.MessageID
-		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(code, services, false)
+		editMessageTextRequest.ReplyMarkup = NewETAMessageReplyMarkup(req.Code, req.Services, false)
 	}
 	responses <- ok(editMessageTextRequest)
 	answerCallbackQueryRequest := telegram.AnswerCallbackQueryRequest{
@@ -83,8 +84,13 @@ func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 		responses <- notOk(errors.Wrap(err, "error unmarshalling callback data"))
 		return
 	}
-	updateETAMessage(ctx, bot, cbq, data.BusStopID, data.ServiceNos, responses)
-	return
+	req := ETARequest{
+		UserID:   cbq.From.ID,
+		Time:     bot.NowFunc(),
+		Code:     data.BusStopID,
+		Services: data.ServiceNos,
+	}
+	updateETAMessage(ctx, bot, cbq, req, responses)
 }
 
 // EtaCallbackHandler handles callback queries from eta messages from old versions of the bot for
@@ -106,8 +112,13 @@ func EtaCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callb
 		code = data.BusStopID
 		services = data.ServiceNos
 	}
-	updateETAMessage(ctx, bot, cbq, code, services, responses)
-	return
+	req := ETARequest{
+		UserID:   cbq.From.ID,
+		Time:     bot.NowFunc(),
+		Code:     code,
+		Services: services,
+	}
+	updateETAMessage(ctx, bot, cbq, req, responses)
 }
 
 // EtaDemoCallbackHandler handles an eta_demo callback from a start command.

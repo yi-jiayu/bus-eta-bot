@@ -75,7 +75,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 				ok(telegram.EditMessageTextRequest{
 					ChatID:    1,
 					MessageID: 1,
-					Text:      "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
+					Text:      "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 					ParseMode: "markdown",
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{
@@ -105,7 +105,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 			Expected: []Response{
 				ok(telegram.EditMessageTextRequest{
 					InlineMessageID: "1",
-					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
+					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 					ParseMode:       "markdown",
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{
@@ -130,7 +130,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 			Expected: []Response{
 				ok(telegram.EditMessageTextRequest{
 					InlineMessageID: "1",
-					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n\nOh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code 501).\n\n_Last updated at 01 Jan 01 08:00 SGT_",
+					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\nLTA DataMall could be down at the moment (status code 501)\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 					ParseMode:       "markdown",
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{
@@ -152,7 +152,32 @@ func TestRefreshCallbackHandler(t *testing.T) {
 			ETAService: mockETAService{
 				Error: errors.New("unexpected error"),
 			},
-			ExpectError: true,
+			Expected: []Response{
+				{
+					Request: telegram.EditMessageTextRequest{
+						ChatID:          0,
+						MessageID:       0,
+						InlineMessageID: "1",
+						Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\nAn error occurred while fetching ETAs (request ID: )\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+						ParseMode:       "markdown",
+						ReplyMarkup: telegram.InlineKeyboardMarkup{
+							InlineKeyboard: [][]telegram.InlineKeyboardButton{
+								{
+									{
+										Text:         "Refresh",
+										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+									},
+								},
+							},
+						},
+					},
+					Error: nil,
+				},
+				{
+					Request: telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1", Text: "ETAs updated!"},
+					Error:   nil,
+				},
+			},
 		},
 		{
 			Name:          "when callback data is invalid",
@@ -211,53 +236,64 @@ func TestEtaCallbackHandler(t *testing.T) {
 			Name:          "for callback query containing argstr",
 			CallbackQuery: newCallbackQueryFromMessage(`{"t":"eta","a":"96049"}`),
 			Expected: []Response{
-				ok(telegram.EditMessageTextRequest{
-					ChatID:    1,
-					MessageID: 1,
-					Text:      "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
-					ParseMode: "markdown",
-					ReplyMarkup: telegram.InlineKeyboardMarkup{
-						InlineKeyboard: [][]telegram.InlineKeyboardButton{
-							{
+				{
+					Request: telegram.EditMessageTextRequest{
+						ChatID:          1,
+						MessageID:       1,
+						InlineMessageID: "",
+						Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+						ParseMode:       "markdown",
+						ReplyMarkup: telegram.InlineKeyboardMarkup{
+							InlineKeyboard: [][]telegram.InlineKeyboardButton{
 								{
-									Text:         "Refresh",
-									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
-								},
-								{
-									Text:         "Resend",
-									CallbackData: "{\"t\":\"resend\",\"b\":\"96049\"}",
-								},
-								{
-									Text:         "⭐",
-									CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
+									{
+										Text:         "Refresh",
+										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+									},
+									{
+										Text:         "Resend",
+										CallbackData: "{\"t\":\"resend\",\"b\":\"96049\"}",
+									},
+									{
+										Text:         "⭐",
+										CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
+									},
 								},
 							},
 						},
 					},
-				}),
-				ok(telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1", Text: "ETAs updated!"}),
+				},
+				{
+					Request: telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1", Text: "ETAs updated!"},
+				},
 			},
 		},
 		{
 			Name:          "for callback query containing bus stop and services",
 			CallbackQuery: newCallbackQueryFromInlineMessage(`{"t":"eta","b":"96049"}`),
 			Expected: []Response{
-				ok(telegram.EditMessageTextRequest{
-					InlineMessageID: "1",
-					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
-					ParseMode:       "markdown",
-					ReplyMarkup: telegram.InlineKeyboardMarkup{
-						InlineKeyboard: [][]telegram.InlineKeyboardButton{
-							{
+				{
+					Request: telegram.EditMessageTextRequest{
+						ChatID:          0,
+						MessageID:       0,
+						InlineMessageID: "1",
+						Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+						ParseMode:       "markdown",
+						ReplyMarkup: telegram.InlineKeyboardMarkup{
+							InlineKeyboard: [][]telegram.InlineKeyboardButton{
 								{
-									Text:         "Refresh",
-									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+									{
+										Text:         "Refresh",
+										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+									},
 								},
 							},
 						},
 					},
-				}),
-				ok(telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1", Text: "ETAs updated!"}),
+				},
+				{
+					Request: telegram.AnswerCallbackQueryRequest{CallbackQueryID: "1", Text: "ETAs updated!"},
+				},
 			},
 		},
 		{
