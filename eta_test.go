@@ -452,6 +452,12 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 							CallbackData: `{"t":"togf","a":"96049"}`,
 						},
 					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: `{"t":"refresh","b":"96049","f":"f"}`,
+						},
+					},
 				},
 			},
 		},
@@ -459,7 +465,7 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 			name: "when not inline, with formatter",
 			args: args{
 				busStopCode: "96049",
-				formatter:   "s",
+				formatter:   FormatterSummary,
 				inline:      false,
 			},
 			want: telegram.InlineKeyboardMarkup{
@@ -476,6 +482,44 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 						{
 							Text:         "⭐",
 							CallbackData: `{"t":"togf","a":"96049"}`,
+						},
+					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: `{"t":"refresh","b":"96049","f":"f"}`,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "when not inline, with features formatter",
+			args: args{
+				busStopCode: "96049",
+				formatter:   FormatterFeatures,
+				inline:      false,
+			},
+			want: telegram.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegram.InlineKeyboardButton{
+					{
+						{
+							Text:         "Refresh",
+							CallbackData: `{"t":"refresh","b":"96049","f":"f"}`,
+						},
+						{
+							Text:         "Resend",
+							CallbackData: `{"t":"resend","b":"96049","f":"f"}`,
+						},
+						{
+							Text:         "⭐",
+							CallbackData: `{"t":"togf","a":"96049"}`,
+						},
+					},
+					{
+						{
+							Text:         "Show incoming bus summary",
+							CallbackData: `{"t":"refresh","b":"96049","f":"s"}`,
 						},
 					},
 				},
@@ -495,6 +539,12 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 							CallbackData: `{"t":"refresh","b":"96049"}`,
 						},
 					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: `{"t":"refresh","b":"96049","f":"f"}`,
+						},
+					},
 				},
 			},
 		},
@@ -502,7 +552,31 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 			name: "when inline, with formatter",
 			args: args{
 				busStopCode: "96049",
-				formatter:   "s",
+				formatter:   FormatterFeatures,
+				inline:      true,
+			},
+			want: telegram.InlineKeyboardMarkup{
+				InlineKeyboard: [][]telegram.InlineKeyboardButton{
+					{
+						{
+							Text:         "Refresh",
+							CallbackData: `{"t":"refresh","b":"96049","f":"f"}`,
+						},
+					},
+					{
+						{
+							Text:         "Show incoming bus summary",
+							CallbackData: `{"t":"refresh","b":"96049","f":"s"}`,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "when inline, with features formatter",
+			args: args{
+				busStopCode: "96049",
+				formatter:   FormatterSummary,
 				inline:      true,
 			},
 			want: telegram.InlineKeyboardMarkup{
@@ -513,15 +587,20 @@ func TestNewETAMessageReplyMarkup(t *testing.T) {
 							CallbackData: `{"t":"refresh","b":"96049","f":"s"}`,
 						},
 					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: `{"t":"refresh","b":"96049","f":"f"}`,
+						},
+					},
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewETAMessageReplyMarkup(tt.args.busStopCode, tt.args.serviceNos, tt.args.formatter, tt.args.inline); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewETAMessageReplyMarkup() = %v, want %v", got, tt.want)
-			}
+			actual := NewETAMessageReplyMarkup(tt.args.busStopCode, tt.args.serviceNos, tt.args.formatter, tt.args.inline)
+			assert.Equal(t, tt.want, actual)
 		})
 	}
 }

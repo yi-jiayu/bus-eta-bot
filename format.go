@@ -11,6 +11,11 @@ import (
 	"github.com/yi-jiayu/datamall/v3"
 )
 
+const (
+	FormatterSummary  = "s"
+	FormatterFeatures = "f"
+)
+
 var (
 	funcMap = map[string]interface{}{
 		"join":          strings.Join,
@@ -47,8 +52,8 @@ var (
 
 var (
 	Formatters = map[string]Formatter{
-		"s": summaryFormatter,
-		"f": featuresFormatter,
+		FormatterSummary:  summaryFormatter,
+		FormatterFeatures: featuresFormatter,
 	}
 )
 

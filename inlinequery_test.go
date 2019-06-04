@@ -77,6 +77,12 @@ func TestInlineQueryHandler(t *testing.T) {
 											CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\"}",
 										},
 									},
+									{
+										{
+											Text:         "Show incoming bus details",
+											CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\",\"f\":\"f\"}",
+										},
+									},
 								},
 							},
 						},
@@ -92,6 +98,12 @@ func TestInlineQueryHandler(t *testing.T) {
 										{
 											Text:         "Refresh",
 											CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+										},
+									},
+									{
+										{
+											Text:         "Show incoming bus details",
+											CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 										},
 									},
 								},
@@ -128,6 +140,12 @@ func TestInlineQueryHandler(t *testing.T) {
 											CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
 										},
 									},
+									{
+										{
+											Text:         "Show incoming bus details",
+											CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
+										},
+									},
 								},
 							},
 						},
@@ -143,6 +161,12 @@ func TestInlineQueryHandler(t *testing.T) {
 										{
 											Text:         "Refresh",
 											CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\"}",
+										},
+									},
+									{
+										{
+											Text:         "Show incoming bus details",
+											CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\",\"f\":\"f\"}",
 										},
 									},
 								},
@@ -175,6 +199,12 @@ func TestInlineQueryHandler(t *testing.T) {
 											CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\"}",
 										},
 									},
+									{
+										{
+											Text:         "Show incoming bus details",
+											CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\",\"f\":\"f\"}",
+										},
+									},
 								},
 							},
 						},
@@ -190,6 +220,12 @@ func TestInlineQueryHandler(t *testing.T) {
 										{
 											Text:         "Refresh",
 											CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+										},
+									},
+									{
+										{
+											Text:         "Show incoming bus details",
+											CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 										},
 									},
 								},
@@ -265,6 +301,12 @@ func TestChosenInlineResultHandler(t *testing.T) {
 									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
 								},
 							},
+							{
+								{
+									Text:         "Show incoming bus details",
+									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
+								},
+							},
 						},
 					},
 				},
@@ -284,6 +326,12 @@ func TestChosenInlineResultHandler(t *testing.T) {
 								{
 									Text:         "Refresh",
 									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+								},
+							},
+							{
+								{
+									Text:         "Show incoming bus details",
+									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 								},
 							},
 						},
@@ -355,6 +403,12 @@ func TestGetNearbyInlineQueryResults(t *testing.T) {
 							CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
 						},
 					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
+						},
+					},
 				},
 			},
 		},
@@ -370,6 +424,12 @@ func TestGetNearbyInlineQueryResults(t *testing.T) {
 						{
 							Text:         "Refresh",
 							CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\"}",
+						},
+					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: "{\"t\":\"refresh\",\"b\":\"96041\",\"f\":\"f\"}",
 						},
 					},
 				},

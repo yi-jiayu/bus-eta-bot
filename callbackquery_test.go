@@ -93,6 +93,12 @@ func TestRefreshCallbackHandler(t *testing.T) {
 									CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
 								},
 							},
+							{
+								{
+									Text:         "Show incoming bus details",
+									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
+								},
+							},
 						},
 					},
 				}),
@@ -113,6 +119,12 @@ func TestRefreshCallbackHandler(t *testing.T) {
 								{
 									Text:         "Refresh",
 									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+								},
+							},
+							{
+								{
+									Text:         "Show incoming bus details",
+									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 								},
 							},
 						},
@@ -138,6 +150,12 @@ func TestRefreshCallbackHandler(t *testing.T) {
 								{
 									Text:         "Refresh",
 									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+								},
+							},
+							{
+								{
+									Text:         "Show incoming bus details",
+									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 								},
 							},
 						},
@@ -166,6 +184,12 @@ func TestRefreshCallbackHandler(t *testing.T) {
 									{
 										Text:         "Refresh",
 										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+									},
+								},
+								{
+									{
+										Text:         "Show incoming bus details",
+										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 									},
 								},
 							},
@@ -259,6 +283,12 @@ func TestEtaCallbackHandler(t *testing.T) {
 										CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
 									},
 								},
+								{
+									{
+										Text:         "Show incoming bus details",
+										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
+									},
+								},
 							},
 						},
 					},
@@ -285,6 +315,12 @@ func TestEtaCallbackHandler(t *testing.T) {
 									{
 										Text:         "Refresh",
 										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\"}",
+									},
+								},
+								{
+									{
+										Text:         "Show incoming bus details",
+										CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 									},
 								},
 							},
@@ -374,6 +410,12 @@ func TestEtaDemoCallbackHandler(t *testing.T) {
 							CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
 						},
 					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
+						},
+					},
 				},
 			},
 		}),
@@ -427,6 +469,12 @@ func TestNewEtaHandler(t *testing.T) {
 						{
 							Text:         "⭐",
 							CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
+						},
+					},
+					{
+						{
+							Text:         "Show incoming bus details",
+							CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
 						},
 					},
 				},

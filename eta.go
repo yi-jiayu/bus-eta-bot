@@ -351,6 +351,34 @@ func NewRefreshButton(busStopCode string, serviceNos []string, formatter string)
 	}
 }
 
+func NewIncomingBusDetailsButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
+	data := CallbackData{
+		Type:       "refresh",
+		BusStopID:  busStopCode,
+		ServiceNos: serviceNos,
+		Formatter:  FormatterFeatures,
+	}
+	JSON, _ := json.Marshal(data)
+	return telegram.InlineKeyboardButton{
+		Text:         "Show incoming bus details",
+		CallbackData: string(JSON),
+	}
+}
+
+func NewIncomingBusSummaryButton(busStopCode string, serviceNos []string) telegram.InlineKeyboardButton {
+	data := CallbackData{
+		Type:       "refresh",
+		BusStopID:  busStopCode,
+		ServiceNos: serviceNos,
+		Formatter:  FormatterSummary,
+	}
+	JSON, _ := json.Marshal(data)
+	return telegram.InlineKeyboardButton{
+		Text:         "Show incoming bus summary",
+		CallbackData: string(JSON),
+	}
+}
+
 func NewResendButton(busStopCode string, serviceNos []string, formatter string) telegram.InlineKeyboardButton {
 	data := CallbackData{
 		Type:       "resend",
@@ -390,9 +418,19 @@ func NewETAMessageReplyMarkup(busStopCode string, serviceNos []string, formatter
 			NewResendButton(busStopCode, serviceNos, formatter),
 			NewToggleFavouriteButton(busStopCode, serviceNos))
 	}
+	keyboard := [][]telegram.InlineKeyboardButton{
+		row,
+	}
+	if formatter == FormatterFeatures {
+		keyboard = append(keyboard, []telegram.InlineKeyboardButton{
+			NewIncomingBusSummaryButton(busStopCode, serviceNos),
+		})
+	} else {
+		keyboard = append(keyboard, []telegram.InlineKeyboardButton{
+			NewIncomingBusDetailsButton(busStopCode, serviceNos),
+		})
+	}
 	return telegram.InlineKeyboardMarkup{
-		InlineKeyboard: [][]telegram.InlineKeyboardButton{
-			row,
-		},
+		InlineKeyboard: keyboard,
 	}
 }

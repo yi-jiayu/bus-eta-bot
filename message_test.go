@@ -163,6 +163,12 @@ func TestTextHandler(t *testing.T) {
 									CallbackData: "{\"t\":\"togf\",\"a\":\"96049\"}",
 								},
 							},
+							{
+								{
+									Text:         "Show incoming bus details",
+									CallbackData: "{\"t\":\"refresh\",\"b\":\"96049\",\"f\":\"f\"}",
+								},
+							},
 						},
 					},
 				},
