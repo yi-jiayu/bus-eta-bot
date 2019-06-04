@@ -20,6 +20,7 @@ var (
 		"sortByService": sortByService,
 		"inSGT":         inSGT,
 		"otherServices": otherServices,
+		"take":          take,
 	}
 )
 
@@ -64,6 +65,14 @@ func (f TemplateFormatter) Format(eta ETA) (string, error) {
 		return "", err
 	}
 	return b.String(), nil
+}
+
+// take returns up to the first n elements of coll.
+func take(n int, coll []ArrivingBus) []ArrivingBus {
+	if n <= 0 || n > len(coll) {
+		n = len(coll)
+	}
+	return coll[:n]
 }
 
 // minutesUntil returns the number of minutes from now until then.

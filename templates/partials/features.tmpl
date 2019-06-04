@@ -2,7 +2,7 @@
 ```
 Svc   Eta  Sea  Typ  Fea
 ---   ---  ---  ---  ---
-{{- range (.Services | arrivingBuses | sortByArrival) }}
+{{- range (.Services | arrivingBuses | sortByArrival | take 10) }}
 {{ $eta := until $.Now .EstimatedArrival -}}
 {{ $sea := .Load -}}
 {{ $typ := .Type -}}
