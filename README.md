@@ -28,3 +28,15 @@ Telegram: [@BusEtaBot](https://t.me/BusEtaBot)
 
 ### Send etas as inline messages
 ![Inline message](screenshots/inline-message.png)
+
+## Updating bus stop data
+
+From the `scripts` directory:
+
+```
+# remove datamall.sqlite if it exists
+# rm datamall.sqlite
+./create_db.sh
+./create_bus_stops_json.py > ../data/bus_stops.json
+```
+
