@@ -13,11 +13,11 @@ import (
 	"github.com/yi-jiayu/datamall/v3"
 	"github.com/yi-jiayu/telegram-bot-api"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/mocks"
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5/mocks"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
-//go:generate mockgen -destination mocks/users.go -package mocks github.com/yi-jiayu/bus-eta-bot/v4 UserRepository
+//go:generate mockgen -destination mocks/users.go -package mocks github.com/yi-jiayu/bus-eta-bot/v5 UserRepository
 
 func newCallbackQueryFromMessage(data string) *tgbotapi.CallbackQuery {
 	return &tgbotapi.CallbackQuery{

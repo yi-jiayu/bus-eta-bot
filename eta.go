@@ -13,7 +13,7 @@ import (
 	"github.com/yi-jiayu/datamall/v3"
 	"google.golang.org/appengine"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
 var (

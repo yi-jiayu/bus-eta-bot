@@ -7,7 +7,7 @@ import (
 
 	"github.com/yi-jiayu/telegram-bot-api"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
 // Links to relevant documents

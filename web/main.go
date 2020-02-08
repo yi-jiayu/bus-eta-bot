@@ -19,8 +19,8 @@ import (
 	aelog "google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4"
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
 var BotToken = os.Getenv("TELEGRAM_BOT_TOKEN")

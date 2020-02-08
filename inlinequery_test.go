@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yi-jiayu/telegram-bot-api"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
 type mockStreetView string

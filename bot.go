@@ -12,7 +12,7 @@ import (
 	"github.com/yi-jiayu/telegram-bot-api"
 	aelog "google.golang.org/appengine/log"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
 // ResponseBufferSize is the size of the channel used to queue responses to be sent via the Telegram Bot API.

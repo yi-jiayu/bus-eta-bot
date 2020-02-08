@@ -10,7 +10,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
 var callbackQueryHandlers = map[string]CallbackQueryHandler{

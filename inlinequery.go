@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yi-jiayu/telegram-bot-api"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/telegram"
+	"github.com/yi-jiayu/bus-eta-bot/v5/telegram"
 )
 
 // NearbyBusStopsRadius is the search range in metres for inline queries for nearby bus stops.

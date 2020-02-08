@@ -10,7 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/yi-jiayu/telegram-bot-api"
 
-	"github.com/yi-jiayu/bus-eta-bot/v4/mocks"
+	"github.com/yi-jiayu/bus-eta-bot/v5/mocks"
 )
 
 // Telegram chat types
