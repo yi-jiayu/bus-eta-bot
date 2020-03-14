@@ -165,32 +165,6 @@ func (SummaryETAFormatter) Format(etas BusEtas, serviceNos []string) string {
 	return formatted
 }
 
-func ETAMessageText(busStops BusStopRepository, etaService ETAService, formatter ETAFormatter, t time.Time, code string, services []string) (string, error) {
-	stop := busStops.Get(code)
-	header := "*" + code + "*"
-	if stop != nil {
-		header = fmt.Sprintf("*%s (%s)*\n%s", stop.Description, stop.BusStopCode, stop.RoadName)
-	}
-	var body string
-	arrival, err := etaService.GetBusArrival(code, "")
-	if err != nil {
-		if err, ok := err.(*datamall.Error); ok {
-			body = fmt.Sprintf("\nOh no! The LTA DataMall API that Bus Eta Bot relies on appears to be down at the moment (it returned HTTP status code %d).", err.StatusCode)
-		} else {
-			return "", errors.Wrap(err, "error getting etas from datamall")
-		}
-	} else {
-		if stop == nil && len(arrival.Services) == 0 {
-			body = "\nNo etas found for this bus stop."
-		} else {
-			etas := CalculateEtas(t, arrival)
-			body = formatter.Format(etas, services)
-		}
-	}
-	timestamp := fmt.Sprintf("Last updated at %s", t.In(sgt).Format(time.RFC822))
-	return fmt.Sprintf("%s\n%s\n\n_%s_", header, body, timestamp), nil
-}
-
 // InferEtaQuery extracts a bus stop ID and service numbers from a text message.
 func InferEtaQuery(text string) (string, []string, error) {
 	m := busStopRegex.FindStringSubmatch(text)

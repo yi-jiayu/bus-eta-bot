@@ -291,7 +291,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 			Expected: []telegram.Request{
 				telegram.EditMessageTextRequest{
 					InlineMessageID: "ID",
-					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
+					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\n\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 					ParseMode:       "markdown",
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{
@@ -318,7 +318,7 @@ func TestChosenInlineResultHandler(t *testing.T) {
 			Expected: []telegram.Request{
 				telegram.EditMessageTextRequest{
 					InlineMessageID: "ID",
-					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
+					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\n\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 					ParseMode:       "markdown",
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{

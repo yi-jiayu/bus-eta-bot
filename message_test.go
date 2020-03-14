@@ -144,9 +144,10 @@ func TestTextHandler(t *testing.T) {
 			Message: MockMessageWithText("96049"),
 			Expected: []telegram.Request{
 				telegram.SendMessageRequest{
-					ChatID:    1,
-					Text:      "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc | Next |  2nd |  3rd |\n|-----|------|------|------|\n| 2   |   -1 |   10 |   36 |\n| 24  |    1 |    3 |    6 |```\nShowing 2 out of 2 services for this bus stop.\n\n_Last updated at 01 Jan 01 08:00 SGT_",
-					ParseMode: "markdown",
+					ChatID:           1,
+					Text:             "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\n\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+					ParseMode:        "markdown",
+					ReplyToMessageID: 0,
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{
 							{

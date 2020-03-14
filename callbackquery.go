@@ -59,7 +59,13 @@ func updateETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.Callbac
 }
 
 func sendETAMessage(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.CallbackQuery, code string, services []string, responses chan<- Response) {
-	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), code, services)
+	eta := NewETA(ctx, bot.BusStops, bot.Datamall, ETARequest{
+		UserID:   cbq.From.ID,
+		Time:     bot.NowFunc(),
+		Code:     code,
+		Services: services,
+	})
+	text, err := summaryFormatter.Format(eta)
 	if err != nil {
 		responses <- notOk(err)
 		return

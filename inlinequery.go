@@ -123,7 +123,13 @@ func ChosenInlineResultHandler(ctx context.Context, bot *BusEtaBot, cir *tgbotap
 	tokens := strings.Split(cir.ResultID, " ")
 	busStopID := tokens[0]
 
-	text, err := ETAMessageText(bot.BusStops, bot.Datamall, SummaryETAFormatter{}, bot.NowFunc(), busStopID, nil)
+	eta := NewETA(ctx, bot.BusStops, bot.Datamall, ETARequest{
+		UserID:   cir.From.ID,
+		Time:     bot.NowFunc(),
+		Code:     busStopID,
+		Services: nil,
+	})
+	text, err := summaryFormatter.Format(eta)
 	if err != nil {
 		return err
 	}
