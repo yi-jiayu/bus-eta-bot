@@ -95,6 +95,14 @@ func RefreshCallbackHandler(ctx context.Context, bot *BusEtaBot, cbq *tgbotapi.C
 		Code:     data.BusStopID,
 		Services: data.ServiceNos,
 	}
+	var format string
+	switch data.Formatter {
+	case FormatterSummary:
+		format = "summary"
+	case FormatterFeatures:
+		format = "features"
+	}
+	go bot.LogEvent(ctx, cbq.From, CategoryCallback, ActionRefreshCallback, format)
 	updateETAMessage(ctx, bot, cbq, req, data.Formatter, responses)
 }
 
