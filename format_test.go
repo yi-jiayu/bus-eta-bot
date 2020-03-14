@@ -523,9 +523,11 @@ func Test_sortByService(t *testing.T) {
 			name: "sorts services numerically",
 			unsorted: []datamall.Service{
 				{ServiceNo: "100"},
+				{ServiceNo: "5"},
 				{ServiceNo: "20"},
 			},
 			sorted: []datamall.Service{
+				{ServiceNo: "5"},
 				{ServiceNo: "20"},
 				{ServiceNo: "100"},
 			},

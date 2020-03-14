@@ -145,10 +145,10 @@ func sortByService(services []datamall.Service) []datamall.Service {
 			// if i cannot be parsed as an integer, then j should come before i
 			return false
 		}
-		if first < second {
-			return true
+		if first == second {
+			return services[i].ServiceNo < services[j].ServiceNo
 		}
-		return services[i].ServiceNo < services[j].ServiceNo
+		return first < second
 	})
 	return services
 }
