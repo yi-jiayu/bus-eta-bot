@@ -58,6 +58,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
 			Description: "Opp Tropicana Condo",
+			Services:    []string{"2", "5", "24"},
 		},
 	}
 	type testCase struct {
@@ -75,7 +76,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 				ok(telegram.EditMessageTextRequest{
 					ChatID:    1,
 					MessageID: 1,
-					Text:      "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+					Text:      "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 3 services for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 					ParseMode: "markdown",
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{
@@ -111,7 +112,7 @@ func TestRefreshCallbackHandler(t *testing.T) {
 			Expected: []Response{
 				ok(telegram.EditMessageTextRequest{
 					InlineMessageID: "1",
-					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+					Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 3 services for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 					ParseMode:       "markdown",
 					ReplyMarkup: telegram.InlineKeyboardMarkup{
 						InlineKeyboard: [][]telegram.InlineKeyboardButton{
@@ -246,6 +247,7 @@ func TestEtaCallbackHandler(t *testing.T) {
 			BusStopCode: "96049",
 			RoadName:    "Upp Changi Rd East",
 			Description: "Opp Tropicana Condo",
+			Services:    []string{"2", "5", "24"},
 		},
 	}
 	type testCase struct {
@@ -265,7 +267,7 @@ func TestEtaCallbackHandler(t *testing.T) {
 						ChatID:          1,
 						MessageID:       1,
 						InlineMessageID: "",
-						Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+						Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 3 services for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 						ParseMode:       "markdown",
 						ReplyMarkup: telegram.InlineKeyboardMarkup{
 							InlineKeyboard: [][]telegram.InlineKeyboardButton{
@@ -307,7 +309,7 @@ func TestEtaCallbackHandler(t *testing.T) {
 						ChatID:          0,
 						MessageID:       0,
 						InlineMessageID: "1",
-						Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 0 service for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
+						Text:            "*Opp Tropicana Condo (96049)*\nUpp Changi Rd East\n```\n| Svc  | Nxt | 2nd | 3rd |\n|------|-----|-----|-----|\n| 2    |  -1 |  10 |  36 |\n| 24   |   1 |   3 |   6 |\n```\nShowing 2 out of 3 services for this bus stop.\n\n_Last updated on Mon, 01 Jan 01 08:00 SGT_",
 						ParseMode:       "markdown",
 						ReplyMarkup: telegram.InlineKeyboardMarkup{
 							InlineKeyboard: [][]telegram.InlineKeyboardButton{
