@@ -2,6 +2,7 @@ package busetabot
 
 import (
 	"bytes"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,6 +16,8 @@ const (
 	FormatterSummary  = "s"
 	FormatterFeatures = "f"
 )
+
+var trimTrailingLettersRegexp = regexp.MustCompile("[^0-9]$")
 
 var (
 	funcMap = map[string]interface{}{
@@ -129,6 +132,22 @@ func sortByArrival(buses []ArrivingBus) []ArrivingBus {
 
 func sortByService(services []datamall.Service) []datamall.Service {
 	sort.Slice(services, func(i, j int) bool {
+		first, err1 := strconv.Atoi(trimTrailingLettersRegexp.ReplaceAllString(services[i].ServiceNo, ""))
+		second, err2 := strconv.Atoi(trimTrailingLettersRegexp.ReplaceAllString(services[j].ServiceNo, ""))
+		switch {
+		case err1 != nil && err2 != nil:
+			// when both services cannot be parsed as integers, sort them lexicographically
+			return services[i].ServiceNo < services[j].ServiceNo
+		case err1 == nil && err2 != nil:
+			// if j cannot be parsed as an integer, then i should come before j
+			return true
+		case err1 != nil && err2 == nil:
+			// if i cannot be parsed as an integer, then j should come before i
+			return false
+		}
+		if first < second {
+			return true
+		}
 		return services[i].ServiceNo < services[j].ServiceNo
 	})
 	return services

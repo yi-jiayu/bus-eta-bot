@@ -512,3 +512,63 @@ func Test_otherServices(t *testing.T) {
 		})
 	}
 }
+
+func Test_sortByService(t *testing.T) {
+	cases := []struct {
+		name     string
+		unsorted []datamall.Service
+		sorted   []datamall.Service
+	}{
+		{
+			name: "sorts services numerically",
+			unsorted: []datamall.Service{
+				{ServiceNo: "100"},
+				{ServiceNo: "20"},
+			},
+			sorted: []datamall.Service{
+				{ServiceNo: "20"},
+				{ServiceNo: "100"},
+			},
+		},
+		{
+			name: "sorts services numerically and then by suffix",
+			unsorted: []datamall.Service{
+				{ServiceNo: "138B"},
+				{ServiceNo: "138A"},
+			},
+			sorted: []datamall.Service{
+				{ServiceNo: "138A"},
+				{ServiceNo: "138B"},
+			},
+		},
+		{
+			name: "places services that do not start with a number at the end",
+			unsorted: []datamall.Service{
+				{ServiceNo: "NR1"},
+				{ServiceNo: "20"},
+			},
+			sorted: []datamall.Service{
+				{ServiceNo: "20"},
+				{ServiceNo: "NR1"},
+			},
+		},
+		{
+			name: "sorts services that do not start with a number lexicographically",
+			unsorted: []datamall.Service{
+				{ServiceNo: "NR1"},
+				{ServiceNo: "CT8"},
+			},
+			sorted: []datamall.Service{
+				{ServiceNo: "CT8"},
+				{ServiceNo: "NR1"},
+			},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got, want := sortByService(c.unsorted), c.sorted; !reflect.DeepEqual(got, want) {
+				t.Fatalf("want %v, got %v", want, got)
+			}
+		})
+	}
+}
