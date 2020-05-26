@@ -1,3 +1,7 @@
+# The code in this repository is no longer in production
+
+Bus Eta Bot the Telegram bot is still around, but is now powered by a new backend which can be found at https://github.com/yi-jiayu/bete.
+
 # Bus Eta Bot
 [![Weekly Users](https://us-central1-bus-eta-bot.cloudfunctions.net/bus-eta-bot-weekly-users)](https://us-central1-bus-eta-bot.cloudfunctions.net/bus-eta-bot-weekly-users)
 [![Build Status](https://travis-ci.org/yi-jiayu/bus-eta-bot.svg?branch=master)](https://travis-ci.org/yi-jiayu/bus-eta-bot)
